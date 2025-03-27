@@ -90,29 +90,7 @@
                             <div>Todas las Citas</div>
                         </a>
                     </li>
-                    <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter') { ?>
-                        <li class="menu-item <?= ($page == 'Citas' && $subpage == 'ListadoCRC') ? 'active' : '' ?>">
-                            <a href="{{ url('dashboard/citas/crc') }}" class="menu-link">
-                                <div>CRC</div>
-                            </a>
-                        </li>
-                        <li class="menu-item <?= ($page == 'Citas' && $subpage == 'ListadoCDA') ? 'active' : '' ?>">
-                            <a href="{{ url('dashboard/citas/cda') }}" class="menu-link">
-                                <div>CDA</div>
-                            </a>
-                        </li>
-                        <li class="menu-item <?= ($page == 'Citas' && $subpage == 'ListadoCIA') ? 'active' : '' ?>">
-                            <a href="{{ url('dashboard/citas/cia') }}" class="menu-link">
-                                <div>CIA</div>
-                            </a>
-                        </li>
-                        <li class="menu-item <?= ($page == 'Citas' && $subpage == 'ListadoCEA') ? 'active' : '' ?>">
-                            <a href="{{ url('dashboard/citas/cea') }}" class="menu-link">
-                                <div>CEA</div>
-                            </a>
-                        </li>
                     <?php
-                    }
                     if ($rol == 'superadmin' || $rol == 'callcenter') {
                     ?>
                         <li class="menu-item <?= ($page == 'Citas' && $subpage == 'Configuración') ? 'active' : '' ?>">
@@ -149,30 +127,6 @@
                             <div>Todas las Citas</div>
                         </a>
                     </li>
-                    <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador') { ?>
-                        <li class="menu-item <?= ($page == 'Liquidador' && $subpage == 'ListadoCRC') ? 'active' : '' ?>">
-                            <a href="{{ url('dashboard/liquidador/crc') }}" class="menu-link">
-                                <div>CRC</div>
-                            </a>
-                        </li>
-                        <li class="menu-item <?= ($page == 'Liquidador' && $subpage == 'ListadoCDA') ? 'active' : '' ?>">
-                            <a href="{{ url('dashboard/liquidador/cda') }}" class="menu-link">
-                                <div>CDA</div>
-                            </a>
-                        </li>
-                        <li class="menu-item <?= ($page == 'Liquidador' && $subpage == 'ListadoCIA') ? 'active' : '' ?>">
-                            <a href="{{ url('dashboard/liquidador/cia') }}" class="menu-link">
-                                <div>CIA</div>
-                            </a>
-                        </li>
-                        <li class="menu-item <?= ($page == 'Liquidador' && $subpage == 'ListadoCEA') ? 'active' : '' ?>">
-                            <a href="{{ url('dashboard/liquidador/cea') }}" class="menu-link">
-                                <div>CEA</div>
-                            </a>
-                        </li>
-                    <?php
-                    }
-                    ?>
                 </ul>
             </li>
         <?php

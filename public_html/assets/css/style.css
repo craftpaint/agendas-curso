@@ -1,17 +1,17 @@
 :root {
     --color-negro: #003B4A;
     --color-gris: #f4f4f499;
-    --color-morado: #5b1080;
-    --color-morado-50: #fbf4ff;
-    --color-morado-100: #f6e6ff;
-    --color-morado-200: #eed1ff;
-    --color-morado-300: #e1adff;
-    --color-morado-400: #cf79ff;
-    --color-morado-500: #7367f0;
-    --color-morado-600: #ac22fb;
-    --color-morado-700: #9512de;
-    --color-morado-800: #7d15b4;
-    --color-verde: #9fde0f;
+    --color-morado: #00a0c3;
+    --color-morado-50: #f0fcff;
+    --color-morado-100: #e0faff;
+    --color-morado-200: #c6f5ff;
+    --color-morado-300: #9becfd;
+    --color-morado-400: #2bd6fb;
+    --color-morado-500: #00d2ff;
+    --color-morado-600: #02aed3;
+    --color-morado-700: #0186a3;
+    --color-morado-800: #036074;
+    --color-verde: #d3d93b;
 }
 
 .morado {
