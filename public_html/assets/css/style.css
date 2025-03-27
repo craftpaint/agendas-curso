@@ -1,0 +1,282 @@
+:root {
+    --color-negro: #003B4A;
+    --color-gris: #f4f4f499;
+    --color-morado: #5b1080;
+    --color-morado-50: #fbf4ff;
+    --color-morado-100: #f6e6ff;
+    --color-morado-200: #eed1ff;
+    --color-morado-300: #e1adff;
+    --color-morado-400: #cf79ff;
+    --color-morado-500: #7367f0;
+    --color-morado-600: #ac22fb;
+    --color-morado-700: #9512de;
+    --color-morado-800: #7d15b4;
+    --color-verde: #9fde0f;
+}
+
+.morado {
+    color: var(--color-morado-500);
+}
+
+.bg-morado-500 {
+    background-color: var(--color-morado-500) !important;
+}
+
+.d-none,
+.layout-navbar-fixed .layout-wrapper:not(.layout-horizontal) .layout-page:before,
+.dataTables_info {
+    display: none !important;
+}
+
+.p-0 {
+    padding: 0 !important;
+}
+
+.content_form_horarios {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+
+.content_form_horarios_item {
+    width: calc(50% - 60px);
+}
+
+.content_form_horarios_item_full {
+    width: calc(100% - 110px);
+}
+
+table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.accordion-button {
+    font-size: 18px !important;
+}
+
+.required_flied {
+    color: red;
+    font-weight: bold;
+}
+
+.content_filtros {
+    padding: 0 20px;
+}
+
+.content_filtros {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.filtros_form {
+    max-width: 60%;
+}
+
+
+#form_filtros {
+    display: flex;
+    align-items: start;
+    justify-content: end;
+    flex-wrap: wrap;
+    gap: 15px;
+
+}
+
+#form_filtros .form-group-grow {
+    flex-grow: 1;
+    min-width: 180px;
+}
+
+
+.contet_full_semana_repeat {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 250px;
+}
+
+.contet_full_semana_repeat label {
+    margin-bottom: 0;
+    margin-left: 5px;
+}
+
+.light-style .datepicker table tr td.old,
+.light-style .datepicker table tr td.disabled {
+    color: #cdcdcd;
+}
+
+.card-datatable {
+    overflow: auto;
+}
+
+.dataTables_info {
+    display: block !important;
+}
+
+.flatpickr-calendar {
+    background-color: var(--color-morado-700);
+    color: #fff;
+    border-radius: 8px;
+}
+
+.flatpickr-day {
+    border-radius: 50%;
+}
+
+.dateInput {
+    margin-left: auto;
+    margin-right: auto;
+    height: 2.5em;
+    width: 12.5em;
+    border-radius: 2.5em;
+    border: 2px solid var(--color-morado-500);
+    background-color: rgb(255, 255, 255);
+    -webkit-filter: drop-shadow(1px 1px 10px #000);
+    filter: drop-shadow(7px 7px 10px #00000059);
+    font-family: Arial, Helvetica, sans-serif;
+    color: rgb(77, 77, 77);
+    text-align: center;
+    font-size: 14px;
+    outline: 2px solid rgba(0, 0, 0, 0);
+    transition: outline-offset 0.5s ease, outline-color 0.5s ease,
+        height 0.5s ease, width 0.5s ease, filter 0.5s ease;
+}
+
+.dateInput:focus {
+    outline-offset: 0.5em;
+    outline-color: rgba(0, 0, 0, 0.228);
+    transition: 0.2s;
+    border: none;
+    height: 3em;
+    width: 13em;
+    -webkit-filter: drop-shadow(1px 1px 10px #000);
+    filter: drop-shadow(-7px 7px 10px #00000059);
+}
+
+.dateInput::placeholder {
+    padding-left: 0.8em;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 500;
+    letter-spacing: 1px;
+    transform: translateX(-6px);
+    transition: transform 0.5s ease;
+}
+
+.dateInput:focus::placeholder {
+    transform: translateX(-85px);
+    transition: 0.5s;
+}
+
+.woow-input-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    position: relative;
+}
+
+.woow-input-search {
+    border-style: none;
+    height: 40px;
+    width: 40px;
+    padding: 0px;
+    outline: none;
+    border-radius: 50%;
+    transition: .5s ease-in-out;
+    background-color: var(--color-morado-500);
+    box-shadow: 0px 0px 3px #f3f3f3;
+    padding-right: 40px;
+    color: #000;
+}
+
+.woow-input-search::placeholder,
+.woow-input-search {
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-size: 17px;
+}
+
+.woow-input-search::placeholder {
+    color: #8f8f8f;
+}
+
+.woow-icon-search {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    right: 0px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    outline: none;
+    border-style: none;
+    border-radius: 50%;
+    pointer-events: painted;
+    background-color: transparent;
+    transition: .2s linear;
+}
+
+.woow-icon-search:focus~.woow-input-search,
+.woow-input-search:focus {
+    box-shadow: none;
+    width: 250px;
+    border-radius: 0px;
+    background-color: transparent;
+    border-bottom: 3px solid var(--color-morado-500);
+    transition: all 500ms cubic-bezier(0, 0.110, 0.35, 2);
+}
+
+.woow-switch {
+    font-size: 17px;
+    position: relative;
+    display: inline-block;
+    width: 3.5em;
+    height: 2em;
+}
+
+/* Hide default HTML checkbox */
+.woow-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: var(--color-morado-300);
+    border-radius: 50px;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 1.4em;
+    width: 1.4em;
+    left: 0.3em;
+    bottom: 0.3em;
+    background-color: white;
+    border-radius: 50px;
+    box-shadow: 0 0px 20px rgba(0, 0, 0, 0.4);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.woow-switch input:checked+.slider {
+    background: var(--color-morado-500);
+}
+
+.woow-switch input:focus+.slider {
+    box-shadow: 0 0 1px var(--color-morado-500);
+}
+
+.woow-switch input:checked+.slider:before {
+    transform: translateX(1.6em);
+    width: 2em;
+    height: 2em;
+    bottom: 0;
+}

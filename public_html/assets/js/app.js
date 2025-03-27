@@ -1,0 +1,2937 @@
+$(function () {
+    //Variables Globales
+    let table_horarios = false;
+    let table_festivos = false;
+    let table_servicios = false;
+    let table_estados = false;
+    let table_usuarios = false;
+    // Variables para los filtros
+    let filtroDia = '';
+    let filtroDiaEnd = '';
+    let filtroSede = '';
+    let filtroEstado = '';
+    let filtroEstadoVerificado = '';
+    let filtroResponsable = '';
+    let filtroServicioLiquidador = '';
+    let filtroEstadoValidacionLiquidador = '';
+    let filtroEstadoPagoLiquidador = '';
+    let filtroOrigen = '';
+    let filtroSearch = '';
+    let tipoCita = '';
+
+    $('.send_form').on('submit', function (event) {
+        event.preventDefault(); // Evita que el formulario se envíe inmediatamente
+        let isValid = true;
+        let action = $(this).attr('action');
+        let form = $(this);
+        // Recorrer todos los elementos con el atributo 'required'
+        form.find('[required]').each(function () {
+            if ($(this).val() === "" || (this.type === "checkbox" && !$(this).is(':checked'))) {
+                isValid = false;
+                $(this).css('border-color', 'red');
+            } else {
+                $(this).css('border-color', '');
+            }
+        });
+        // Si todos los campos son válidos, proceder con el envío por AJAX
+        if (isValid) {
+            if ($('#phoneCliente').length) {
+                const fullPhoneNumber = phoneInput.getNumber();
+                $('#phoneCliente').val(fullPhoneNumber);
+            }
+            $.ajax({
+                url: action,
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.validate) {
+                        if (response.reload) {
+                            alertNotify('¡Éxito!', response.text, 'success', response, true); ('¡Éxito!', response.text, 'success', response);
+
+                        } else {
+                            alertNotify('¡Éxito!', response.text, 'success', response); ('¡Éxito!', response.text, 'success', response);
+                        }
+                        form[0].reset();
+                        if (table_horarios !== false) {
+                            table_horarios.ajax.reload();
+                        }
+                        if (table_festivos !== false) {
+                            table_festivos.ajax.reload();
+                        }
+                        if (table_servicios !== false) {
+                            table_servicios.ajax.reload();
+                        }
+                        if (table_estados !== false) {
+                            table_estados.ajax.reload();
+                        }
+                        if (table_usuarios !== false) {
+                            table_usuarios.ajax.reload();
+                        }
+
+                    } else {
+                        alertNotify('¡Error!', response.text, 'error');
+                    }
+                },
+                error: function (error) {
+                    alert('Error en el envío del formulario');
+                }
+            });
+        } else {
+            alertNotify('¡Error!', '¡Por favor, completa todos los campos requeridos!', 'error');
+        }
+    });
+    //Funciones Generales
+    function alertNotify(title, text, icon, response = false, reload = false) {
+        Swal.fire({
+            icon: icon,
+            title: title,
+            text: text,
+            confirmButtonText: 'OK',
+            customClass: {
+                confirmButton: 'btn btn-primary',
+                cancelButton: 'btn btn-outline-danger ml-1 d-none'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                if (icon === 'success') {
+                    if ($('.content_sede').length) {
+                        if (response?.id) {
+                            if (rol == 'gestorsede') {
+                                window.location = url + '/dashboard/sedes/view/' + response.id;
+                            } else {
+                                window.location = url + '/dashboard/sedes/edit/' + response.id;
+                            }
+                        }
+                    }
+                    if ($('.content_clientes').length) {
+                        if (response?.id) {
+                            if (rol == 'gestorsede') {
+                                window.location = url + '/dashboard/clientes/view/' + response.id;
+                            } else {
+                                window.location = url + '/dashboard/clientes/edit/' + response.id;
+                            }
+                        }
+                    }
+                    if ($('.content_vehiculos').length) {
+                        if (response?.id) {
+                            if (rol == 'gestorsede') {
+                                window.location = url + '/dashboard/clientes/view_vehiculos/' + response.id;
+                            } else {
+                                window.location = url + '/dashboard/clientes/edit_vehiculos/' + response.id;
+                            }
+                        }
+                    }
+                    if ($('.content_citas').length) {
+                        ;
+                        if (response?.id) {
+                            if (rol == 'gestorsede') {
+                                window.location = url + '/dashboard/citas/view/' + response.id;
+                            } else {
+                                window.location = url + '/dashboard/citas/edit/' + response.id;
+                            }
+                        }
+                    }
+                    if ($('.content_citas_edit_estados').length) {
+                        ;
+                        if (response?.id) {
+                            if (rol == 'gestorsede') {
+                                window.location = url + '/dashboard/citas';
+                            } else {
+                                window.location = url + '/dashboard/citas/configuracion';
+                            }
+                        }
+                    }
+                    if (reload) {
+                        location.reload(); // Recarga la página
+                    }
+                }
+            }
+        });
+    }
+    //INICIO: FORMULARIO PRINCIPAL AJAX------------------------------------------------------------------------
+    //Selectes con funcionaliades
+    if ($('.select2').length) {
+        let texto = 'Seleccione una opción';
+        $('.select2').each(function () {
+            var $this = $(this);
+            var placeholder = $this.attr('placeholder');
+            if (placeholder) {
+                texto = placeholder;
+            }
+            $this.wrap('<div class="position-relative"></div>').select2({
+                placeholder: placeholder,
+                dropdownParent: $this.parent()
+            });
+        });
+    }
+    //INICIO: SEDES------------------------------------------------------------------------
+    //TABLAS DE SEDES
+    if ($('.datatables-sedes').length) {
+        let table = $('.datatables-sedes').DataTable({
+            ordering: false,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: url + '/dashboard/sedes/get_sedes',
+                type: "POST"
+            },
+            column: [{ data: '' }],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        return '<span class="badge bg-label-dark">' + full.id_sede + '</span>';
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return full.idrun_sede;
+                    }
+                },
+                {
+                    targets: 2,
+                    render: function (data, type, full, meta) {
+                        return full.nombre_sede;
+                    }
+                },
+                {
+                    targets: 3,
+                    render: function (data, type, full, meta) {
+                        return full.tel_sede;
+                    }
+                },
+                {
+                    targets: 4,
+                    render: function (data, type, full, meta) {
+                        if (full.estado_sede == 'Activo') {
+                            return '<span class="badge bg-label-success">' + full.estado_sede + '</span>';
+                        }
+                        return '<span class="badge bg-label-danger">' + full.estado_sede + '</span>';
+                    }
+                },
+                {
+                    targets: 5,
+                    render: function (data, type, full, meta) {
+                        return `
+                        <div class="d-flex justify-content-end">
+                            ${(rol == 'superadmin') ? `
+                            <a href="${url}/dashboard/sedes/edit/${full.id_sede}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-edit ti-md"></i>
+                            </a>
+                            <button type="button" data-id="${full.id_sede}" class="btn_delete_sede btn btn-icon btn-label-danger waves-effect">
+                                <i class="tf-icons ti ti-trash ti-md"></i>
+                            </button>` : ``}
+                        </div>`	;
+                    }
+                },
+            ],
+            pagingType: "simple"
+        });
+        //ELIMINAR SEDE
+        $('.datatables-sedes').on('click', '.btn_delete_sede', function () {
+            let id = $(this).data('id');
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: '¡No podrás revertir esto!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '¡Sí, bórralo!',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-outline-danger ml-1'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url + '/dashboard/sedes/delete_sede',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (data) {
+                            if (data.validate) {
+                                table.ajax.reload();
+                            } else {
+                                alertNotify('¡Error!', data.text, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    }
+    //Tabla de horarios
+    if ($('.datatables-horarios').length) {
+        table_horarios = $('.datatables-horarios').DataTable({
+            lengthChange: true,
+            searching: false,
+            ordering: false,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: url + '/dashboard/sedes/get_horarios',
+                type: "POST"
+            },
+            column: [{ data: '' }],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        return full.rango_horario;
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return `
+                        <div class="d-flex justify-content-end">
+                            ${(rol == 'superadmin') ? `
+                            <button type="button" data-id="${full.id_horario}" class="btn_delete_horario btn btn-icon btn-label-danger waves-effect">
+                                <i class="tf-icons ti ti-trash ti-md"></i>
+                            </button>` : ``}
+                        </div>`	;
+                    }
+                },
+            ],
+            pagingType: "simple"
+        });
+        //ELIMINAR SEDE
+        $('.datatables-horarios').on('click', '.btn_delete_horario', function () {
+            let id = $(this).data('id');
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: '¡No podrás revertir esto!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '¡Sí, bórralo!',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-outline-danger ml-1'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url + '/dashboard/sedes/delete_horario',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (data) {
+                            if (data.validate) {
+                                table_horarios.ajax.reload();
+                            } else {
+                                alertNotify('¡Error!', data.text, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    }
+    //Tabla de festiuvos
+    if ($('.datatables-festivos').length) {
+        table_festivos = $('.datatables-festivos').DataTable({
+            lengthChange: false,
+            searching: false,
+            ordering: false,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: url + '/dashboard/sedes/get_festivos',
+                type: "POST"
+            },
+            column: [{ data: '' }],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        return full.fecha;
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return `
+                        <div class="d-flex justify-content-end">
+                            ${(rol == 'superadmin') ? `
+                            <button type="button" data-id="${full.id}" data-fecha="${full.fecha}" class="btn_delete_festivo btn btn-icon btn-label-danger waves-effect">
+                                <i class="tf-icons ti ti-trash ti-md"></i>
+                            </button>` : ``}
+                        </div>`	;
+                    }
+                },
+            ],
+            pagingType: "simple"
+        });
+        //ELIMINAR SEDE
+        $('.datatables-festivos').on('click', '.btn_delete_festivo', function () {
+            let id = $(this).data('id');
+            let fecha = $(this).data('fecha');
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: '¡No podrás revertir esto!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '¡Sí, bórralo!',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-outline-danger ml-1'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url + '/dashboard/sedes/delete_festivos',
+                        type: 'POST',
+                        data: { id: id, fecha: fecha },
+                        success: function (data) {
+                            if (data.validate) {
+                                ;
+                                table_festivos.ajax.reload();
+                            } else {
+                                alertNotify('¡Error!', data.text, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    }
+    //Tabla de festiuvos
+    if ($('.datatables-servicios').length) {
+        table_servicios = $('.datatables-servicios').DataTable({
+            lengthChange: false,
+            searching: false,
+            ordering: false,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: url + '/dashboard/sedes/get_servicio',
+                type: "POST"
+            },
+            column: [{ data: '' }],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        return full.tipo_servicio;
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return full.desc_servicio;
+                    }
+                },
+                {
+                    targets: 2,
+                    render: function (data, type, full, meta) {
+                        return `
+                        <div class="d-flex justify-content-end">
+                            ${(rol == 'superadmin') ? `
+                            <button type="button" data-id="${full.id_servicio}" class="btn_delete_servicio btn btn-icon btn-label-danger waves-effect">
+                                <i class="tf-icons ti ti-trash ti-md"></i>
+                            </button>` : ``}
+                        </div>`	;
+                    }
+                },
+            ],
+            pagingType: "simple"
+        });
+        //ELIMINAR SEDE
+        $('.datatables-servicios').on('click', '.btn_delete_servicio', function () {
+            let id = $(this).data('id');
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: '¡No podrás revertir esto!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '¡Sí, bórralo!',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-outline-danger ml-1'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url + '/dashboard/sedes/delete_servicio',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (data) {
+                            if (data.validate) {
+                                table_servicios.ajax.reload();
+                            } else {
+                                alertNotify('¡Error!', data.text, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    }
+    //FIN: HORARIOS------------------------------------------------------------------------
+    if ($('.form-repeater').length) {
+        a_dias.forEach(function (item, index) {
+            $('.repeat_' + item).repeater({
+                show: function () {
+                    $(this).slideDown();
+                },
+                hide: function (deleteElement) {
+                    if (confirm('¿Estás seguro de que quieres eliminar este elemento?')) {
+                        $(this).slideUp(deleteElement);
+                    }
+                }
+            });
+
+
+        });
+    }
+    //FIN: SEDES------------------------------------------------------------------------
+    //INICIO: CLIENTES------------------------------------------------------------------------
+    if ($('.datatables-clientes').length) {
+        let table_clientes = $('.datatables-clientes').DataTable({
+            ordering: false,
+            processing: true,
+            serverSide: true,
+            pageLength: 50, // Cambiar la paginación a 50 entradas
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json' // Configuración de idioma español
+            },
+            ajax: {
+                url: url + '/dashboard/clientes/get_clientes',
+                type: "POST"
+            },
+            column: [{ data: '' }],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        return full.nombre_cliente + ' ' + full.apellido_cliente;
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return '<span class="badge bg-label-dark">' + full.tipo_doc_cliente + ': ' + full.doc_cliente + '</span>';
+                    }
+                },
+                {
+                    targets: 2,
+                    render: function (data, type, full, meta) {
+                        return full.telefono_cliente;
+                    }
+                },
+                {
+                    targets: 3,
+                    render: function (data, type, full, meta) {
+                        return '<a href="mailto:' + full.email_cliente + '">' + full.email_cliente + '</a>';
+                    }
+                },
+                {
+                    targets: 4,
+                    render: function (data, type, full, meta) {
+                        return `
+                        <div class="d-flex justify-content-end">
+                            ${(rol == 'superadmin') ? `
+                            <a href="${url}/dashboard/clientes/edit/${full.id_cliente}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-edit ti-md"></i>
+                            </a>
+                            <button type="button" data-id="${full.id_cliente}" class="btn_delete_cliente btn btn-icon btn-label-danger waves-effect">
+                                <i class="tf-icons ti ti-trash ti-md"></i>
+                            </button>` : ``}
+                            ${(rol == 'callcenter') ? `
+                            <a href="${url}/dashboard/clientes/edit/${full.id_cliente}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-edit ti-md"></i>
+                            </a>` : ``}
+                            ${(rol == 'gestorsede') ? `
+                                <a href="${url}/dashboard/clientes/view/${full.id_cliente}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                    <i class="tf-icons ti ti-search ti-md"></i>
+                                </a>` : ``}
+                        </div>`	;
+                    }
+                },
+            ],
+            pagingType: "simple"
+        });
+        $('.datatables-clientes').on('click', '.btn_delete_cliente', function () {
+            let id = $(this).data('id');
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: '¡No podrás revertir esto!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '¡Sí, bórralo!',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-outline-danger ml-1'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url + '/dashboard/clientes/delete_cliente',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (data) {
+                            if (data.validate) {
+                                table_clientes.ajax.reload();
+                            } else {
+                                alertNotify('¡Error!', data.text, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    }
+    //Vehiculos
+    if ($('.datatables-vehiculos').length) {
+        let table_vehiculos = $('.datatables-vehiculos').DataTable({
+            ordering: false,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: url + '/dashboard/clientes/get_vehiculos',
+                type: "POST"
+            },
+            column: [{ data: '' }],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        return '<strong>' + full.tipo_vehiculo + '</strong> (' + full.modelo_vehiculo + ')';
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return '<span class="badge bg-label-dark">' + full.placa_vehiculo + '</span>';
+                    }
+                },
+                {
+                    targets: 2,
+                    render: function (data, type, full, meta) {
+                        return '<span class="badge bg-label-primary">' + full.tipo_doc_cliente + ': ' + full.doc_cliente + '</span>';
+                    }
+                },
+                {
+                    targets: 3,
+                    render: function (data, type, full, meta) {
+                        return `
+                        <div class="d-flex justify-content-end">
+                            ${(rol == 'superadmin') ? `
+                            <a href="${url}/dashboard/clientes/edit_vehiculos/${full.id_vehiculo}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-edit ti-md"></i>
+                            </a>
+                            <button type="button" data-id="${full.id_vehiculo}" class="btn_delete_vehiculo btn btn-icon btn-label-danger waves-effect">
+                                <i class="tf-icons ti ti-trash ti-md"></i>
+                            </button>` : ``}
+                            ${(rol == 'callcenter') ? `
+                            <a href="${url}/dashboard/clientes/edit_vehiculos/${full.id_vehiculo}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-edit ti-md"></i>
+                            </a>` : ``}
+                             ${(rol == 'gestorsede') ? `
+                                <a href="${url}/dashboard/clientes/view_vehiculos/${full.id_cliente}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                    <i class="tf-icons ti ti-search ti-md"></i>
+                                </a>` : ``}
+                        </div>`	;
+                    }
+                }
+            ],
+            pagingType: "simple"
+        });
+        $('.datatables-vehiculos').on('click', '.btn_delete_vehiculo', function () {
+            let id = $(this).data('id');
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: '¡No podrás revertir esto!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '¡Sí, bórralo!',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-outline-danger ml-1'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url + '/dashboard/clientes/delete_vehiculo',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (data) {
+                            if (data.validate) {
+                                table_vehiculos.ajax.reload();
+                            } else {
+                                alertNotify('¡Error!', data.text, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    }
+    //Select para buscar cliente
+    if ($('.select_search_cliente').length) {
+        $('.select_search_cliente').select2({
+            ajax: {
+                url: url + '/dashboard/clientes/get_clientes_in_vehicle',
+                dataType: 'json'
+            }
+        });
+    }
+    //INICIO: CITAS------------------------------------------------------------------------
+    let currentServiceType = null;
+    if ($('.content_citas').length) {
+        let horarios = false;
+        //SELECT DE SEDES
+        $('#selectSede').change(function () {
+            let id = $(this).val();
+            let festivos = $(this).find(':selected').data('festivos');
+            let dias_fijos = [0, 1, 2, 3, 4, 5, 6];
+            // Configuración en español para el datepicker
+            $.fn.datepicker.dates['es'] = {
+                days: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
+                daysShort: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
+                daysMin: ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sá"],
+                months: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+                monthsShort: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+                today: "Hoy",
+                clear: "Limpiar",
+                format: "dd/mm/yyyy",
+                titleFormat: "MM yyyy",
+                weekStart: 0
+            };
+            // Ocultar y limpiar el select de vehículos (si lo tienes)
+            hideVehiculoSelect();
+
+            // Llamada para obtener el servicio asociado a la sede en una función separada
+            obtenerServicioSede(id);
+
+            $.ajax({
+                // AJAX para obtener los horarios de la sede seleccionada
+                url: url + '/dashboard/citas/get_horarios',
+                type: 'POST',
+                data: { id: id },
+                dataType: 'json',
+                success: function (response) {
+                    horarios = response.horarios;
+                    let dias_disponibles = [];
+                    let dias_disponibles_datapicker = [];
+                    horarios.forEach(function (item, index) {
+                        let dia_sede_horario = parseInt(item.dia_sede_horario);
+                        let dia_sede_horario_datapicker = parseInt(item.dia_sede_horario);
+                        if (dia_sede_horario_datapicker == 7) {
+                            dia_sede_horario_datapicker = 0;
+                        }
+                        dias_disponibles.push(dia_sede_horario);
+                        dias_disponibles_datapicker.push(dia_sede_horario_datapicker);
+                    });
+                    dias_disponibles = [...new Set(dias_disponibles)];
+                    dias_disponibles_datapicker = [...new Set(dias_disponibles_datapicker)];
+                    let dias_no_disponibles = dias_fijos.filter(elemento => !dias_disponibles_datapicker.includes(elemento));
+                    var startDateDatepicker = new Date(); // Por defecto se restringe a partir de hoy
+                    if (rol === 'superadmin' || rol === 'admin' || rol === 'callcenter') {
+                        startDateDatepicker = null; // Permite seleccionar cualquier fecha
+                    }
+
+                    // Destruye el calendario antes de volver a inicializarlo
+                    $('#citaDia').datepicker('destroy');
+                    $('#citaDia').attr('disabled', false);
+                    $('#citaDia').datepicker({
+                        todayHighlight: true,
+                        daysOfWeekDisabled: dias_no_disponibles,
+                        orientation: isRtl ? 'auto right' : 'auto left',
+                        language: 'es',
+                        startDate: startDateDatepicker,
+                        beforeShowDay: function (date) {
+                            const fechaString = date.toISOString().split('T')[0];
+                            if (festivos !== null && festivos.includes(fechaString)) {
+                                return { enabled: false, classes: 'disabled-date', tooltip: 'Fecha no disponible' };
+                            }
+                            return true;
+                        }
+                    }).on('changeDate', function (e) {
+                        if (e.date !== undefined) {
+                            let dia_semana = e.date.getDay();
+                            if (dia_semana == 0) {
+                                dia_semana = 7;
+                            }
+                            let horarios_disponibles = [];
+                            // Verificamos si el día seleccionado es hoy
+                            let hoy = new Date();
+                            let dia = hoy.getDate().toString().padStart(2, '0'); // Agregar cero inicial si es necesario
+                            let mes = (hoy.getMonth() + 1).toString().padStart(2, '0'); // Agregar cero inicial
+                            let anio = hoy.getFullYear();
+                            let fecha_hoy = `${dia}/${mes}/${anio}`;
+                            let fecha_seleccionada = e.format();
+                            if (fecha_hoy == fecha_seleccionada) {
+                                horarios_disponibles = horarios.filter(function (item) {
+                                    let hora_inicio = item.inicio_horario; // formato 24 horas como string: "HH:mm:ss"
+                                    let hora_actual = hoy.getHours().toString().padStart(2, '0') + ':' +
+                                        hoy.getMinutes().toString().padStart(2, '0') + ':' +
+                                        hoy.getSeconds().toString().padStart(2, '0');
+
+                                    // Convierte ambas horas a objetos Date con una fecha base
+                                    let horaInicioDate = new Date(`1970-01-01T${hora_inicio}Z`);
+                                    let horaActualDate = new Date(`1970-01-01T${hora_actual}Z`);
+                                    if ($('.content_citas_edit').length) {
+                                        return item.dia_sede_horario == dia_semana && (horaInicioDate > horaActualDate || item.rango_horario == rango_horario);;
+                                    } else {
+                                        return item.dia_sede_horario == dia_semana && horaInicioDate > horaActualDate;
+                                    }
+                                });
+
+                            } else {
+                                horarios_disponibles = horarios.filter(function (item) {
+                                    return item.dia_sede_horario == dia_semana;
+                                });
+                            }
+                            let html_select = '<option value="">Seleccione una opción</option>';
+                            horarios_disponibles.forEach(function (item, index) {
+                                html_select += '<option value="' + item.id_sede_horario + '">' + item.rango_horario + '</option>';
+                            });
+                            $('#citaHora').html(html_select);
+                            $('#citaHora').attr('disabled', false);
+                            //EDITAR CITA
+                            if ($('.content_citas_edit').length) {
+                                $('#citaHora option').each(function () {
+                                    if ($(this).text().trim() === rango_horario.trim()) { // Compara el texto
+                                        $(this).prop('selected', true); // Selecciona la opción
+                                        $('#citaHora').trigger('change'); // Dispara el evento 'change' si es necesario
+                                        return false; // Sale del bucle
+                                    }
+                                });
+                            }
+                        }
+                    });
+                    //EDITAR CITA
+                    if ($('.content_citas_edit').length) {
+                        $('#citaDia').datepicker('setDate', new Date(reserva_cita)).trigger('changeDate');
+                    }
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        });
+        //Editar citas
+        if ($('.content_citas_edit').length) {
+            //Ejecutamos evento de cambio de sede
+            $('#selectSede').trigger('change');
+        }
+    }
+
+    function obtenerServicioSede(idSede) {
+        $.ajax({
+            url: url + '/dashboard/sedes/get_servicio_by_id_sede', // Endpoint a crear en el backend
+            type: 'POST',
+            data: { id_sede: idSede },
+            dataType: 'json',
+            success: function (response) {
+                if (response.validate) {
+                    currentServiceType = response.tipo_servicio[0].tipo_servicio;
+                } else {
+                    currentServiceType = null;
+                }
+                // Verificar si se deben cargar los vehículos
+                checkAndLoadVehiculos();
+            },
+            error: function () {
+                currentServiceType = null;
+                checkAndLoadVehiculos();
+            }
+        });
+    }
+
+    // Cuando cambia el cliente, volvemos a verificar si se deben cargar vehículos
+    $('.select_search_cliente').change(function () {
+        checkAndLoadVehiculos();
+        // console.log('Se cambió el cliente');
+    });
+
+
+    function checkAndLoadVehiculos() {
+        let clientId = $('.select_search_cliente').val();
+        // console.log('Cliente seleccionado:', clientId);
+        // console.log('Tipo de servicio actual:', currentServiceType);
+        // Condiciones:
+        // 1. currentServiceType debe existir y ser "CDA"
+        // 2. Debe haber un cliente seleccionado
+        if (currentServiceType && currentServiceType == 'CDA' && clientId) {
+            loadVehiculos(clientId);
+        } else {
+            hideVehiculoSelect();
+        }
+    }
+
+    // Función para ocultar y limpiar el select de vehículos
+    function hideVehiculoSelect() {
+        $('#divSelectVehiculo').hide();
+        $('#selectVehiculo').html('<option value="">Seleccionar vehículo</option>');
+    }
+
+
+    // Función para cargar los vehículos asociados a un cliente
+    function loadVehiculos(clientId) {
+        $.ajax({
+            url: url + '/dashboard/clientes/get_vehiculos_by_id_cliente',
+            type: 'POST',
+            data: { id_cliente: clientId },
+            dataType: 'json',
+            success: function (response) {
+                if (response.validate) {
+                    let html = '<option value="">Seleccionar vehículo</option>';
+
+                    response.vehiculos.forEach(function (vehiculo) {
+                        html += '<option value="' + vehiculo.id_vehiculo + '">' +
+                            vehiculo.placa_vehiculo + ' - ' + vehiculo.tipo_vehiculo +
+                            '</option>';
+                    });
+                    $('#selectVehiculo').html(html);
+                    $('#divSelectVehiculo').show();
+                    // Inicializa select2 (o refrescalo)
+                    $('#selectVehiculo').select2();
+
+                    // Si estamos en modo edición y tenemos un vehículo asignado, lo seleccionamos
+                    if ($('.content_citas_edit').length && typeof idVehiculoCita !== 'undefined' && idVehiculoCita) {
+                        $('#selectVehiculo option').each(function () {
+                            if ($(this).val() == idVehiculoCita) {
+                                $(this).prop('selected', true);
+                                $('#selectVehiculo').trigger('change');
+                                return false; // Sale del each
+                            }
+                        });
+                    }
+                } else {
+                    hideVehiculoSelect();
+                }
+            },
+            error: function () {
+                hideVehiculoSelect();
+            }
+        });
+    }
+
+    // Función para calcular si el color es claro u oscuro
+    function getContrastingTextColor(bgColor) {
+
+        // Validar si bgColor es un valor válido
+        if (!bgColor || typeof bgColor !== 'string') {
+            return '#000000'; // Texto negro por defecto si el color es inválido
+        }
+        // Quitar el símbolo '#' si está presente
+        const hex = bgColor.replace('#', '');
+
+        // Convertir el color HEX a valores RGB
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+
+        // Calcular la luminancia relativa según el estándar WCAG
+        const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+        // Determinar si el fondo es claro u oscuro
+        return luminance > 128 ? '#000000' : '#FFFFFF'; // Texto negro si es claro, blanco si es oscuro
+    }
+    //TABLA DE ESTADOS DE CITAS
+    if ($('.datatables-estados').length) {
+        table_estados = $('.datatables-estados').DataTable({
+            lengthChange: false,
+            searching: false,
+            ordering: false,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: url + '/dashboard/citas/get_estados',
+                type: "POST"
+            },
+            column: [{ data: '' }],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        const bgColor = full.color_estado; // Color de fondo del estado
+                        const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                        return '<span class="badge bg-label-dark" style="background-color: ' + bgColor + ' !important; color: ' + textColor + '!important;">' + full.nombre_estado + '</span>';
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return full.desc_estado;
+                    }
+                },
+                {
+                    targets: 2,
+                    render: function (data, type, full, meta) {
+                        return `
+                        <div class="d-flex justify-content-end">
+                            ${(rol == 'superadmin') ? `
+														<a href="${url}/dashboard/citas/edit_estados/${full.id_estado}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-edit ti-md"></i>
+                            </a>
+                            <button type="button" data-id="${full.id_estado}" class="btn_delete_estado btn btn-icon btn-label-danger waves-effect">
+                                <i class="tf-icons ti ti-trash ti-md"></i>
+                            </button>` : ``}
+                        </div>`	;
+                    }
+                },
+            ],
+            pagingType: "simple"
+        });
+        //ELIMINAR SEDE
+        $('.datatables-estados').on('click', '.btn_delete_estado', function () {
+            let id = $(this).data('id');
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: '¡No podrás revertir esto!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '¡Sí, bórralo!',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-outline-danger ml-1'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url + '/dashboard/citas/delete_estados',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (data) {
+                            if (data.validate) {
+                                table_estados.ajax.reload();
+                            } else {
+                                alertNotify('¡Error!', data.text, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    }
+    //TABLAS DE CITAS
+    if ($('.datatables-citas').length) {
+        tipoCita = $('#tipo_cita').val();
+        let table = $('.datatables-citas').DataTable({
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            searching: false,
+            info: true,
+            pageLength: 50, // Cambiar la paginación a 50 entradas
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
+                info: "Mostrando _START_ a _END_ de _MAX_ registros",
+                infoEmpty: "No hay datos disponibles",
+                infoFiltered: "(filtrados de un total de _MAX_ registros)"
+            },
+            dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+            ajax: {
+                url: url + '/dashboard/citas/get_citas',
+                type: "POST",
+                data: function (d) {
+                    d.filtro_dia = filtroDia;
+                    d.filtro_dia_end = filtroDiaEnd;
+                    d.filtro_sede = filtroSede;
+                    d.filtro_estado = filtroEstado;
+                    d.filtro_estado_verificado = filtroEstadoVerificado;
+                    d.filtro_responsable = filtroResponsable;
+                    d.filtro_origen = filtroOrigen;
+                    d.filtro_search = filtroSearch;
+                    d.tipo_cita = tipoCita;
+                    // Parámetros necesarios para ordenamiento
+                    d.order = d.order;
+                    d.columns = d.columns;
+                    d.search = d.search;
+                },
+            },
+            columns: [
+                { data: 'nombre_cliente' },                 // Columna 0
+                { data: 'nombre_sede' },                    // Columna 1
+                { data: 'reserva_cita' },                   // Columna 2
+                { data: 'fecha_create' },                   // Columna 3
+                { data: 'estado_actual_nombre' },           // Columna 4
+                { data: 'estado_verificado_nombre' },       // Columna 5
+                { data: 'nombre_servicio_liquidador' },     // Columna 6
+                { data: 'responsable_origen' },             // Columna 7
+                { data: 'origen' },                         // Columna 8
+                { data: null }                              // Columna 9 (botones)
+            ],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        if (full.id_vehiculo) {
+                            texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small><br><span class="badge bg-label-dark">' + full.placa_vehiculo + '</span><small class="text-muted ml-2">' + full.tipo_vehiculo + ' - ' + full.modelo_vehiculo + '</small>';
+
+                            // texto = '<h6 class="m-0">' + full.nombre_cliente + $full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + ' - Tipo: ' + full.tipo_vehiculo + ' - Modelo: ' + full.modelo_vehiculo + '</small>';
+                        } else {
+                            texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small>';
+                        }
+                        return texto;
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return `<span class="badge bg-label-dark">${full.nombre_sede}</span>`;
+                    }
+                },
+                {
+                    targets: 2,
+                    render: function (data, type, full, meta) {
+                        let fecha = full.reserva_cita.split(" ")[0];
+                        return `<h6 class="m-0">${fecha} ${full.rango_horario}</h6>`;
+                    }
+                },
+                {
+                    targets: 3,
+                    render: function (data, type, full, meta) {
+                        return `<h6 class="m-0">${full.fecha_create}</h6>`;
+                    }
+                },
+                {
+                    targets: 4,
+                    render: function (data, type, full, meta) {
+                        const bgColor = full.estado_actual_color; // Color de fondo del estado
+                        const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                        return `
+                        <div class="btn-group">
+                            <button type="button" data-nombre_estado="${full.estado_actual_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</button>
+                            <ul class="dropdown-menu" style="">` +
+                            estados.map(estado => {
+                                return `<li><a class="dropdown-item waves-effect change_estado_cita" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
+                            }).join('')
+                            + `
+                            </ul>
+                        </div>`;
+                    }
+                },
+                {
+                    targets: 5,
+                    render: function (data, type, full, meta) {
+                        const bgColor = full.estado_verificado_color; // Color de fondo del estado
+                        const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                        return `
+                        <div class="btn-group">
+                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter') ? `
+                            <button type="button" data-nombre_estado="${full.estado_verificado_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</button>
+                            <ul class="dropdown-menu" style="">` +
+                                estados.map(estado => {
+                                    return `<li><a class="dropdown-item waves-effect change_estado_cita_verificado" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
+                                }).join('')
+                                + `</ul>` : `
+                            <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</span>
+                            `}
+                        </div>`;
+                    }
+                },
+                {
+                    // Columna 6 -> Servicio liquidador
+                    targets: 6,
+                    render: function (data, type, full, meta) {
+                        var bgColor = "#e5e5e5"; // Color de fondo del servicio por defecto
+                        if (full.color_servicio_liquidador) {
+                            bgColor = full.color_servicio_liquidador; // Color de fondo del servicio
+                        }
+                        const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                        // Si no tiene servicio, mostrará “Selecciona un servicio”
+                        let currentServiceName = full.nombre_servicio_liquidador
+                            ? full.nombre_servicio_liquidador
+                            : 'Sin servicio seleccionado';
+                        return `
+                        <div class="btn-group">
+                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter') ? `
+                            <button type="button" data-nombre_estado="${currentServiceName}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</button>
+                            <ul class="dropdown-menu">` +
+                                servicios_liquidador.map(serv => {
+                                    return `<li><a class="dropdown-item waves-effect change_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_servicio_liquidador="${serv.id_servicio_liquidador}">${serv.nombre_servicio_liquidador}</a></li>`;
+                                }).join('')
+                                + `</ul>` : `
+                            <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</span>
+                            `}
+                        </div>
+                      `;
+                    }
+                },
+                {
+                    targets: 7,
+                    render: function (data, type, full, meta) {
+                        if (full.responsable_origen == 'Desconocido') {
+                            return `<span class="badge bg-label-dark">${full.responsable_origen}</span>`;
+                        } else if (full.responsable_origen == 'Sede') {
+                            return `<span class="badge bg-label-info">${full.responsable_origen}</span>`;
+                        } else {
+                            return `<span class="badge bg-label-primary">${full.responsable_origen}</span>`;
+                        }
+                    }
+                },
+                {
+                    targets: 8,
+                    render: function (data, type, full, meta) {
+                        if (full.origen == null || full.origen == 'null' || full.origen == 'Desconocido') {
+                            return `<span class="badge bg-label-secondary">${full.origen}</span> <br>
+                            <small class="text-muted">${full.creado_por}</small>`;
+                        } else if (full.origen == 'QR' || full.origen == 'qr' || full.origen == 'Qr' || full.origen == 'QRCode' || full.origen == 'qrcode') {
+                            return `<span class="badge bg-label-info">${full.origen}</span> <br>
+                            <small class="text-muted">${full.creado_por}</small>`;
+                        } else if (full.origen == 'Club del conductor') {
+                            return `<span class="badge bg-label-primary">${full.origen}</span> <br>
+                            <small class="text-muted">${full.creado_por}</small>`;
+                        } else {
+                            return `<span class="badge bg-label-success">${full.origen}</span> <br>
+                            <small class="text-muted">${full.creado_por}</small>`;
+                        }
+                    }
+                },
+                {
+                    orderable: false,
+                    targets: 9,
+                    render: function (data, type, full, meta) {
+                        return `
+                        <div class="d-flex justify-content-end">
+                            ${(rol == 'superadmin') ? `
+                            <a href="${url}/dashboard/citas/edit/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-edit ti-md"></i>
+                            </a>
+                            <button type="button" data-id="${full.id_cita}" class="btn_delete_cita btn btn-icon btn-label-danger waves-effect">
+                                <i class="tf-icons ti ti-trash ti-md"></i>
+                            </button>` : ``}
+                            ${(rol == 'callcenter') ? `
+                            <a href="${url}/dashboard/citas/edit/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-edit ti-md"></i>
+                            </a>` : ``}
+                            ${(rol == 'gestorsede') ? `
+                            <a href="${url}/dashboard/citas/view/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-search ti-md"></i>
+                            </a>` : ``}
+                        </div>`	;
+                    }
+                }
+            ],
+            pagingType: "simple"
+        });
+        // Eventos para los filtros
+        $('#filtro-ayer').on('click', function () {
+            const ayer = new Date();
+            ayer.setDate(ayer.getDate() - 1);
+            filtroDia = formatDate(ayer);
+            table.ajax.reload();
+        });
+        $('#filtro-hoy').on('click', function () {
+            const hoy = new Date();
+            filtroDia = formatDate(hoy);
+            table.ajax.reload();
+        });
+        $('#filtro-manana').on('click', function () {
+            const manana = new Date();
+            manana.setDate(manana.getDate() + 1);
+            filtroDia = formatDate(manana);
+            table.ajax.reload();
+        });
+        $('#filtro-fecha').on('change', function () {
+            filtroDia = $(this).val();
+            table.ajax.reload();
+        });
+        $('#filtro-fecha-end').on('change', function () {
+            filtroDiaEnd = $(this).val();
+            table.ajax.reload();
+        });
+        $('#filtro-sede').on('change', function () {
+            filtroSede = $(this).val();
+            table.ajax.reload();
+        });
+        $('#filtro-estado').on('change', function () {
+            filtroEstado = $(this).val();
+            table.ajax.reload();
+        });
+        $('#filtro-estado-verificado').on('change', function () {
+            filtroEstadoVerificado = $(this).val();
+            table.ajax.reload();
+        });
+        $('#filtro-responsable').on('change', function () {
+            filtroResponsable = $(this).val();
+            table.ajax.reload();
+        });
+        $('#filtro-origen').on('change', function () {
+            filtroOrigen = $(this).val();
+            table.ajax.reload();
+        });
+        $('#woow-search-citas').on('keyup', function () {
+            filtroSearch = $(this).val();
+            table.ajax.reload();
+        });
+        $('#filtro-reset').on('click', function () {
+            filtroDia = '';
+            filtroDiaEnd = '';
+            filtroSede = '';
+            filtroEstado = '';
+            filtroEstadoVerificado = '';
+            filtroResponsable = '';
+            filtroOrigen = '';
+            filtroSearch = '';
+            $('#filtro-dia').val("").trigger('input');
+            $('#filtro-dia-end').val("").trigger('input');
+            $('#filtro-sede').val("").trigger('change');
+            $('#filtro-estado').val("").trigger('change');
+            $('#filtro-responsable').val("").trigger('change');
+            $('#filtro-estado-verificado').val("").trigger('change');
+            $('#filtro-origen').val("").trigger('change');
+            $('#woow-search-citas').val("").trigger('input');
+            console.log("Filtro día: " + $('#filtro-dia').val());
+            console.log("Filtro sede: " + $('#filtro-sede').val());
+            table.ajax.reload();
+        });
+        // Función para formatear fecha en formato 'YYYY-MM-DD'
+        function formatDate(date) {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1);
+            let day = '' + d.getDate();
+            const year = d.getFullYear();
+
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+
+            return [year, month, day].join('-');
+        }
+        //ELIMINAR SEDE
+        $('.datatables-citas').on('click', '.btn_delete_cita', function () {
+            let id = $(this).data('id');
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: '¡No podrás revertir esto!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '¡Sí, bórralo!',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-outline-danger ml-1'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url + '/dashboard/citas/delete',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (data) {
+                            if (data.validate) {
+                                table.ajax.reload();
+                            } else {
+                                alertNotify('¡Error!', data.text, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        //Cambiamos el estado
+        $('.datatables-citas').on('click', '.change_estado_cita', function () {
+            let id_estado = $(this).data('id_estado');
+            let id_cita = $(this).data('id_cita');
+            $.ajax({
+                url: url + '/dashboard/citas/change_estado',
+                type: 'POST',
+                data: {
+                    id_estado: id_estado,
+                    id_cita: id_cita
+                },
+                success: function (data) {
+                    table.ajax.reload();
+                }
+            });
+        });
+        //Cambiamos el estado verificado
+        $('.datatables-citas').on('click', '.change_estado_cita_verificado', function () {
+            let id_estado = $(this).data('id_estado');
+            let id_cita = $(this).data('id_cita');
+            $.ajax({
+                url: url + '/dashboard/citas/change_estado_verificado',
+                type: 'POST',
+                data: {
+                    id_estado: id_estado,
+                    id_cita: id_cita
+                },
+                success: function (data) {
+                    table.ajax.reload();
+                }
+            });
+        });
+        //Cambiamos el servicio
+        $('.datatables-citas').on('click', '.change_servicio_liquidador', function () {
+            let id_servicio_liquidador = $(this).data('id_servicio_liquidador');
+            let id_cita = $(this).data('id_cita');
+            $.ajax({
+                url: url + '/dashboard/liquidador/change_servicio_liquidador',
+                type: 'POST',
+                data: {
+                    id_servicio_liquidador: id_servicio_liquidador,
+                    id_cita: id_cita
+                },
+                success: function (data) {
+                    table.ajax.reload();
+                }
+            });
+        });
+    }
+    //USUARIOS
+    if ($('.datatables-usuarios').length) {
+        table_usuarios = $('.datatables-usuarios').DataTable({
+            lengthChange: false,
+            searching: false,
+            ordering: false,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: url + '/dashboard/usuarios/get',
+                type: "POST"
+            },
+            column: [{ data: '' }],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        return '<h6 class="m-0">' + full.name + '</h6>';
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return '<span class="badge bg-label-dark">' + full.email + '</span>';
+                    }
+                },
+                {
+                    targets: 2,
+                    render: function (data, type, full, meta) {
+                        let sede = (full.nombre_sede != undefined) ? full.nombre_sede : 'Sin asignar';
+                        return '<h6 class="m-0">' + sede + '</h6>';
+                    }
+                },
+                {
+                    targets: 3,
+                    render: function (data, type, full, meta) {
+                        return '<span class="badge bg-label-dark">' + full.role + '</span>';
+                    }
+                },
+                {
+                    targets: 4,
+                    render: function (data, type, full, meta) {
+                        return `
+                        <div class="d-flex justify-content-end">
+                            ${(rol == 'superadmin') ? `
+                            <a href="#" data-id="${full.id}" class="btn_edit_usuario btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-edit ti-md"></i>
+                            </a>
+                            <button type="button" data-id="${full.id}" class="btn_delete_usuario btn btn-icon btn-label-danger waves-effect">
+                                <i class="tf-icons ti ti-trash ti-md"></i>
+                            </button>` : ``}
+                        </div>`	;
+                    }
+                },
+            ],
+            pagingType: "simple"
+        });
+        //ELIMINAR SEDE
+        $('.datatables-usuarios').on('click', '.btn_delete_usuario', function () {
+            let id = $(this).data('id');
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: '¡No podrás revertir esto!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '¡Sí, bórralo!',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-outline-danger ml-1'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url + '/dashboard/usuarios/delete',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (data) {
+                            if (data.validate) {
+                                table_estados.ajax.reload();
+                            } else {
+                                alertNotify('¡Error!', data.text, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        //Editar usuario
+        $('.datatables-usuarios').on('click', '.btn_edit_usuario', function () {
+            let id = $(this).data('id');
+            $.ajax({
+                url: url + '/dashboard/usuarios/get_user',
+                type: 'POST',
+                data: { id: id },
+                success: function (response) {
+                    $('.content_users_edit input[name="id_user"]').val(id);
+                    $('.content_users_edit select[name="id_sede"]').val(response.usuario.id_sede).trigger('change');
+                    $('.content_users_edit input[name="name"]').val(response.usuario.name);
+                    $('.content_users_edit input[name="email"]').val(response.usuario.email);
+                    $('.content_users_edit input[name="password"]').val('');
+                    $('.content_users_edit select[name="role"]').val(response.usuario.role);
+                    if (response.usuario.role == 'callcenter') {
+                        $('#contenedor-rol-user-edit').addClass('col-3');
+                        $('#contenedor-rol-user-edit').removeClass('col-6');
+                        $('#contenedor-habilitar-call-edit').show();
+                    } else {
+                        $('#contenedor-rol-user-edit').addClass('col-6');
+                        $('#contenedor-rol-user-edit').removeClass('col-3');
+                        $('#contenedor-habilitar-call-edit').hide();
+                    }
+                    console.log(response.usuario.callcenter_habilitado);
+                    if (response.usuario.callcenter_habilitado == 1) {
+                        console.log('deberia habilitar');
+                        $('.content_users_edit input[name="callcenter_habilitado"]').prop('checked', true);
+                    } else {
+                        console.log('deberia deshabilitar');
+                        $('.content_users_edit input[name="callcenter_habilitado"]').prop('checked', false);
+                    }
+                    $('.content_users_add').hide();
+                    $('.content_users_edit').fadeIn(200);
+
+                }
+            });
+        });
+        $('.add_user').click(function () {
+            $('.content_users_edit').hide();
+            $('.content_users_add').fadeIn(200);
+        });
+        $('#rol-user').change(function () {
+            if ($(this).val() == 'callcenter') {
+                $('#contenedor-rol-user').addClass('col-3');
+                $('#contenedor-rol-user').removeClass('col-6');
+                $('#contenedor-habilitar-call').show();
+            } else {
+                $('#contenedor-rol-user').addClass('col-6');
+                $('#contenedor-rol-user').removeClass('col-3');
+                $('#contenedor-habilitar-call').hide();
+            }
+        }); $('#rol-user-edit').change(function () {
+            if ($(this).val() == 'callcenter') {
+                $('#contenedor-rol-user-edit').addClass('col-3');
+                $('#contenedor-rol-user-edit').removeClass('col-6');
+                $('#contenedor-habilitar-call-edit').show();
+            } else {
+                $('#contenedor-rol-user-edit').addClass('col-6');
+                $('#contenedor-rol-user-edit').removeClass('col-3');
+                $('#contenedor-habilitar-call-edit').hide();
+            }
+        });
+    }
+    //Descargar boton
+    //Cambiamo el estado
+    function dowloadFileCita(action, start, filter) {
+        $.ajax({
+            url: action,
+            type: 'POST',
+            data: {
+                start: start,
+                filtro_dia: filter.filtro_dia,
+                filtro_dia_end: filter.filtro_dia_end,
+                filtro_estado_pago_liquidador: filter.filtro_estado_pago_liquidador,
+                filtro_estado_validacion_liquidador: filter.filtro_estado_validacion_liquidador,
+                filtro_estado: filter.filtro_estado,
+                filtro_sede: filter.filtro_sede,
+                tipo_cita: filter.tipo_cita,
+                filtro_servicios_liquidador: filter.filtro_servicios_liquidador,
+            },
+            success: function (data) {
+                console.log("Data: " + data);
+                if (data.status === 'in_progress') {
+                    // Si aún hay más datos por procesar, llama a la función con el siguiente bloque
+                    dowloadFileCita(action, data.nextStart, filter);
+                } else if (data.status === 'completed') {
+                    let url_file = data.url;
+                    let a = document.createElement('a');
+                    a.href = url_file;
+                    a.download = url_file.split('/').pop();
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
+            },
+            error: function (error) {
+                console.error("Error en la exportación:", error);
+            }
+        });
+    }
+    $('.btn_descagar_cita').click(function () {
+        let action = $(this).data('action');
+        let filter = {
+            'filtro_dia': filtroDia,
+            'filtro_dia_end': filtroDiaEnd,
+            'filtro_sede': filtroSede,
+            'filtro_estado': filtroEstado,
+            'tipo_cita': $('#tipo_cita').val(),
+            'filtro_servicios_liquidador': filtroServicioLiquidador,
+            'filtro_estado_validacion_liquidador': filtroEstadoValidacionLiquidador,
+            'filtro_estado_pago_liquidador': filtroEstadoPagoLiquidador,
+        };
+        dowloadFileCita(action, 0, filter); // Inicia con el primer bloque de datos
+        console.log(filter);
+    });
+    //Descargar boton
+    function dowloadFile(action, start, type) {
+        $.ajax({
+            url: action,
+            type: 'POST',
+            data: {
+                start: start,
+                type: type
+            },
+            success: function (data) {
+                if (data.status === 'in_progress') {
+                    dowloadFile(action, data.nextStart, type);
+                } else if (data.status === 'completed') {
+                    let url_file = data.url;
+                    let a = document.createElement('a');
+                    a.href = url_file;
+                    a.download = url_file.split('/').pop();
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
+            },
+            error: function (error) {
+                console.error("Error en la exportación:", error);
+            }
+        });
+    }
+    $('.btn_descagar').click(function () {
+        let action = $(this).data('action');
+        let type = $(this).data('type');
+        dowloadFile(action, 0, type);
+    });
+
+
+    let timerId;
+
+    function checkNewRecords() {
+        fetch('citas/get_new_records', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.validate) {
+                    // Mostrar notificación si hay nuevos registros
+                    if (data.nuevos_registros > 0) {
+                        const notification = new Notification(`¡Nueva Registros!`, {
+                            body: `${data.nuevos_registros} registros nuevos en los últimos 5 minutos en ${data.sede}.`,
+                            icon: '../assets/img/favicon/favicon.ico',
+                        });
+
+                        notification.addEventListener('click', () => {
+                            window.open('citas', '_blank');
+                        });
+                    } else {
+                        console.log('No hay nuevos registros');
+                    }
+
+                    console.log(`Próxima consulta en ${data.time_remaining} segundos.`);
+                    // Sincronizar temporizador con el servidor
+                    clearTimeout(timerId);
+                    timerId = setTimeout(checkNewRecords, data.time_remaining * 1000);
+                    console.log(timerId)
+                }
+            })
+            .catch(error => console.error('Error al obtener registros nuevos:', error));
+    }
+
+    if (Notification.permission !== "granted") {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                console.log("Permiso de notificaciones concedido.");
+                checkNewRecords();
+            } else {
+                console.error("Permiso de notificaciones denegado.");
+            }
+        });
+    } else {
+        checkNewRecords();
+    }
+
+    //----------  Dashboard Estadisticas --------------------
+
+    if ($('#estadisticas-fechas-citas').length) {
+        // Inicializar el gráfico
+        var chart = new ApexCharts(document.querySelector("#ChartComparacionDateCreatedLinear"), {
+            chart: {
+                type: "line",
+                height: 400,
+                stacked: false,
+            },
+            series: [
+                {
+                    name: "Semana Actual",
+                    type: "column",
+                    data: [],
+                },
+                {
+                    name: "Semana Anterior",
+                    type: "line",
+                    data: [],
+                }
+            ], // Los datos se cargarán dinámicamente
+            xaxis: {
+                categories: [], // Las categorías se cargarán dinámicamente
+            },
+            stroke: {
+                width: [0, 2]
+            },
+            yaxis: [
+                {
+                    axisTicks: {
+                        show: false
+                    },
+                    axisBorder: {
+                        show: false,
+                    },
+                },
+            ],
+            tooltip: {
+                shared: true,
+                intersect: false,
+                custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+                    // Array de los días de la semana
+                    const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+
+                    // Obtener las fechas asociadas al rango actual e histórico
+                    const currentDates = w.config.series[0].data;
+                    const historicalDates = w.config.series[1].data;
+
+                    // Identificar el tipo de comparación según las fechas
+                    const currentDate = currentDates[dataPointIndex]?.x || 'N/A';
+                    const historicalDate = historicalDates[dataPointIndex]?.x || 'N/A';
+
+                    // Obtener las fechas iniciales y finales del rango actual
+                    const startDate = new Date(currentDates[0]?.x);
+                    const endDate = new Date(currentDates[currentDates.length - 1]?.x);
+
+                    // Calcular la diferencia en días entre las fechas
+                    const timeDiff = Math.abs(endDate - startDate);
+                    const dayDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+                    // Identificar el tipo de comparación según la duración
+                    const isWeeklyComparison = dayDiff <= 7; // Si el rango abarca 7 días o menos, es semanal
+                    const isTowWeeklyComparison = dayDiff > 7 && dayDiff <= 15; // Entre 8 y 15 días, es bisemanal
+                    const isMonthlyComparison = dayDiff > 15 && dayDiff <= 31; // Entre 16 y 31 días, es mensual
+                    const isTreeMonthlyComparison = dayDiff > 31; // desde 32 días, es trimestral
+
+                    // Formato del día según el tipo de comparación
+                    let dayLabel;
+                    let tipoComparison;
+                    if (isWeeklyComparison) {
+                        dayLabel = daysOfWeek[dataPointIndex % daysOfWeek.length]; // Día de la semana
+                        tipoComparison = 'Semana';
+                    } else if (isTowWeeklyComparison) {
+                        dayLabel = daysOfWeek[dataPointIndex % daysOfWeek.length];
+                        tipoComparison = 'Quincena';
+                    } else if (isMonthlyComparison) {
+                        dayLabel = `Día ${dataPointIndex + 1}`; // Día numérico
+                        tipoComparison = 'Mes';
+                    } else if (isTreeMonthlyComparison) {
+                        dayLabel = `Día ${dataPointIndex + 1}`; // Día numérico
+                        tipoComparison = 'Trimestre';
+                    }
+                    // Obtener los datos de la serie actual e histórica
+                    const currentValue = series[0][dataPointIndex] ?? 0; // Semana/Mes actual
+                    const historicalValue = series[1][dataPointIndex] ?? 0; // Semana/Mes histórica
+
+
+                    // Construir el HTML del tooltip
+                    return `
+                        <div class="apexcharts-tooltip-custom" >
+                            <div class="tooltip-header" style="padding: 10px; font-weight: bold; margin-bottom: 8px; background-color: var(--color-gris); color: var(--color-morado);">
+                                ${dayLabel}
+                            </div>
+                             <div class="tooltip-body" style="padding: 12px;">
+                                <div style="margin-bottom: 8px;">
+                                    <span style="display: inline-block; width: 10px; height: 10px; background-color: ${w.config.colors[0]}; border-radius: 50%; margin-right: 5px;"></span>
+                                    <strong> ${tipoComparison} Actual</strong><br>
+                                    Fecha: ${currentDate}<br>
+                                    Registros: ${currentValue}
+                                </div>
+                                <div>
+                                    <span style="display: inline-block; width: 10px; height: 10px; background-color: ${w.config.colors[1]}; border-radius: 50%; margin-right: 5px;"></span>
+                                    <strong>${tipoComparison} anterior</strong><br>
+                                    Fecha: ${historicalDate}<br>
+                                    Registros: ${historicalValue}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+            markers: {
+                strokeWidth: 1,
+                strokeOpacity: 1,
+                style: 'hollow',
+                strokeColors: [config.colors.info],
+                colors: [config.colors.primary],
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '30%',
+                    borderRadius: 40,
+                    borderRadiusApplication: 'around',
+                    borderRadiusWhenStacked: 'all',
+
+                },
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shade: 'light',
+                    type: 'vertical', // Horizontal o vertical
+                    gradientToColors: [config.colors.primary], // Segundo color del gradiente
+                    stops: [0, 100], // Inicia y termina en 0% y 100%
+                }
+            },
+            colors: ['#7367f0', '#00e396'],
+
+        });
+
+
+        // Renderizar el gráfico vacío inicialmente
+        chart.render();
+
+        // Función para cargar datos desde el backend
+        function fetchData(endpoint, chart, dateSelected, selectedRange) {
+            $.ajax({
+                url: endpoint,
+                method: "GET",
+                data: {
+                    start_date: dateSelected,
+                    range: selectedRange
+                },
+                success: function (response) {
+                    // Procesar la respuesta del backend
+                    const TotalDatesActual = response.TotalDatesActual;
+                    const TotalDatesHistorico = response.TotalDatesHistorico;
+                    const currrentDateStart = response.currrentDateStart;
+                    const currrentDateEnd = response.currrentDateEnd;
+                    const TotalDatesHistoricoStart = response.TotalDatesHistoricoStart;
+                    const TotalDatesHistoricoEnd = response.TotalDatesHistoricoEnd;
+                    const peiodoSelecionado = response.peiodoSelecionado;
+
+                    $("#ConTextRangoFechas").html(currrentDateStart + ' - ' + currrentDateEnd);
+                    $("#ConTextRangoFechasHistorico").html(TotalDatesHistoricoStart + ' - ' + TotalDatesHistoricoEnd);
+                    if (peiodoSelecionado == "Semana") {
+                        $("#comp-fecha-creacion-titulo").html("Comparativa Semanal: Fechas de Creación");
+                        $("#comp-fecha-reserva-titulo").html("Comparativa Semanal: Fechas de Reserva");
+                    } else if (peiodoSelecionado == "Quincena") {
+                        $("#comp-fecha-creacion-titulo").html("Comparativa Quincenal: Fechas de Creación");
+                        $("#comp-fecha-reserva-titulo").html("Comparativa Quincenal: Fechas de Reserva");
+                    } else if (peiodoSelecionado == "Mes") {
+                        $("#comp-fecha-creacion-titulo").html("Comparativa Mensual: Fechas de Creación");
+                        $("#comp-fecha-reserva-titulo").html("Comparativa Mensual: Fechas de Reserva");
+                    } else if (peiodoSelecionado == "Trimestre") {
+                        $("#comp-fecha-creacion-titulo").html("Comparativa Trimestral: Fechas de Creación");
+                        $("#comp-fecha-reserva-titulo").html("Comparativa Trimestral: Fechas de Reserva");
+                    } else {
+                        $("#comp-fecha-creacion-titulo").html("Comparativa Semanal: Fechas de Creación");
+                        $("#comp-fecha-reserva-titulo").html("Comparativa Semanal: Fechas de Reserva");
+                    }
+
+                    // Calcular totales
+                    const totalActual = TotalDatesActual.reduce((sum, item) => sum + item.count, 0);
+                    const totalHistorico = TotalDatesHistorico.reduce((sum, item) => sum + item.count, 0);
+
+
+                    // Actualizar las series con fechas y valores
+                    const currentData = TotalDatesActual.map(item => ({ x: item.date, y: item.count }));
+                    const previousData = TotalDatesHistorico.map(item => ({ x: item.date, y: item.count }));
+                    const $etxtTotalActual = peiodoSelecionado + " Actual: " + totalActual.toLocaleString('es-ES') + " Citas creadas";
+                    const $etxtTotalHistorico = peiodoSelecionado + " Anterior: " + totalHistorico.toLocaleString('es-ES') + " Citas creadas";
+
+                    chart.updateSeries([
+                        {
+                            name: $etxtTotalActual,
+                            type: "column",
+                            data: currentData,
+                        },
+                        {
+                            name: $etxtTotalHistorico,
+                            type: "line",
+                            data: previousData,
+                        },
+                    ]);
+
+                    // Extraer las categorías (días de la semana) y los datos
+                    const categories = TotalDatesActual.map((item) => {
+                        const day = moment(item.date).locale("es").format("dddd");
+                        return day.charAt(0).toUpperCase() + day.slice(1);
+                    });
+
+                    // Actualizar las categorías y las series del gráfico
+                    chart.updateOptions({
+                        xaxis: {
+                            categories: categories,
+                        },
+                    });
+
+                },
+                error: function (error) {
+                    console.error("Error al cargar los datos:", error);
+                },
+            });
+        }
+
+        // Llamar a la función para cargar los datos
+        fetchData("estadisticas/creaciones", chart);
+
+        // Inicializar el gráfico
+        var chart2 = new ApexCharts(document.querySelector("#ChartComparacionDateReservaLinear"), {
+            chart: {
+                type: "line",
+                height: 400,
+            },
+            series: [
+                {
+                    name: "Semana Actual",
+                    type: "column",
+                    data: [],
+                },
+                {
+                    name: "Semana Anterior",
+                    type: "line",
+                    data: [],
+                }
+            ], // Los datos se cargarán dinámicamente
+            xaxis: {
+                categories: [], // Las categorías se cargarán dinámicamente
+            },
+            stroke: {
+                width: [0, 2]
+            },
+            yaxis: [
+                {
+                    axisTicks: {
+                        show: false
+                    },
+                    axisBorder: {
+                        show: false,
+                    },
+                },
+            ],
+            tooltip: {
+                shared: true,
+                intersect: false,
+                custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+                    // Array de los días de la semana
+                    const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+                    // Obtener las fechas asociadas al rango actual e histórico
+                    const currentDates = w.config.series[0].data;
+                    const historicalDates = w.config.series[1].data;
+
+                    // Identificar el tipo de comparación según las fechas
+                    const currentDate = currentDates[dataPointIndex]?.x || 'N/A';
+                    const historicalDate = historicalDates[dataPointIndex]?.x || 'N/A';
+
+                    // Obtener las fechas iniciales y finales del rango actual
+                    const startDate = new Date(currentDates[0]?.x);
+                    const endDate = new Date(currentDates[currentDates.length - 1]?.x);
+
+                    // Calcular la diferencia en días entre las fechas
+                    const timeDiff = Math.abs(endDate - startDate);
+                    const dayDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+                    // Identificar el tipo de comparación según la duración
+                    const isWeeklyComparison = dayDiff <= 7; // Si el rango abarca 7 días o menos, es semanal
+                    const isTowWeeklyComparison = dayDiff > 7 && dayDiff <= 15; // Entre 8 y 15 días, es bisemanal
+                    const isMonthlyComparison = dayDiff > 15 && dayDiff <= 31; // Entre 16 y 31 días, es mensual
+                    const isTreeMonthlyComparison = dayDiff > 31; // desde 32 días, es trimestral
+
+                    // Formato del día según el tipo de comparación
+                    let dayLabel;
+                    let tipoComparison;
+                    if (isWeeklyComparison) {
+                        dayLabel = daysOfWeek[dataPointIndex % daysOfWeek.length]; // Día de la semana
+                        tipoComparison = 'Semana';
+                    } else if (isTowWeeklyComparison) {
+                        dayLabel = daysOfWeek[dataPointIndex % daysOfWeek.length];
+                        tipoComparison = 'Quincena';
+                    } else if (isMonthlyComparison) {
+                        dayLabel = `Día ${dataPointIndex + 1}`; // Día numérico
+                        tipoComparison = 'Mes';
+                    } else if (isTreeMonthlyComparison) {
+                        dayLabel = `Día ${dataPointIndex + 1}`; // Día numérico
+                        tipoComparison = 'Trimestre';
+                    }
+                    // Obtener los datos de la serie actual e histórica
+                    const currentValue = series[0][dataPointIndex] ?? 0; // Semana/Mes actual
+                    const historicalValue = series[1][dataPointIndex] ?? 0; // Semana/Mes histórica
+
+                    // Construir el HTML del tooltip
+                    return `
+                        <div class="apexcharts-tooltip-custom" >
+                            <div class="tooltip-header" style="padding: 10px; font-weight: bold; margin-bottom: 8px; background-color: var(--color-gris); color: var(--color-morado);">
+                                ${dayLabel}
+                            </div>
+                            <div class="tooltip-body" style="padding: 12px;">
+                                <div style="margin-bottom: 8px;">
+                                    <span style="display: inline-block; width: 10px; height: 10px; background-color: ${w.config.colors[0]}; border-radius: 50%; margin-right: 5px;"></span>
+                                    <strong> ${tipoComparison} Actual</strong><br>
+                                    Fecha: ${currentDate}<br>
+                                    Registros: ${currentValue}
+                                </div>
+                                <div>
+                                    <span style="display: inline-block; width: 10px; height: 10px; background-color: ${w.config.colors[1]}; border-radius: 50%; margin-right: 5px;"></span>
+                                    <strong>${tipoComparison} anterior</strong><br>
+                                    Fecha: ${historicalDate}<br>
+                                    Registros: ${historicalValue}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+            markers: {
+                strokeWidth: 1,
+                strokeOpacity: 1,
+                strokeColors: [config.colors.info],
+                colors: [config.colors.primary],
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '30%',
+                    borderRadius: 40,
+                    borderRadiusApplication: 'around',
+                    borderRadiusWhenStacked: 'all',
+
+                },
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shade: 'light',
+                    type: 'vertical', // Horizontal o vertical
+                    gradientToColors: [config.colors.primary], // Segundo color del gradiente
+                    stops: [0, 100], // Inicia y termina en 0% y 100%
+                }
+            },
+            colors: ['#7367f0', '#00e396'],
+
+        });
+
+
+        // Renderizar el gráfico vacío inicialmente
+        chart2.render();
+
+        // Función para cargar datos desde el backend
+        function fetchData2(endpoint, chart2, dateSelected, selectedRange) {
+            $.ajax({
+                url: endpoint,
+                method: "GET",
+                data: {
+                    start_date: dateSelected,
+                    range: selectedRange
+
+                },
+                success: function (response) {
+                    // Procesar la respuesta del backend
+                    const TotalDatesActual = response.TotalDatesActual;
+                    const TotalDatesHistorico = response.TotalDatesHistorico;
+                    const peiodoSelecionado = response.peiodoSelecionado;
+
+
+                    // Actualizar las series con fechas y valores
+                    const currentData = TotalDatesActual.map(item => ({ x: item.date, y: item.count }));
+                    const previousData = TotalDatesHistorico.map(item => ({ x: item.date, y: item.count }));
+
+                    // Calcular totales
+                    const totalActual = TotalDatesActual.reduce((sum, item) => sum + item.count, 0);
+                    const totalHistorico = TotalDatesHistorico.reduce((sum, item) => sum + item.count, 0);
+                    const $etxtTotalActual = peiodoSelecionado + " Actual: " + totalActual.toLocaleString('es-ES') + " Citas reservada";
+                    const $etxtTotalHistorico = peiodoSelecionado + " Anterior: " + totalHistorico.toLocaleString('es-ES') + " Citas reservada";
+
+
+                    chart2.updateSeries([
+                        {
+                            name: $etxtTotalActual,
+                            type: "column",
+                            data: currentData,
+                        },
+                        {
+                            name: $etxtTotalHistorico,
+                            type: "line",
+                            data: previousData,
+                        },
+                    ]);
+
+                    // Extraer las categorías (días de la semana) y los datos
+                    const categories = TotalDatesActual.map((item) => {
+                        const day = moment(item.date).locale("es").format("dddd");
+                        return day.charAt(0).toUpperCase() + day.slice(1);
+                    });
+
+                    // Actualizar las categorías y las series del gráfico
+                    chart2.updateOptions({
+                        xaxis: {
+                            categories: categories,
+                        },
+                    });
+
+                },
+                error: function (error) {
+                    console.error("Error al cargar los datos:", error);
+                },
+            });
+        }
+
+        // Llamar a la función para cargar los datos
+        fetchData2("estadisticas/citas", chart2);
+
+        // Inicializar Flatpickr
+        const today = new Date();
+
+        // Función para obtener el primer día de la semana
+        function getFirstDayOfWeek(date) {
+            const day = date.getDay(); // Día de la semana (0 = domingo, 1 = lunes, ...)
+            const diff = (day === 0 ? -6 : 1) - day; // Ajuste para que el lunes sea el primer día
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate() + diff);
+        }
+
+        const firstDayOfWeek = getFirstDayOfWeek(today);
+
+        flatpickr("#datePicker", {
+            dateFormat: "Y-m-d", // Formato de fecha (Año-Mes-Día)
+            defaultDate: firstDayOfWeek, // Fecha por defecto
+            maxDate: new Date().fp_incr(1), // Fecha máxima (1 día después de hoy)
+            enable: [
+                function (date) {
+                    // Permitir solo los primeros días de la semana (lunes)
+                    return date.getDay() === 1; // 1 = Lunes
+                }
+            ],
+            onChange: function (selectedDates, dateStr, instance) {
+                // Aquí puedes filtrar los datos de tu gráfico según las fechas seleccionadas
+                updateCharts(dateStr, null);
+            }
+        });
+        // Función para actualizar los gráficos
+        function updateCharts(selectedDate, selectedRange) {
+
+
+            if (selectedDate) {
+                var RangoFechas = $("#select-rango-fechas-estadisticas").val();
+                // Actualizar el gráfico de creaciones
+                fetchData(`estadisticas/creaciones`, chart, selectedDate, RangoFechas);
+                // Actualizar el gráfico de reservas
+                fetchData2(`estadisticas/citas`, chart2, selectedDate, RangoFechas);
+            } else if (selectedRange) {
+                var fechaPick = $("#datePicker").val();
+                // Actualizar el gráfico de creaciones
+                fetchData(`estadisticas/creaciones`, chart, fechaPick, selectedRange);
+                // Actualizar el gráfico de reservas
+                fetchData2(`estadisticas/citas`, chart2, fechaPick, selectedRange);
+
+            }
+        }
+        $("#select-rango-fechas-estadisticas").change(function () {
+            updateCharts(null, $(this).val());
+        });
+
+
+    };
+
+    //----------------------------------------------------------------------------
+    //----------------------  Dashboard Liquidador -------------------------------
+    //----------------------------------------------------------------------------
+
+    //TABLAS DE CITAS
+    if ($('.datatables-citas-liquidador').length) {
+        tipoCita = $('#tipo_cita').val();
+        let table = $('.datatables-citas-liquidador').DataTable({
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            searching: false,
+            info: true,
+            pageLength: 50, // Cambiar la paginación a 50 entradas
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
+                info: "Mostrando _START_ a _END_ de _MAX_ registros",
+                infoEmpty: "No hay datos disponibles",
+                infoFiltered: "(filtrados de un total de _MAX_ registros)"
+            },
+            dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+            ajax: {
+                url: url + '/dashboard/liquidador/get_citas',
+                type: "POST",
+                data: function (d) {
+                    d.filtro_dia = filtroDia;
+                    d.filtro_dia_end = filtroDiaEnd;
+                    d.filtro_sede = filtroSede;
+                    d.filtro_servicio_liquidador = filtroServicioLiquidador;
+                    d.filtro_estado_validacion_liquidador = filtroEstadoValidacionLiquidador;
+                    d.filtro_estado_pago_liquidador = filtroEstadoPagoLiquidador;
+                    d.filtro_search = filtroSearch;
+                    d.tipo_cita = tipoCita;
+                    // Parámetros necesarios para ordenamiento
+                    d.order = d.order;
+                    d.columns = d.columns;
+                    d.search = d.search;
+                }
+            },
+            columns: [
+                { data: 'nombre_cliente' },                // Columna 0
+                { data: 'nombre_sede' },                   // Columna 1
+                { data: 'reserva_cita' },                  // Columna 2
+                { data: 'fecha_create' },                  // Columna 3
+                { data: 'estado_liquidador' },             // Columna 4
+                { data: 'comentario_liquidador' },         // Columna 5
+                { data: 'valor_servicio_liquidador' },     // Columna 6
+                { data: 'pago_liquidador' }                // Columna 7
+            ],
+            columnDefs: [
+                {
+                    targets: 0, // Checkbox select cita
+                    orderable: false,
+                    render: function (data, type, full, meta) {
+                        // Solo superadmin ve el checkbox
+                        if (rol == 'superadmin') {
+                            return `<input type="checkbox" class="check-cita form-check-input"
+                                        data-id-cita="${full.id_cita}"
+                                        data-id-liquidador="${full.id_liquidador}"
+                                        data-valor="${full.valor_servicio_liquidador}">`;
+                        } else {
+                            return '';
+                        }
+                    }
+                },
+                {
+                    targets: 1, // Cliente
+                    render: function (data, type, full, meta) {
+
+                        const bgColor = full.estado_verificado_color; // Color de fondo del estado
+                        const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                        if (full.id_vehiculo) {
+                            texto = `
+                            <h6 class="m-0">${full.nombre_cliente} ${full.apellido_cliente}</h6>
+                            <small>${full.tipo_doc_cliente} ${full.doc_cliente} - Telf: <a href="tel:${full.telefono_cliente}">${full.telefono_cliente}</a></small> <br>
+                            <span class="badge bg-label-dark">${full.placa_vehiculo}</span><small class="text-muted ml-2">${full.tipo_vehiculo} -  ${full.modelo_vehiculo}</small><br>
+                            <span class="badge mt-1" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</span>`;
+                        } else {
+                            texto = `
+                            <h6 class="m-0">${full.nombre_cliente} ${full.apellido_cliente}</h6>
+                            <small>${full.tipo_doc_cliente} ${full.doc_cliente} - Telf: <a href="tel:${full.telefono_cliente}">${full.telefono_cliente}</a></small> <br>
+                            <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</span>`
+                        }
+                        return texto;
+                    }
+                },
+                {
+                    targets: 2, // Sede
+                    render: function (data, type, full, meta) {
+                        return `<span class="badge bg-label-dark">${full.nombre_sede}</span>`;
+                    }
+                },
+                {
+                    targets: 3, // Fecha Cita
+                    render: function (data, type, full, meta) {
+                        let fecha = full.reserva_cita.split(" ")[0];
+                        return `<h6 class="m-0">${fecha} ${full.rango_horario}</h6>`;
+                    }
+                },
+                {
+                    targets: 4, // Fecha Creación
+                    render: function (data, type, full, meta) {
+                        return `<h6 class="m-0">${full.fecha_create}</h6>`;
+                    }
+                },
+                {
+                    targets: 5, // Servicio liquidador
+                    render: function (data, type, full, meta) {
+                        var bgColor = "#e5e5e5"; // Color de fondo del servicio por defecto
+                        if (full.color_servicio_liquidador) {
+                            bgColor = full.color_servicio_liquidador; // Color de fondo del servicio
+                        }
+                        const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                        // Si no tiene servicio, mostrará “Selecciona un servicio”
+                        let currentEstadoServiceName = full.estado_liquidador
+                            ? full.estado_liquidador
+                            : 'Sin servicio seleccionado';
+
+                        if (currentEstadoServiceName == "Confirmado") {
+                            if (rol == 'liquidador' || rol == 'superadmin') {
+                                return `
+                                <div class="btn-group">
+                                    <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-success dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
+                                    <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Confirmado">Confirmado</a></li>
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Pendiente">Pendiente</a></li>
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="En validación">En validación</a></li>
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Errado">Errado</a></li>
+                                    </ul>
+                                </div>`;
+                            }
+                            else {
+                                return `
+                                <div class="btn-group">
+                                    <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-success dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
+                                    <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Pendiente">Pendiente</a></li>
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="En validación">En validación</a></li>
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Errado">Errado</a></li>
+                                    </ul>
+                                </div>`;
+                            }
+                        } else if (currentEstadoServiceName == "Pendiente" || currentEstadoServiceName == "pendiente") {
+                            if (rol == 'liquidador' || rol == 'superadmin') {
+                                return `
+                                <div class="btn-group">
+                                    <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-warning dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
+                                    <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Confirmado">Confirmado</a></li>
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Pendiente">Pendiente</a></li>
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="En validación">En validación</a></li>
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Errado">Errado</a></li>
+                                    </ul>
+                                </div>`;
+                            } else {
+                                return `
+                                <div class="btn-group">
+                                    <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-warning dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
+                                    <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Pendiente">Pendiente</a></li>
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="En validación">En validación</a></li>
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Errado">Errado</a></li>
+                                    </ul>
+                                </div>`;
+                            }
+                        } else if (currentEstadoServiceName == "Errado") {
+                            if (rol == 'liquidador' || rol == 'superadmin') {
+                                return `
+                            <div class="btn-group">
+                                <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-danger dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
+                                <ul class="dropdown-menu">
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Confirmado">Confirmado</a></li>
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Pendiente">Pendiente</a></li>
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="En validación">En validación</a></li>
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Errado">Errado</a></li>
+                                </ul>
+                            </div>`;
+                            } else {
+                                return `
+                            <div class="btn-group">
+                                <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-danger dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
+                                <ul class="dropdown-menu">
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Pendiente">Pendiente</a></li>
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="En validación">En validación</a></li>
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Errado">Errado</a></li>
+                                </ul>
+                            </div>`;
+                            }
+                        } else if (currentEstadoServiceName == "En validación") {
+                            if (rol == 'liquidador' || rol == 'superadmin') {
+                                return `
+                            <div class="btn-group">
+                                <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-info dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
+                                <ul class="dropdown-menu">
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Confirmado">Confirmado</a></li>
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Pendiente">Pendiente</a></li>
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="En validación">En validación</a></li>
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Errado">Errado</a></li>
+                                </ul>
+                            </div>`;
+                            } else {
+                                return `
+                                <div class="btn-group">
+                                    <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-info dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
+                                    <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Pendiente">Pendiente</a></li>
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="En validación">En validación</a></li>
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Errado">Errado</a></li>
+                                    </ul>
+                                </div>`;
+                            }
+                        } else {
+                            if (rol == 'liquidador' || rol == 'superadmin') {
+                                return `
+                            <div class="btn-group">
+                                <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-secondary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
+                                <ul class="dropdown-menu">
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Confirmado">Confirmado</a></li>
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Pendiente">Pendiente</a></li>
+                                    <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="En validación">En validación</a></li>
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Errado">Errado</a></li>
+                                </ul>
+                            </div>`;
+                            } else {
+                                return `
+                            <div class="btn-group">
+                                <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-secondary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
+                                <ul class="dropdown-menu">
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Pendiente">Pendiente</a></li>
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="En validación">En validación</a></li>
+                                <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Errado">Errado</a></li>
+                                </ul>
+                            </div>`;
+                            }
+                        }
+                    }
+                },
+                {
+                    targets: 6, // Comentario Liquidador
+                    orderable: false,
+                    render: function (data, type, full, meta) {
+                        // data = full.comentario_liquidador
+                        let hasComment = (full.comentario_liquidador && full.comentario_liquidador.trim() !== '');
+                        let iconColor = hasComment ? 'text-success' : 'text-muted';
+                        let iconNotify = hasComment ? `<i class="ti ti-circle-filled text-danger" style="font-size:10px; position:absolute; right:0; top:0;"></i>` : '';
+
+                        // Si existen anotaciones, mostramos también la cantidad en un badge
+                        let badgeAnotaciones = '';
+                        iconColorAnotaciones = 'text-muted';
+                        if (full.total_anotaciones && parseInt(full.total_anotaciones) > 0) {
+                            badgeAnotaciones = `<span class="badge rounded-pill text-bg-danger badge-notifications px-1">${full.total_anotaciones}</span>`;
+                            iconColorAnotaciones = 'text-success';
+                        }
+
+                        return `
+                        <div style="position:relative; display:inline-block;">
+                            <button type="button"
+                                class="btn btn-sm btn-light btn-open-comment-modal ${iconColor}"
+                                data-id-cita="${full.id_cita}"
+                                data-id-liquidador="${full.id_liquidador}"
+                                data-comentario="${full.comentario_liquidador || ''}"
+                                data-nombre-cliente="${full.nombre_cliente || ''}"
+                                data-doc-cliente="${full.doc_cliente || ''}"
+                                data-tipo-doc-cliente="${full.tipo_doc_cliente || ''}"
+
+                                 >
+                                <i class="ti ti-message-circle"></i>
+                            </button>
+                            ${iconNotify}
+                        </div>
+                        <div style="position:relative; display:inline-block;">
+                            <!-- Botón para ver el seguimiento -->
+                            <button type="button"
+                                class="btn btn-sm btn-light btn-open-seguimiento-modal ${iconColorAnotaciones}"
+                                data-id-cita="${full.id_cita}"
+                                title="Ver seguimiento">
+                                <i class="ti ti-eye"></i>
+                            </button>
+                            ${badgeAnotaciones}
+                        </div>
+                      `;
+                    }
+                },
+                {
+                    targets: 7,
+                    render: function (data, type, full, meta) {
+                        var bgColor = "#e5e5e5"; // Color de fondo del servicio por defecto
+                        if (full.color_servicio_liquidador) {
+                            bgColor = full.color_servicio_liquidador; // Color de fondo del servicio
+                        }
+                        const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                        // Si no tiene servicio, mostrará “Selecciona un servicio”
+                        let currentServiceName = full.nombre_servicio_liquidador
+                            ? full.nombre_servicio_liquidador
+                            : 'Sin servicio seleccionado';
+                        // Aseguramos que el valor sea un número y lo formateamos con separadores de miles
+                        let valor = parseFloat(full.valor_servicio_liquidador) || 0;
+                        let formattedValor = valor.toLocaleString('es-ES'); // Ejemplo: 50000 -> "50.000"
+                        return `
+                        <h4>$${formattedValor}</h4>
+                        <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</span>`;
+
+                    }
+                },
+                {
+                    targets: 8,
+                    render: function (data, type, full, meta) {
+                        if (full.pago_liquidador == null || full.pago_liquidador == 'null' || full.pago_liquidador == 'Pendiente' || full.pago_liquidador == 'pendiente') {
+                            return `<span class="badge bg-label-secondary">${full.pago_liquidador}</span>`;
+                        } else {
+                            return `<span class="badge bg-label-success">${full.pago_liquidador}</span>`;
+                        }
+                    }
+                }
+            ],
+            initComplete: function (settings, json) {
+                if (json && json.extra) {
+                    updateTotales(json.extra);
+                }
+
+            },
+            pagingType: "simple"
+        });
+        // Evento que se dispara cada vez que se recibe una respuesta AJAX
+        table.on('xhr.dt', function (e, settings, json, xhr) {
+            if (json && json.extra) {
+                updateTotales(json.extra);
+            }
+        });
+        // Eventos para los filtros
+        $('#filtro-mes-anterior').on('click', function () {
+            const ahora = new Date();
+            const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1);
+            const finMes = new Date(ahora.getFullYear(), ahora.getMonth(), 0);
+            filtroDia = formatDate(inicioMes);
+            filtroDiaEnd = formatDate(finMes);
+            table.ajax.reload();
+        });
+        $('#filtro-mes-actual').on('click', function () {
+            const ahora = new Date();
+            const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+            const finMes = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0);
+            filtroDia = formatDate(inicioMes);
+            filtroDiaEnd = formatDate(finMes);
+            table.ajax.reload();
+        });
+        // Eventos para los filtros
+        $('#filtro-fecha').on('change', function () {
+            filtroDia = $(this).val();
+            table.ajax.reload();
+        });
+        $('#filtro-fecha-end').on('change', function () {
+            filtroDiaEnd = $(this).val();
+            table.ajax.reload();
+        });
+        $('#filtro-sede').on('change', function () {
+            filtroSede = $(this).val();
+            table.ajax.reload();
+        });
+        $('#filtro-servicios_liquidador').on('change', function () {
+            filtroServicioLiquidador = $(this).val();
+            table.ajax.reload();
+        });
+        $('#filtro-estado-validacion-liquidador').on('change', function () {
+            filtroEstadoValidacionLiquidador = $(this).val();
+            table.ajax.reload();
+        });
+        $('#filtro-estado-pago-liquidador').on('change', function () {
+            filtroEstadoPagoLiquidador = $(this).val();
+            table.ajax.reload();
+        });
+        $('#woow-search-citas').on('keyup', function () {
+            filtroSearch = $(this).val();
+            table.ajax.reload();
+        });
+        $('#filtro-reset').on('click', function () {
+            filtroDia = '';
+            filtroDiaEnd = '';
+            filtroSede = '';
+            filtroServicioLiquidador = '';
+            filtroEstadoValidacionLiquidador = '';
+            filtroEstadoPagoLiquidador = '';
+            filtroEstado = '';
+            filtroEstadoVerificado = '';
+            filtroResponsable = '';
+            filtroOrigen = '';
+            filtroSearch = '';
+            $('#filtro-dia').val("").trigger('input');
+            $('#filtro-dia-end').val("").trigger('input');
+            $('#filtro-sede').val("").trigger('change');
+            $('#filtro-servicios_liquidador').val("").trigger('change');
+            $('#filtro-estado-validacion-liquidador').val("").trigger('change');
+            $('#filtro-estado-pago-liquidador').val("").trigger('change');
+            $('#filtro-estado').val("").trigger('change');
+            $('#filtro-responsable').val("").trigger('change');
+            $('#filtro-estado-verificado').val("").trigger('change');
+            $('#filtro-origen').val("").trigger('change');
+            $('#woow-search-citas').val("").trigger('input');
+            console.log("Filtro día: " + $('#filtro-dia').val());
+            console.log("Filtro sede: " + $('#filtro-sede').val());
+            table.ajax.reload();
+        });
+        // Función para formatear fecha en formato 'YYYY-MM-DD'
+        function formatDate(date) {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1);
+            let day = '' + d.getDate();
+            const year = d.getFullYear();
+
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+
+            return [year, month, day].join('-');
+        }
+        //Cambiamos el estado
+        $('.datatables-citas').on('click', '.change_estado_cita_verificado', function () {
+            let id_estado = $(this).data('id_estado');
+            let id_cita = $(this).data('id_cita');
+            $.ajax({
+                url: url + '/dashboard/citas/change_estado_verificado',
+                type: 'POST',
+                data: {
+                    id_estado: id_estado,
+                    id_cita: id_cita
+                },
+                success: function (data) {
+                    table.ajax.reload();
+                }
+            });
+        });
+
+        //Cambiamo el estado
+        $('.datatables-citas-liquidador').on('click', '.change_estado_servicio_liquidador', function () {
+            let id_liquidador = $(this).data('id_liquidador');
+            let id_cita = $(this).data('id_cita');
+            let estado_liquidador = $(this).data('estado_liquidador');
+            $.ajax({
+                url: url + '/dashboard/liquidador/change_estado_servicio_liquidador',
+                type: 'POST',
+                data: {
+                    id_liquidador: id_liquidador,
+                    id_cita: id_cita,
+                    estado_liquidador: estado_liquidador
+                },
+                success: function (data) {
+                    table.ajax.reload();
+                }
+            });
+        });
+
+
+
+        // Función para actualizar los contadores en la interfaz
+        function updateTotales(extra) {
+            $('#rango-fecha').html(extra.fecha_inicio);
+            $('#rango-fecha-fin').html(extra.fecha_fin);
+            $('#lblTotalValorALiquidar').html(parseFloat(extra.total_valor_a_liquidar).toLocaleString('es-ES'));
+            $('#lblTotalValorLiquidado').html(parseFloat(extra.total_valor_liquidado).toLocaleString('es-ES'));
+            $('#lblTotalConfirmados').html(extra.total_confirmados);
+            $('#lblTotalErrados').html(extra.total_errados);
+            $('#lblTotalPendientes').html(extra.total_pendientes);
+            $('#lblTotalValidacion').html(extra.total_validacion);
+            $('#lblPagoPendiente').html(extra.total_pago_pendiente);
+            $('#lblPagoPagado').html(extra.total_pago_pagado);
+        }
+    }
+
+    //TABLA DE SERVICIO LIQUIDADOR DE CITAS
+    if ($('.datatables-servicios-liquidador').length) {
+        table_estados = $('.datatables-servicios-liquidador').DataTable({
+            lengthChange: false,
+            searching: false,
+            ordering: false,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: url + '/dashboard/liquidador/get_servicio_liquidador',
+                type: "POST"
+            },
+            column: [{ data: '' }],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        const bgColor = full.color_servicio_liquidador; // Color de fondo del estado
+                        const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                        return '<span class="badge bg-label-dark" style="background-color: ' + bgColor + ' !important; color: ' + textColor + '!important;">' + full.nombre_servicio_liquidador + '</span>';
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return '<span class="badge bg-label-primary"> $' + full.valor_servicio_liquidador + '</span>';
+                    }
+                },
+                {
+                    targets: 2,
+                    render: function (data, type, full, meta) {
+                        return `
+                        <div class="d-flex justify-content-end">
+                            ${(rol == 'superadmin') ? `
+														<a href="${url}/dashboard/liquidador/edit_servicio_liquidador/${full.id_servicio_liquidador}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-edit ti-md"></i>
+                            </a>
+                            <button type="button" data-id="${full.id_servicio_liquidador}" class="btn_delete_estado btn btn-icon btn-label-danger waves-effect">
+                                <i class="tf-icons ti ti-trash ti-md"></i>
+                            </button>` : ``}
+                        </div>`	;
+                    }
+                },
+            ],
+            pagingType: "simple"
+        });
+        //ELIMINAR SERVICIO
+        $('.datatables-servicios-liquidador').on('click', '.btn_delete_estado', function () {
+            let id = $(this).data('id');
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: '¡No podrás revertir esto!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '¡Sí, bórralo!',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-outline-danger ml-1'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url + '/dashboard/citas/delete_estados',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (data) {
+                            if (data.validate) {
+                                table_estados.ajax.reload();
+                            } else {
+                                alertNotify('¡Error!', data.text, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    // Modal para editar comentario de liquidador
+    $('.datatables-citas-liquidador').on('click', '.btn-open-comment-modal', function () {
+        let idCita = $(this).data('id-cita');
+        let idLiquidador = $(this).data('id-liquidador');
+        let comentario = $(this).data('comentario');
+        let nombreCliente = $(this).data('nombre-cliente');
+        let docCliente = $(this).data('doc-cliente');
+        let tipoDocCliente = $(this).data('tipo-doc-cliente');
+
+        $('#comentario-id-cita').val(idCita);
+        $('#comentario-id-liquidador').val(idLiquidador);
+        $('#comentario-text').val(comentario);
+        $('#comentario_nombre_cliente').text(nombreCliente);
+        $('#comentario_tipo_doc_cliente').text(tipoDocCliente);
+        $('#comentario_doc_cliente').text(docCliente);
+
+
+        $('#modalComentarioLiquidador').modal('show');
+    });
+
+    $('.datatables-citas-liquidador').on('click', '.btn-open-seguimiento-modal', function () {
+        let idCita = $(this).data('id-cita');
+
+        $.ajax({
+            url: url + '/dashboard/citas/get_seguimiento_cita', // Asegúrate de tener este endpoint en tu backend
+            method: 'POST',
+            data: { id_cita: idCita },
+            success: function (response) {
+                if (response.validate) {
+                    Swal.fire({
+                        title: 'Seguimiento de la Cita',
+                        html: response.html,
+                        width: '600px',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                            cancelButton: 'btn btn-outline-danger ml-1 d-none'
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.text || 'No se pudo obtener el seguimiento.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                            cancelButton: 'btn btn-outline-danger ml-1 d-none'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo conectar con el servidor.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                        cancelButton: 'btn btn-outline-danger ml-1 d-none'
+                    }
+                });
+            }
+        });
+    });
+
+
+    // Función para actualizar el comentario de liquidador
+    $('#formComentarioLiquidador').on('submit', function (e) {
+        e.preventDefault();
+        let formData = $(this).serialize();
+
+        $.ajax({
+            url: url + '/dashboard/liquidador/updateComentario',
+            method: 'POST',
+            data: formData,
+            success: function (resp) {
+                if (resp.validate) {
+                    // Cerrar modal
+                    $('#modalComentarioLiquidador').modal('hide');
+                    // Recargar tabla
+                    $('.datatables-citas-liquidador').DataTable().ajax.reload(null, false);
+                } else {
+                    alert(resp.text || 'Error al guardar comentario');
+                }
+            },
+            error: function () {
+                alert('Error en la solicitud');
+            }
+        });
+    });
+
+
+    // Escucha el evento change en los checkboxes de la tabla
+    $('.datatables-citas-liquidador').on('change', '.check-cita', function () {
+        // Obtener todos los checkboxes seleccionados
+        let seleccionados = $('.check-cita:checked');
+        let contador = seleccionados.length;
+        let sumaTotal = 0;
+
+        // Recorrer cada checkbox seleccionado y sumar el valor
+        seleccionados.each(function () {
+            let valor = parseFloat($(this).data('valor'));
+            if (!isNaN(valor)) {
+                sumaTotal += valor;
+            }
+        });
+
+        // Actualizar los elementos de la vista
+        $('#checkbox-selected-contador-citas-pago').text(contador);
+        $('#checkbox-selected-valor-total-pago').text(sumaTotal.toLocaleString('es-ES'));
+
+        // Mostrar o esconder el div y botón según la cantidad de elementos seleccionados
+        if (contador > 0) {
+            // solo se muestra el botón de cambio de pago si el rol es superadmin
+            if (rol == 'superadmin') {
+                // Mostrar el botón de cambio de pago
+                $('#checkbox-selected-div-contador-pago').show();
+                $('#btnChangePago').show();
+            }
+        } else {
+            // solo se muestra el botón de cambio de pago si el rol es superadmin
+            if (rol == 'superadmin') {
+                // Mostrar el botón de cambio de pago
+                $('#checkbox-selected-div-contador-pago').hide();
+                $('#btnChangePago').hide();
+            }
+        }
+    });
+
+    // Función para marcar todos los registros
+    $('#checkAll').on('change', function () {
+        // Cambiar el estado de todos los registros
+        let checked = $(this).is(':checked');
+        // Marcar todos los registros
+        $('.check-cita').prop('checked', checked).trigger('change');
+    });
+
+
+
+    // Función para cambiar el estado de pago de los registros
+    $('#btnChangePago').on('click', function () {
+        // Array de objetos con los IDs de cita y liquidador
+        let seleccionados = [];
+        $('.check-cita:checked').each(function () {
+            seleccionados.push({
+                id_cita: $(this).data('id-cita'),
+                id_liquidador: $(this).data('id-liquidador')
+            });
+        });
+
+        if (seleccionados.length === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Sin selección',
+                text: 'No has seleccionado citas para actualizar.',
+                showDenyButton: false,
+                showCancelButton: false,
+            });
+            return;
+        }
+
+        // Preguntamos con un select en SweetAlert2 o con un prompt
+        Swal.fire({
+            title: 'Cambiar estado de pago',
+            text: '¿Deseas marcar como "pagado" o "pendiente"?',
+            icon: 'question',
+            showDenyButton: true,
+            showCancelButton: true,
+            confirmButtonText: 'Pagado',
+            denyButtonText: 'Pendiente',
+            cancelButtonText: 'Cancelar',
+        }).then((result) => {
+            let nuevoEstado = '';
+            if (result.isConfirmed) {
+                // Usuario presionó "Pagado"
+                nuevoEstado = 'pagado';
+            } else if (result.isDenied) {
+                // Usuario presionó "Pendiente"
+                nuevoEstado = 'pendiente';
+            } else {
+                // Cualquier otro caso (cerrar sin elegir)
+                return;
+            }
+
+            // Enviar la solicitud AJAX
+            $.ajax({
+                url: url + '/dashboard/liquidador/updatePagoMasivo',
+                method: 'POST',
+                data: {
+                    citas: seleccionados,
+                    pago_liquidador: nuevoEstado
+                },
+                success: function (resp) {
+                    if (resp.validate) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: resp.text || 'Estado de pago actualizado correctamente.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        // Recargar la tabla sin cambiar de página
+                        $('.datatables-citas-liquidador').DataTable().ajax.reload(null, false);
+                        $('#checkAll').prop('checked', false).trigger('change');
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: resp.text || 'Ocurrió un error al cambiar el estado de pago.'
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo conectar con el servidor.'
+                    });
+                }
+            });
+        });
+    });
+
+});
