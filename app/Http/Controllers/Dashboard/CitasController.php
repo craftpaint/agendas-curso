@@ -546,7 +546,7 @@ class CitasController extends Controller
                         ];
 
                         // Enviar el correo al cliente
-                        Mail::to($email_cliente)->send(new FormularioCompletado($formData));
+                        // Mail::to($email_cliente)->send(new FormularioCompletado($formData));
                         // Enviar el correo a don miguel
                         // Mail::to('jrubio@zocodigital.com')->send(new FormularioCompletadoNotifiInterno($formData));
                     } catch (\Exception $e) {
