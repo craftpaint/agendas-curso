@@ -456,8 +456,8 @@ class CitasController extends Controller
 
                 // Asignar valores adicionales
                 $creado_por = $rol;
-                $origen = 'Club del conductor';
-                $responsable_origen = 'Club del conductor';
+                $origen = 'Curso Comparendo';
+                $responsable_origen = 'Curso Comparendo';
                 $tipo_dispositivo = $request->header('User-Agent'); // Detectar el dispositivo desde el User-Agent
                 // Procesar el User-Agent para determinar el tipo de dispositivo
                 if (preg_match('/mobile/i', $tipo_dispositivo)) {

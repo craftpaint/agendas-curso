@@ -1185,7 +1185,7 @@ $(function () {
                         } else if (full.origen == 'QR' || full.origen == 'qr' || full.origen == 'Qr' || full.origen == 'QRCode' || full.origen == 'qrcode') {
                             return `<span class="badge bg-label-info">${full.origen}</span> <br>
                             <small class="text-muted">${full.creado_por}</small>`;
-                        } else if (full.origen == 'Club del conductor') {
+                        } else if (full.origen == 'Curso Comparendo') {
                             return `<span class="badge bg-label-primary">${full.origen}</span> <br>
                             <small class="text-muted">${full.creado_por}</small>`;
                         } else {

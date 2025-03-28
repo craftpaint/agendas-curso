@@ -81,7 +81,7 @@ class LoadController extends Controller
                 } elseif ($origen == 'QR' || $origen == 'qr' || $origen == 'Qr' || $origen == 'QRCode' || $origen == 'qrcode') {
                     $responsable_origen = 'Sede';
                 } else {
-                    $responsable_origen = 'Club del conductor';
+                    $responsable_origen = 'Curso Comparendo';
                 }
                 $tipo_dispositivo = $request->header('User-Agent'); // Detectar el dispositivo desde el User-Agent
 
