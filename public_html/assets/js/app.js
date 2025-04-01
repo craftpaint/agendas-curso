@@ -1019,11 +1019,12 @@ $(function () {
             });
         });
     }
+    var table_citas;
     //TABLAS DE CITAS
     if ($('.datatables-citas').length) {
         tipoCita = $('#tipo_cita').val();
         if (rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'liquidador') {
-            let table = $('.datatables-citas').DataTable({
+            table_citas = $('.datatables-citas').DataTable({
                 ordering: true,
                 processing: true,
                 serverSide: true,
@@ -1112,7 +1113,7 @@ $(function () {
                             <button type="button" data-nombre_estado="${full.estado_actual_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</button>
                             <ul class="dropdown-menu" style="">` +
                                     estados.map(estado => {
-                                        return `<li><a class="dropdown-item waves-effect change_estado_cita_verificado" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
+                                        return `<li><a class="dropdown-item waves-effect change_estado_cita" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
                                     }).join('')
                                     + `</ul>` : `
                             <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</span>
@@ -1225,7 +1226,7 @@ $(function () {
                 pagingType: "simple"
             });
         } else {
-            let table = $('.datatables-citas').DataTable({
+            table_citas = $('.datatables-citas').DataTable({
                 ordering: true,
                 processing: true,
                 serverSide: true,
@@ -1364,50 +1365,50 @@ $(function () {
             const ayer = new Date();
             ayer.setDate(ayer.getDate() - 1);
             filtroDia = formatDate(ayer);
-            table.ajax.reload();
+            table_citas.ajax.reload();
         });
         $('#filtro-hoy').on('click', function () {
             const hoy = new Date();
             filtroDia = formatDate(hoy);
-            table.ajax.reload();
+            table_citas.ajax.reload();
         });
         $('#filtro-manana').on('click', function () {
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
             filtroDia = formatDate(manana);
-            table.ajax.reload();
+            table_citas.ajax.reload();
         });
         $('#filtro-fecha').on('change', function () {
             filtroDia = $(this).val();
-            table.ajax.reload();
+            table_citas.ajax.reload();
         });
         $('#filtro-fecha-end').on('change', function () {
             filtroDiaEnd = $(this).val();
-            table.ajax.reload();
+            table_citas.ajax.reload();
         });
         $('#filtro-sede').on('change', function () {
             filtroSede = $(this).val();
-            table.ajax.reload();
+            table_citas.ajax.reload();
         });
         $('#filtro-estado').on('change', function () {
             filtroEstado = $(this).val();
-            table.ajax.reload();
+            table_citas.ajax.reload();
         });
         $('#filtro-estado-verificado').on('change', function () {
             filtroEstadoVerificado = $(this).val();
-            table.ajax.reload();
+            table_citas.ajax.reload();
         });
         $('#filtro-responsable').on('change', function () {
             filtroResponsable = $(this).val();
-            table.ajax.reload();
+            table_citas.ajax.reload();
         });
         $('#filtro-origen').on('change', function () {
             filtroOrigen = $(this).val();
-            table.ajax.reload();
+            table_citas.ajax.reload();
         });
         $('#woow-search-citas').on('keyup', function () {
             filtroSearch = $(this).val();
-            table.ajax.reload();
+            table_citas.ajax.reload();
         });
         $('#filtro-reset').on('click', function () {
             filtroDia = '';
@@ -1428,7 +1429,7 @@ $(function () {
             $('#woow-search-citas').val("").trigger('input');
             console.log("Filtro día: " + $('#filtro-dia').val());
             console.log("Filtro sede: " + $('#filtro-sede').val());
-            table.ajax.reload();
+            table_citas.ajax.reload();
         });
         // Función para formatear fecha en formato 'YYYY-MM-DD'
         function formatDate(date) {
@@ -1465,7 +1466,7 @@ $(function () {
                         data: { id: id },
                         success: function (data) {
                             if (data.validate) {
-                                table.ajax.reload();
+                                table_citas.ajax.reload();
                             } else {
                                 alertNotify('¡Error!', data.text, 'error');
                             }
@@ -1486,7 +1487,7 @@ $(function () {
                     id_cita: id_cita
                 },
                 success: function (data) {
-                    table.ajax.reload();
+                    table_citas.ajax.reload();
                 }
             });
         });
@@ -1502,7 +1503,7 @@ $(function () {
                     id_cita: id_cita
                 },
                 success: function (data) {
-                    table.ajax.reload();
+                    table_citas.ajax.reload();
                 }
             });
         });
@@ -1518,7 +1519,7 @@ $(function () {
                     id_cita: id_cita
                 },
                 success: function (data) {
-                    table.ajax.reload();
+                    table_citas.ajax.reload();
                 }
             });
         });
