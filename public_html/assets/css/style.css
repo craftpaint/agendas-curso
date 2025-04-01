@@ -1,25 +1,26 @@
 :root {
     --color-negro: #003B4A;
     --color-gris: #f4f4f499;
-    --color-morado: #00a0c3;
-    --color-morado-50: #f0fcff;
-    --color-morado-100: #e0faff;
-    --color-morado-200: #c6f5ff;
-    --color-morado-300: #9becfd;
-    --color-morado-400: #2bd6fb;
-    --color-morado-500: #00d2ff;
-    --color-morado-600: #02aed3;
-    --color-morado-700: #0186a3;
-    --color-morado-800: #036074;
+    --color-gris-oscuro: #d3d3d3c2;
+    --color-azul: #00a0c3;
+    --color-azul-50: #f0fcff;
+    --color-azul-100: #e0faff;
+    --color-azul-200: #c6f5ff;
+    --color-azul-300: #9becfd;
+    --color-azul-400: #2bd6fb;
+    --color-azul-500: #00d2ff;
+    --color-azul-600: #02aed3;
+    --color-azul-700: #0186a3;
+    --color-azul-800: #036074;
     --color-verde: #d3d93b;
 }
 
 .morado {
-    color: var(--color-morado-500);
+    color: var(--color-azul-500);
 }
 
 .bg-morado-500 {
-    background-color: var(--color-morado-500) !important;
+    background-color: var(--color-azul-500) !important;
 }
 
 .d-none,
@@ -116,7 +117,7 @@ table tbody tr:nth-child(even) {
 }
 
 .flatpickr-calendar {
-    background-color: var(--color-morado-700);
+    background-color: var(--color-azul-700);
     color: #fff;
     border-radius: 8px;
 }
@@ -131,7 +132,7 @@ table tbody tr:nth-child(even) {
     height: 2.5em;
     width: 12.5em;
     border-radius: 2.5em;
-    border: 2px solid var(--color-morado-500);
+    border: 2px solid var(--color-azul-500);
     background-color: rgb(255, 255, 255);
     -webkit-filter: drop-shadow(1px 1px 10px #000);
     filter: drop-shadow(7px 7px 10px #00000059);
@@ -185,7 +186,7 @@ table tbody tr:nth-child(even) {
     outline: none;
     border-radius: 50%;
     transition: .5s ease-in-out;
-    background-color: var(--color-morado-500);
+    background-color: var(--color-azul-500);
     box-shadow: 0px 0px 3px #f3f3f3;
     padding-right: 40px;
     color: #000;
@@ -224,7 +225,7 @@ table tbody tr:nth-child(even) {
     width: 250px;
     border-radius: 0px;
     background-color: transparent;
-    border-bottom: 3px solid var(--color-morado-500);
+    border-bottom: 3px solid var(--color-azul-500);
     transition: all 500ms cubic-bezier(0, 0.110, 0.35, 2);
 }
 
@@ -248,7 +249,7 @@ table tbody tr:nth-child(even) {
     position: absolute;
     cursor: pointer;
     inset: 0;
-    background: var(--color-morado-300);
+    background: var(--color-azul-300);
     border-radius: 50px;
     transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
 }
@@ -267,11 +268,11 @@ table tbody tr:nth-child(even) {
 }
 
 .woow-switch input:checked+.slider {
-    background: var(--color-morado-500);
+    background: var(--color-azul-500);
 }
 
 .woow-switch input:focus+.slider {
-    box-shadow: 0 0 1px var(--color-morado-500);
+    box-shadow: 0 0 1px var(--color-azul-500);
 }
 
 .woow-switch input:checked+.slider:before {
@@ -279,4 +280,55 @@ table tbody tr:nth-child(even) {
     width: 2em;
     height: 2em;
     bottom: 0;
+}
+
+/* add this to your :root variables */
+.checkbox {
+    --duration: 0.3s;
+    --ease: ease-in-out;
+}
+
+/* hide checkbox */
+.checkbox input[type="checkbox"] {
+    opacity: 0;
+    position: absolute;
+}
+
+.checkbox label {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+}
+
+.checkbox label span {
+    margin-left: 8px;
+}
+
+.checkbox svg {
+    height: 20px;
+    width: 20px;
+}
+
+/* svg rectangle property */
+.checkbox svg>rect {
+    fill: var(--color-gris-oscuro);
+    stroke: var(--color-azul);
+    /* responsive values */
+    stroke-dasharray: 400%;
+    stroke-dashoffset: 400%;
+    transition: var(--duration) stroke-dashoffset var(--ease);
+}
+
+/* svg check property */
+.checkbox svg path {
+    stroke: var(--color-azul);
+    /* responsive values */
+    stroke-dasharray: 100%;
+    stroke-dashoffset: 100%;
+    transition: var(--duration) stroke-dashoffset var(--ease);
+}
+
+.checkbox input[type="checkbox"]:checked+label svg>rect,
+.checkbox input[type="checkbox"]:checked+label svg path {
+    stroke-dashoffset: 0;
 }

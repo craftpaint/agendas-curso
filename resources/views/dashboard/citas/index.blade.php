@@ -30,20 +30,22 @@
                                 <div class="form-group form-group-grow">
                                     <input type="date" class="form-control" id="filtro-fecha-end" name="filtro-fecha-end">
                                 </div>
-                                <div class="form-group form-group-grow">
-                                    <select id="filtro-sede" class="select2 form-select" placeholder="Seleccionar sede">
-                                        <option value="">Todas las sedes</option>
-                                        <?php
-                                        if (is_array($sedes) && !empty($sedes)) {
-                                            foreach ($sedes as $key => $sede) {
-                                                $a_festivos = @unserialize($sede->festivos_sede);
-                                                $a_festivos = $a_festivos !== false ? $a_festivos : array();
-                                                echo '<option data-festivos=' . json_encode($a_festivos) . ' value="' . $sede->id_sede . '">' . $sede->nombre_sede . '</option>';
+                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador') { ?>
+                                    <div class="form-group form-group-grow">
+                                        <select id="filtro-sede" class="select2 form-select" placeholder="Seleccionar sede">
+                                            <option value="">Todas las sedes</option>
+                                            <?php
+                                            if (is_array($sedes) && !empty($sedes)) {
+                                                foreach ($sedes as $key => $sede) {
+                                                    $a_festivos = @unserialize($sede->festivos_sede);
+                                                    $a_festivos = $a_festivos !== false ? $a_festivos : array();
+                                                    echo '<option data-festivos=' . json_encode($a_festivos) . ' value="' . $sede->id_sede . '">' . $sede->nombre_sede . '</option>';
+                                                }
                                             }
-                                        }
-                                        ?>
-                                    </select>
-                                </div>
+                                            ?>
+                                        </select>
+                                    </div>
+                                <?php } ?>
                                 <div class="form-group form-group-grow">
                                     <select id="filtro-estado" class="select2 form-select" placeholder="Seleccionar estado">
                                         <option value="">Todos los estados</option>
@@ -68,28 +70,32 @@
                                         ?>
                                     </select>
                                 </div>
-                                <div class="form-group form-group-grow">
-                                    <select id="filtro-responsable" class="select2 form-select" placeholder="Seleccionar origen">
-                                        <option value="">Todos </option>
-                                        <option value="Desconocido">Desconocido</option>
-                                        <option value="Sede">Sede</option>
-                                        <option value="Cliente">Cliente</option>
-                                        <option value="Club del conductor">Club del conductor</option>
-                                    </select>
-                                </div>
-                                <div class="form-group form-group-grow">
-                                    <select id="filtro-origen" class="select2 form-select" placeholder="Seleccionar Tag">
-                                        <option value="">Todos los Tags</option>
-                                        <?php
-                                        if (is_array($origenes) && !empty($origenes)) {
-                                            foreach ($origenes as $key => $origen) {
-                                                echo '<option value="' . $origen->origen . '">' . $origen->origen . '</option>';
+                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador') { ?>
+                                    <div class="form-group form-group-grow">
+                                        <select id="filtro-responsable" class="select2 form-select" placeholder="Seleccionar origen">
+                                            <option value="">Todos </option>
+                                            <option value="Desconocido">Desconocido</option>
+                                            <option value="Sede">Sede</option>
+                                            <option value="Cliente">Cliente</option>
+                                            <option value="Club del conductor">Club del conductor</option>
+                                        </select>
+                                    </div>
+                                <?php } ?>
+                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador') { ?>
+                                    <div class="form-group form-group-grow">
+                                        <select id="filtro-origen" class="select2 form-select" placeholder="Seleccionar Tag">
+                                            <option value="">Todos los Tags</option>
+                                            <?php
+                                            if (is_array($origenes) && !empty($origenes)) {
+                                                foreach ($origenes as $key => $origen) {
+                                                    echo '<option value="' . $origen->origen . '">' . $origen->origen . '</option>';
+                                                }
                                             }
-                                        }
-                                        ?>
-                                        <option value=null>Null</option>
-                                    </select>
-                                </div>
+                                            ?>
+                                            <option value=null>Null</option>
+                                        </select>
+                                    </div>
+                                <?php } ?>
                                 <div class="woow-input-wrapper form-group">
                                     <button class="woow-icon-search" type="button">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" height="25px" width="25px">
@@ -112,16 +118,25 @@
                     <table class="datatables-citas table">
                         <thead>
                             <tr>
-                                <th>Cliente</th>
-                                <th>Sede</th>
-                                <th>Fecha Cita</th>
-                                <th>Fecha Creación</th>
-                                <th>Estado</th>
-                                <th>Estado Verificado</th>
-                                <th>Servicio</th>
-                                <th>Origen</th>
-                                <th>Tag</th>
-                                <th></th>
+                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador') { ?>
+                                    <th>Cliente</th>
+                                    <th>Sede</th>
+                                    <th>Fecha Cita</th>
+                                    <th>Fecha Creación</th>
+                                    <th>Estado</th>
+                                    <th>Estado Verificado</th>
+                                    <th>Servicio</th>
+                                    <th>Origen</th>
+                                    <th>Tag</th>
+                                    <th></th>
+                                <?php } else { ?>
+                                    <th>Cliente</th>
+                                    <th>Fecha Cita</th>
+                                    <th>Fecha Creación</th>
+                                    <th>Estado</th>
+                                    <th>Estado Verificado</th>
+                                    <th></th>
+                                <?php } ?>
                             </tr>
                         </thead>
 

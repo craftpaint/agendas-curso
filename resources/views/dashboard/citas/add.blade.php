@@ -38,19 +38,23 @@
                                     ?>
                                 </select>
                             </div>
-                            <div class="mb-4 col-md-6">
-                                <label class="form-label">Estado verificado de la cita <span class="required_flied">*</span></label>
-                                <select id="selectSede" class="form-select" required name="id_estado_verificado">
-                                    <option value="">Seleccionar estado</option>
-                                    <?php
-                                    if (is_array($estados) && !empty($estados)) {
-                                        foreach ($estados as $key => $estado) {
-                                            echo '<option value="' . $estado->id_estado . '">' . $estado->nombre_estado . '</option>';
+                            <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador') { ?>
+                                <div class="mb-4 col-md-6">
+                                    <label class="form-label">Estado verificado de la cita <span class="required_flied">*</span></label>
+                                    <select id="selectSede" class="form-select" required name="id_estado_verificado">
+                                        <option value="">Seleccionar estado</option>
+                                        <?php
+                                        if (is_array($estados) && !empty($estados)) {
+                                            foreach ($estados as $key => $estado) {
+                                                echo '<option value="' . $estado->id_estado . '">' . $estado->nombre_estado . '</option>';
+                                            }
                                         }
-                                    }
-                                    ?>
-                                </select>
-                            </div>
+                                        ?>
+                                    </select>
+                                </div>
+                            <?php } else { ?>
+                                <input type="hidden" name="id_estado_verificado" value="1">
+                            <?php } ?>
                             <div class="mb-4 col-md-6">
                                 <label class="form-label">Día <span class="required_flied">*</span></label>
                                 <input name="reserva_cita" type="text" id="citaDia" placeholder="DD/MM/YYYY" class="form-control" readonly disabled />
@@ -61,19 +65,23 @@
                                     <option value="">Seleccionar horario</option>
                                 </select>
                             </div>
-                            <div class="mb-4 col-md-6">
-                                <label class="form-label">Servicio Liquidador<span class="required_flied">*</span></label>
-                                <select id="selectSede" class="form-select" required name="id_servicio_liquidador">
-                                    <option value="">Seleccionar servicio</option>
-                                    <?php
-                                    if (is_array($servicios_liquidador) && !empty($servicios_liquidador)) {
-                                        foreach ($servicios_liquidador as $key => $servicio) {
-                                            echo '<option value="' . $servicio->id_servicio_liquidador . '">' . $servicio->nombre_servicio_liquidador . '</option>';
+                            <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador') { ?>
+                                <div class="mb-4 col-md-6">
+                                    <label class="form-label">Servicio Liquidador<span class="required_flied">*</span></label>
+                                    <select id="selectSede" class="form-select" required name="id_servicio_liquidador">
+                                        <option value="">Seleccionar servicio</option>
+                                        <?php
+                                        if (is_array($servicios_liquidador) && !empty($servicios_liquidador)) {
+                                            foreach ($servicios_liquidador as $key => $servicio) {
+                                                echo '<option value="' . $servicio->id_servicio_liquidador . '">' . $servicio->nombre_servicio_liquidador . '</option>';
+                                            }
                                         }
-                                    }
-                                    ?>
-                                </select>
-                            </div>
+                                        ?>
+                                    </select>
+                                </div>
+                            <?php } else { ?>
+                                <input type="hidden" name="id_servicio_liquidador" value="5">
+                            <?php } ?>
                             <div class="mb-4 col-md-12">
                                 <label class="form-label">Cliente <span class="required_flied">*</span></label>
                                 <select class="select_search_cliente" name="id_cliente" required>

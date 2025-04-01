@@ -1022,183 +1022,186 @@ $(function () {
     //TABLAS DE CITAS
     if ($('.datatables-citas').length) {
         tipoCita = $('#tipo_cita').val();
-        let table = $('.datatables-citas').DataTable({
-            ordering: true,
-            processing: true,
-            serverSide: true,
-            searching: false,
-            info: true,
-            pageLength: 50, // Cambiar la paginación a 50 entradas
-            language: {
-                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
-                info: "Mostrando _START_ a _END_ de _MAX_ registros",
-                infoEmpty: "No hay datos disponibles",
-                infoFiltered: "(filtrados de un total de _MAX_ registros)"
-            },
-            dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
-            ajax: {
-                url: url + '/dashboard/citas/get_citas',
-                type: "POST",
-                data: function (d) {
-                    d.filtro_dia = filtroDia;
-                    d.filtro_dia_end = filtroDiaEnd;
-                    d.filtro_sede = filtroSede;
-                    d.filtro_estado = filtroEstado;
-                    d.filtro_estado_verificado = filtroEstadoVerificado;
-                    d.filtro_responsable = filtroResponsable;
-                    d.filtro_origen = filtroOrigen;
-                    d.filtro_search = filtroSearch;
-                    d.tipo_cita = tipoCita;
-                    // Parámetros necesarios para ordenamiento
-                    d.order = d.order;
-                    d.columns = d.columns;
-                    d.search = d.search;
+        if (rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'liquidador') {
+            let table = $('.datatables-citas').DataTable({
+                ordering: true,
+                processing: true,
+                serverSide: true,
+                searching: false,
+                info: true,
+                pageLength: 50, // Cambiar la paginación a 50 entradas
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
+                    info: "Mostrando _START_ a _END_ de _MAX_ registros",
+                    infoEmpty: "No hay datos disponibles",
+                    infoFiltered: "(filtrados de un total de _MAX_ registros)"
                 },
-            },
-            columns: [
-                { data: 'nombre_cliente' },                 // Columna 0
-                { data: 'nombre_sede' },                    // Columna 1
-                { data: 'reserva_cita' },                   // Columna 2
-                { data: 'fecha_create' },                   // Columna 3
-                { data: 'estado_actual_nombre' },           // Columna 4
-                { data: 'estado_verificado_nombre' },       // Columna 5
-                { data: 'nombre_servicio_liquidador' },     // Columna 6
-                { data: 'responsable_origen' },             // Columna 7
-                { data: 'origen' },                         // Columna 8
-                { data: null }                              // Columna 9 (botones)
-            ],
-            columnDefs: [
-                {
-                    targets: 0,
-                    render: function (data, type, full, meta) {
-                        if (full.id_vehiculo) {
-                            texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small><br><span class="badge bg-label-dark">' + full.placa_vehiculo + '</span><small class="text-muted ml-2">' + full.tipo_vehiculo + ' - ' + full.modelo_vehiculo + '</small>';
+                dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+                ajax: {
+                    url: url + '/dashboard/citas/get_citas',
+                    type: "POST",
+                    data: function (d) {
+                        d.filtro_dia = filtroDia;
+                        d.filtro_dia_end = filtroDiaEnd;
+                        d.filtro_sede = filtroSede;
+                        d.filtro_estado = filtroEstado;
+                        d.filtro_estado_verificado = filtroEstadoVerificado;
+                        d.filtro_responsable = filtroResponsable;
+                        d.filtro_origen = filtroOrigen;
+                        d.filtro_search = filtroSearch;
+                        d.tipo_cita = tipoCita;
+                        // Parámetros necesarios para ordenamiento
+                        d.order = d.order;
+                        d.columns = d.columns;
+                        d.search = d.search;
+                    },
+                },
+                columns: [
+                    { data: 'nombre_cliente' },                 // Columna 0
+                    { data: 'nombre_sede' },                    // Columna 1
+                    { data: 'reserva_cita' },                   // Columna 2
+                    { data: 'fecha_create' },                   // Columna 3
+                    { data: 'estado_actual_nombre' },           // Columna 4
+                    { data: 'estado_verificado_nombre' },       // Columna 5
+                    { data: 'nombre_servicio_liquidador' },     // Columna 6
+                    { data: 'responsable_origen' },             // Columna 7
+                    { data: 'origen' },                         // Columna 8
+                    { data: null }                              // Columna 9 (botones)
+                ],
+                columnDefs: [
+                    {
+                        targets: 0,
+                        render: function (data, type, full, meta) {
+                            if (full.id_vehiculo) {
+                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small><br><span class="badge bg-label-dark">' + full.placa_vehiculo + '</span><small class="text-muted ml-2">' + full.tipo_vehiculo + ' - ' + full.modelo_vehiculo + '</small>';
 
-                            // texto = '<h6 class="m-0">' + full.nombre_cliente + $full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + ' - Tipo: ' + full.tipo_vehiculo + ' - Modelo: ' + full.modelo_vehiculo + '</small>';
-                        } else {
-                            texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small>';
+                                // texto = '<h6 class="m-0">' + full.nombre_cliente + $full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + ' - Tipo: ' + full.tipo_vehiculo + ' - Modelo: ' + full.modelo_vehiculo + '</small>';
+                            } else {
+                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small>';
+                            }
+                            return texto;
                         }
-                        return texto;
-                    }
-                },
-                {
-                    targets: 1,
-                    render: function (data, type, full, meta) {
-                        return `<span class="badge bg-label-dark">${full.nombre_sede}</span>`;
-                    }
-                },
-                {
-                    targets: 2,
-                    render: function (data, type, full, meta) {
-                        let fecha = full.reserva_cita.split(" ")[0];
-                        return `<h6 class="m-0">${fecha} ${full.rango_horario}</h6>`;
-                    }
-                },
-                {
-                    targets: 3,
-                    render: function (data, type, full, meta) {
-                        return `<h6 class="m-0">${full.fecha_create}</h6>`;
-                    }
-                },
-                {
-                    targets: 4,
-                    render: function (data, type, full, meta) {
-                        const bgColor = full.estado_actual_color; // Color de fondo del estado
-                        const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
-                        return `
+                    },
+                    {
+                        targets: 1,
+                        render: function (data, type, full, meta) {
+                            return `<span class="badge bg-label-dark">${full.nombre_sede}</span>`;
+                        }
+                    },
+                    {
+                        targets: 2,
+                        render: function (data, type, full, meta) {
+                            let fecha = full.reserva_cita.split(" ")[0];
+                            return `<h6 class="m-0">${fecha} ${full.rango_horario}</h6>`;
+                        }
+                    },
+                    {
+                        targets: 3,
+                        render: function (data, type, full, meta) {
+                            return `<h6 class="m-0">${full.fecha_create}</h6>`;
+                        }
+                    },
+                    {
+                        targets: 4,
+                        render: function (data, type, full, meta) {
+                            const bgColor = full.estado_actual_color; // Color de fondo del estado
+                            const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                            return `
                         <div class="btn-group">
+                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'gestorsede') ? `
                             <button type="button" data-nombre_estado="${full.estado_actual_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</button>
                             <ul class="dropdown-menu" style="">` +
-                            estados.map(estado => {
-                                return `<li><a class="dropdown-item waves-effect change_estado_cita" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
-                            }).join('')
-                            + `
-                            </ul>
+                                    estados.map(estado => {
+                                        return `<li><a class="dropdown-item waves-effect change_estado_cita_verificado" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
+                                    }).join('')
+                                    + `</ul>` : `
+                            <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</span>
+                            `}
                         </div>`;
-                    }
-                },
-                {
-                    targets: 5,
-                    render: function (data, type, full, meta) {
-                        const bgColor = full.estado_verificado_color; // Color de fondo del estado
-                        const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
-                        return `
+                        }
+                    },
+                    {
+                        targets: 5,
+                        render: function (data, type, full, meta) {
+                            const bgColor = full.estado_verificado_color; // Color de fondo del estado
+                            const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                            return `
                         <div class="btn-group">
                         ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter') ? `
                             <button type="button" data-nombre_estado="${full.estado_verificado_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</button>
                             <ul class="dropdown-menu" style="">` +
-                                estados.map(estado => {
-                                    return `<li><a class="dropdown-item waves-effect change_estado_cita_verificado" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
-                                }).join('')
-                                + `</ul>` : `
+                                    estados.map(estado => {
+                                        return `<li><a class="dropdown-item waves-effect change_estado_cita_verificado" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
+                                    }).join('')
+                                    + `</ul>` : `
                             <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</span>
                             `}
                         </div>`;
-                    }
-                },
-                {
-                    // Columna 6 -> Servicio liquidador
-                    targets: 6,
-                    render: function (data, type, full, meta) {
-                        var bgColor = "#e5e5e5"; // Color de fondo del servicio por defecto
-                        if (full.color_servicio_liquidador) {
-                            bgColor = full.color_servicio_liquidador; // Color de fondo del servicio
                         }
-                        const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
-                        // Si no tiene servicio, mostrará “Selecciona un servicio”
-                        let currentServiceName = full.nombre_servicio_liquidador
-                            ? full.nombre_servicio_liquidador
-                            : 'Sin servicio seleccionado';
-                        return `
+                    },
+                    {
+                        // Columna 6 -> Servicio liquidador
+                        targets: 6,
+                        render: function (data, type, full, meta) {
+                            var bgColor = "#e5e5e5"; // Color de fondo del servicio por defecto
+                            if (full.color_servicio_liquidador) {
+                                bgColor = full.color_servicio_liquidador; // Color de fondo del servicio
+                            }
+                            const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                            // Si no tiene servicio, mostrará “Selecciona un servicio”
+                            let currentServiceName = full.nombre_servicio_liquidador
+                                ? full.nombre_servicio_liquidador
+                                : 'Sin servicio seleccionado';
+                            return `
                         <div class="btn-group">
                         ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter') ? `
                             <button type="button" data-nombre_estado="${currentServiceName}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</button>
                             <ul class="dropdown-menu">` +
-                                servicios_liquidador.map(serv => {
-                                    return `<li><a class="dropdown-item waves-effect change_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_servicio_liquidador="${serv.id_servicio_liquidador}">${serv.nombre_servicio_liquidador}</a></li>`;
-                                }).join('')
-                                + `</ul>` : `
+                                    servicios_liquidador.map(serv => {
+                                        return `<li><a class="dropdown-item waves-effect change_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_servicio_liquidador="${serv.id_servicio_liquidador}">${serv.nombre_servicio_liquidador}</a></li>`;
+                                    }).join('')
+                                    + `</ul>` : `
                             <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</span>
                             `}
                         </div>
                       `;
-                    }
-                },
-                {
-                    targets: 7,
-                    render: function (data, type, full, meta) {
-                        if (full.responsable_origen == 'Desconocido') {
-                            return `<span class="badge bg-label-dark">${full.responsable_origen}</span>`;
-                        } else if (full.responsable_origen == 'Sede') {
-                            return `<span class="badge bg-label-info">${full.responsable_origen}</span>`;
-                        } else {
-                            return `<span class="badge bg-label-primary">${full.responsable_origen}</span>`;
                         }
-                    }
-                },
-                {
-                    targets: 8,
-                    render: function (data, type, full, meta) {
-                        if (full.origen == null || full.origen == 'null' || full.origen == 'Desconocido') {
-                            return `<span class="badge bg-label-secondary">${full.origen}</span> <br>
-                            <small class="text-muted">${full.creado_por}</small>`;
-                        } else if (full.origen == 'QR' || full.origen == 'qr' || full.origen == 'Qr' || full.origen == 'QRCode' || full.origen == 'qrcode') {
-                            return `<span class="badge bg-label-info">${full.origen}</span> <br>
-                            <small class="text-muted">${full.creado_por}</small>`;
-                        } else if (full.origen == 'Curso Comparendo') {
-                            return `<span class="badge bg-label-primary">${full.origen}</span> <br>
-                            <small class="text-muted">${full.creado_por}</small>`;
-                        } else {
-                            return `<span class="badge bg-label-success">${full.origen}</span> <br>
-                            <small class="text-muted">${full.creado_por}</small>`;
+                    },
+                    {
+                        targets: 7,
+                        render: function (data, type, full, meta) {
+                            if (full.responsable_origen == 'Desconocido') {
+                                return `<span class="badge bg-label-dark">${full.responsable_origen}</span>`;
+                            } else if (full.responsable_origen == 'Sede') {
+                                return `<span class="badge bg-label-info">${full.responsable_origen}</span>`;
+                            } else {
+                                return `<span class="badge bg-label-primary">${full.responsable_origen}</span>`;
+                            }
                         }
-                    }
-                },
-                {
-                    orderable: false,
-                    targets: 9,
-                    render: function (data, type, full, meta) {
-                        return `
+                    },
+                    {
+                        targets: 8,
+                        render: function (data, type, full, meta) {
+                            if (full.origen == null || full.origen == 'null' || full.origen == 'Desconocido') {
+                                return `<span class="badge bg-label-secondary">${full.origen}</span> <br>
+                            <small class="text-muted">${full.creado_por}</small>`;
+                            } else if (full.origen == 'QR' || full.origen == 'qr' || full.origen == 'Qr' || full.origen == 'QRCode' || full.origen == 'qrcode') {
+                                return `<span class="badge bg-label-info">${full.origen}</span> <br>
+                            <small class="text-muted">${full.creado_por}</small>`;
+                            } else if (full.origen == 'Curso Comparendo') {
+                                return `<span class="badge bg-label-primary">${full.origen}</span> <br>
+                            <small class="text-muted">${full.creado_por}</small>`;
+                            } else {
+                                return `<span class="badge bg-label-success">${full.origen}</span> <br>
+                            <small class="text-muted">${full.creado_por}</small>`;
+                            }
+                        }
+                    },
+                    {
+                        orderable: false,
+                        targets: 9,
+                        render: function (data, type, full, meta) {
+                            return `
                         <div class="d-flex justify-content-end">
                             ${(rol == 'superadmin') ? `
                             <a href="${url}/dashboard/citas/edit/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
@@ -1216,11 +1219,146 @@ $(function () {
                                 <i class="tf-icons ti ti-search ti-md"></i>
                             </a>` : ``}
                         </div>`	;
+                        }
                     }
-                }
-            ],
-            pagingType: "simple"
-        });
+                ],
+                pagingType: "simple"
+            });
+        } else {
+            let table = $('.datatables-citas').DataTable({
+                ordering: true,
+                processing: true,
+                serverSide: true,
+                searching: false,
+                info: true,
+                pageLength: 50, // Cambiar la paginación a 50 entradas
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
+                    info: "Mostrando _START_ a _END_ de _MAX_ registros",
+                    infoEmpty: "No hay datos disponibles",
+                    infoFiltered: "(filtrados de un total de _MAX_ registros)"
+                },
+                dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+                ajax: {
+                    url: url + '/dashboard/citas/get_citas',
+                    type: "POST",
+                    data: function (d) {
+                        d.filtro_dia = filtroDia;
+                        d.filtro_dia_end = filtroDiaEnd;
+                        d.filtro_sede = filtroSede;
+                        d.filtro_estado = filtroEstado;
+                        d.filtro_estado_verificado = filtroEstadoVerificado;
+                        d.filtro_responsable = filtroResponsable;
+                        d.filtro_origen = filtroOrigen;
+                        d.filtro_search = filtroSearch;
+                        d.tipo_cita = tipoCita;
+                        // Parámetros necesarios para ordenamiento
+                        d.order = d.order;
+                        d.columns = d.columns;
+                        d.search = d.search;
+                    },
+                },
+                columns: [
+                    { data: 'nombre_cliente' },                 // Columna 0
+                    { data: 'reserva_cita' },                   // Columna 1
+                    { data: 'fecha_create' },                   // Columna 2
+                    { data: 'estado_actual_nombre' },           // Columna 3
+                    { data: 'estado_verificado_nombre' },       // Columna 4
+                    { data: null }                              // Columna 5 (botones)
+                ],
+                columnDefs: [
+                    {
+                        targets: 0,
+                        render: function (data, type, full, meta) {
+                            if (full.id_vehiculo) {
+                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small><br><span class="badge bg-label-dark">' + full.placa_vehiculo + '</span><small class="text-muted ml-2">' + full.tipo_vehiculo + ' - ' + full.modelo_vehiculo + '</small>';
+
+                                // texto = '<h6 class="m-0">' + full.nombre_cliente + $full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + ' - Tipo: ' + full.tipo_vehiculo + ' - Modelo: ' + full.modelo_vehiculo + '</small>';
+                            } else {
+                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small>';
+                            }
+                            return texto;
+                        }
+                    },
+                    {
+                        targets: 1,
+                        render: function (data, type, full, meta) {
+                            let fecha = full.reserva_cita.split(" ")[0];
+                            return `<h6 class="m-0">${fecha} ${full.rango_horario}</h6>`;
+                        }
+                    },
+                    {
+                        targets: 2,
+                        render: function (data, type, full, meta) {
+                            return `<h6 class="m-0">${full.fecha_create}</h6>`;
+                        }
+                    },
+                    {
+                        targets: 3,
+                        render: function (data, type, full, meta) {
+                            const bgColor = full.estado_actual_color; // Color de fondo del estado
+                            const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                            return `
+                        <div class="btn-group">
+                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'gestorsede') ? `
+                            <button type="button" data-nombre_estado="${full.estado_actual_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</button>
+                            <ul class="dropdown-menu" style="">` +
+                                    estados.map(estado => {
+                                        return `<li><a class="dropdown-item waves-effect change_estado_cita_verificado" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
+                                    }).join('')
+                                    + `</ul>` : `
+                            <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</span>
+                            `}
+                        </div>`;
+                        }
+                    },
+                    {
+                        targets: 4,
+                        render: function (data, type, full, meta) {
+                            const bgColor = full.estado_verificado_color; // Color de fondo del estado
+                            const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                            return `
+                        <div class="btn-group">
+                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter') ? `
+                            <button type="button" data-nombre_estado="${full.estado_verificado_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</button>
+                            <ul class="dropdown-menu" style="">` +
+                                    estados.map(estado => {
+                                        return `<li><a class="dropdown-item waves-effect change_estado_cita_verificado" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
+                                    }).join('')
+                                    + `</ul>` : `
+                            <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</span>
+                            `}
+                        </div>`;
+                        }
+                    },
+                    {
+                        orderable: false,
+                        targets: 5,
+                        render: function (data, type, full, meta) {
+                            return `
+                        <div class="d-flex justify-content-end">
+                            ${(rol == 'superadmin') ? `
+                            <a href="${url}/dashboard/citas/edit/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-edit ti-md"></i>
+                            </a>
+                            <button type="button" data-id="${full.id_cita}" class="btn_delete_cita btn btn-icon btn-label-danger waves-effect">
+                                <i class="tf-icons ti ti-trash ti-md"></i>
+                            </button>` : ``}
+                            ${(rol == 'callcenter') ? `
+                            <a href="${url}/dashboard/citas/edit/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-edit ti-md"></i>
+                            </a>` : ``}
+                            ${(rol == 'gestorsede') ? `
+                            <a href="${url}/dashboard/citas/view/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-search ti-md"></i>
+                            </a>` : ``}
+                        </div>`	;
+                        }
+                    }
+                ],
+                pagingType: "simple"
+            });
+        }
         // Eventos para los filtros
         $('#filtro-ayer').on('click', function () {
             const ayer = new Date();

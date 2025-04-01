@@ -455,7 +455,7 @@ class CitasController extends Controller
                 $telefono_cliente = $cliente ? $cliente->telefono_cliente : 'Teléfono no disponible';
 
                 // Asignar valores adicionales
-                $creado_por = $rol;
+                $creado_por = $rol . "-" . $user->name;
                 $origen = 'Curso Comparendo';
                 $responsable_origen = 'Curso Comparendo';
                 $tipo_dispositivo = $request->header('User-Agent'); // Detectar el dispositivo desde el User-Agent
@@ -489,36 +489,39 @@ class CitasController extends Controller
                     }
                 }
 
-                //  OBTENER EL LISTADO DE AGENTES CALLCENTER HABILITADOS
-                $agentes = User::role('callcenter')
-                    ->where('callcenter_habilitado', 1)
-                    ->orderBy('id', 'asc')
-                    ->get();
-                // log::info($agentes);
-                //  LEER EL PUNTERO ACTUAL DESDE tb_config
-                $config = DB::table('tb_config')
-                    ->where('config_key', 'round_robin_callcenter')
-                    ->first();
-                // Si no existe, lo iniciamos en 0
-                $puntero = $config ? (int)$config->config_value : 0;
+                if ($rol == "callcenter") {
+                    $idAgenteCallcenter = $user->id;
+                } else {
+                    $agentes = User::role('callcenter')
+                        ->where('callcenter_habilitado', 1)
+                        ->orderBy('id', 'asc')
+                        ->get();
+                    // log::info($agentes);
+                    //  LEER EL PUNTERO ACTUAL DESDE tb_config
+                    $config = DB::table('tb_config')
+                        ->where('config_key', 'round_robin_callcenter')
+                        ->first();
+                    // Si no existe, lo iniciamos en 0
+                    $puntero = $config ? (int)$config->config_value : 0;
 
-                // SELECCIONAR AL AGENTE SIGUIENTE
-                $countAgentes = $agentes->count();
-                $idAgenteCallcenter = null;
-                if ($countAgentes > 0) {
-                    // Si el puntero sobrepasa el total de agentes, reiniciamos a 0
-                    if ($puntero >= $countAgentes) {
-                        $puntero = 0;
+                    // SELECCIONAR AL AGENTE SIGUIENTE
+                    $countAgentes = $agentes->count();
+                    $idAgenteCallcenter = null;
+                    if ($countAgentes > 0) {
+                        // Si el puntero sobrepasa el total de agentes, reiniciamos a 0
+                        if ($puntero >= $countAgentes) {
+                            $puntero = 0;
+                        }
+                        // Asignamos el agente según la posición del puntero
+                        $idAgenteCallcenter = $agentes[$puntero]->id;
+
+                        // Incrementamos el puntero y lo guardamos en tb_config
+                        $puntero++;
+                        DB::table('tb_config')->updateOrInsert(
+                            ['config_key' => 'round_robin_callcenter'],
+                            ['config_value' => $puntero]
+                        );
                     }
-                    // Asignamos el agente según la posición del puntero
-                    $idAgenteCallcenter = $agentes[$puntero]->id;
-
-                    // Incrementamos el puntero y lo guardamos en tb_config
-                    $puntero++;
-                    DB::table('tb_config')->updateOrInsert(
-                        ['config_key' => 'round_robin_callcenter'],
-                        ['config_value' => $puntero]
-                    );
                 }
                 $agenteValue   = is_null($idAgenteCallcenter) ? "NULL" : $idAgenteCallcenter;
                 if ($id_vehiculo) {

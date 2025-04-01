@@ -108,6 +108,32 @@
                         <input type="number" class="form-control" id="modelo_vehiculo" name="modelo_vehiculo" required>
                     </div>
                 </div>
+                <div class="checkbox col-12 mx-auto my-4 px-4">
+                    <input id="form-checkbox-1" name="conscentimiento_subsidio" type="checkbox" required="required">
+                    <label for="form-checkbox-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200">
+                            <mask fill="white" id="checkbox-mask">
+                                <rect height="200" width="200"></rect>
+                            </mask>
+                            <rect mask="url(#checkbox-mask)" stroke-width="40" height="200" width="200"></rect>
+                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64"></path>
+                        </svg>
+                        <span class="text-center f18">Acepto las <a href="https://ciatran.com.co/assets/files/PD-DA-02-Politica-de-Tratamiento-de-Datos.pdf">politicas de tratamiento de datos.</a></span>
+                    </label>
+                </div>
+                <div class="checkbox col-12 mx-auto my-4 px-4">
+                    <input id="form-checkbox-2" name="conscentimiento_horario" type="checkbox" required="required">
+                    <label for="form-checkbox-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200">
+                            <mask fill="white" id="checkbox-mask">
+                                <rect height="200" width="200"></rect>
+                            </mask>
+                            <rect mask="url(#checkbox-mask)" stroke-width="40" height="200" width="200"></rect>
+                            <path stroke-width="15" d="M52 111.018L76.9867 136L149 64"></path>
+                        </svg>
+                        <span class="text-center f18">Soy conciente que debo llegar 15 minutos antes de la cita, de lo contrario no podre tomar el curso.</span>
+                    </label>
+                </div>
             </div>
             <input type="hidden" name="utm_source" value="{{ session('utm_source', 'Desconocido') }}">
             <input type="hidden" name="url_variables" value="{{ json_encode(request()->except('utm_source')) }}">

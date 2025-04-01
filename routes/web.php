@@ -101,18 +101,18 @@ Route::controller(ClientesController::class)->group(function () {
 })->name('clientes');
 // CITAS
 Route::controller(CitasController::class)->group(function () {
-    Route::get('dashboard/citas', 'index')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede']);
-    Route::get('dashboard/citas/cda', 'indexCDA')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede']);
-    Route::get('dashboard/citas/cea', 'indexCEA')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede']);
-    Route::get('dashboard/citas/cia', 'indexCIA')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede']);
-    Route::get('dashboard/citas/crc', 'indexCRC')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede']);
-    Route::post('dashboard/citas/get_citas', 'get_citas')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede']);
+    Route::get('dashboard/citas', 'index')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador']);
+    Route::get('dashboard/citas/cda', 'indexCDA')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador']);
+    Route::get('dashboard/citas/cea', 'indexCEA')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador']);
+    Route::get('dashboard/citas/cia', 'indexCIA')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador']);
+    Route::get('dashboard/citas/crc', 'indexCRC')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador']);
+    Route::post('dashboard/citas/get_citas', 'get_citas')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador']);
     Route::get('dashboard/citas/add', 'add')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede']);
     Route::post('dashboard/citas/save', 'save')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede']);
     Route::post('dashboard/citas/get_horarios', 'get_horarios')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede']);
-    Route::get('dashboard/citas/edit/{id}', 'edit')->middleware(['auth', 'verified', 'role:superadmin|callcenter']);
-    Route::get('dashboard/citas/view/{id}', 'view')->middleware(['auth', 'verified', 'role:gestorsede']);
-    Route::post('dashboard/citas/update', 'update')->middleware(['auth', 'verified', 'role:superadmin|callcenter']);
+    Route::get('dashboard/citas/edit/{id}', 'edit')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter']);
+    Route::get('dashboard/citas/view/{id}', 'view')->middleware(['auth', 'verified', 'role:superadmin|admin|gestorsede|liquidador']);
+    Route::post('dashboard/citas/update', 'update')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter']);
     Route::post('dashboard/citas/delete', 'delete')->middleware(['auth', 'verified', 'role:superadmin']);
     Route::get('dashboard/citas/configuracion', 'configuracion')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter']);
     Route::post('dashboard/citas/get_estados', 'get_estados')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede']);

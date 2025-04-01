@@ -68,17 +68,19 @@ $(function () {
                         let fecha_hoy = `${dia}/${mes}/${anio}`;
                         let fecha_seleccionada = e.format();
                         if (fecha_hoy == fecha_seleccionada) {
-                            horarios_disponibles = horarios.filter(function (item) {
-                                let hora_inicio = item.inicio_horario; // formato 24 horas como string: "HH:mm:ss"
-                                let hora_actual = hoy.getHours().toString().padStart(2, '0') + ':' +
-                                    hoy.getMinutes().toString().padStart(2, '0') + ':' +
-                                    hoy.getSeconds().toString().padStart(2, '0');
+                            // Obtener la hora actual y sumarle 40 minutos
+                            let ahora = new Date();
+                            let horaLimite = new Date(ahora.getTime() + 40 * 60000); // Sumar 40 minutos
 
-                                // Convierte ambas horas a objetos Date con una fecha base
-                                let horaInicioDate = new Date(`1970-01-01T${hora_inicio}Z`);
-                                let horaActualDate = new Date(`1970-01-01T${hora_actual}Z`);
-                                // Realiza la comparación y filtra los horarios
-                                return item.dia_sede_horario == dia_semana && horaInicioDate > horaActualDate;
+                            horarios_disponibles = horarios.filter(function (item) {
+                                let hora_inicio = item.inicio_horario; // Formato "HH:mm:ss"
+
+                                // Crear objetos Date con la misma fecha base para comparar correctamente
+                                let [hh, mm, ss] = hora_inicio.split(':').map(Number);
+                                let horaInicioDate = new Date();
+                                horaInicioDate.setHours(hh, mm, ss, 0); // Asignar la hora del horario
+
+                                return item.dia_sede_horario == dia_semana && horaInicioDate > horaLimite;
                             });
                         } else {
                             horarios_disponibles = horarios.filter(function (item) {

@@ -71,7 +71,7 @@
             </li>
         <?php
         }
-        if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'gestorsede') {
+        if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'gestorsede' || $rol == 'liquidador') {
         ?>
             <li class="menu-item <?= ($page == 'Citas') ? 'active open' : '' ?>">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
@@ -80,14 +80,14 @@
                     <?= ($alert > 0) ? '<div class="badge bg-danger rounded-pill ms-auto">' . $alert . '</div>' : '' ?>
                 </a>
                 <ul class="menu-sub">
-                    <li class="menu-item <?= ($page == 'Citas' && $subpage == 'Crear citas') ? 'active' : '' ?>">
-                        <a href="{{ url('dashboard/citas/add') }}" class="menu-link">
-                            <div>Crear citas</div>
-                        </a>
-                    </li>
                     <li class="menu-item <?= ($page == 'Citas' && $subpage == 'Listado') ? 'active' : '' ?>">
                         <a href="{{ url('dashboard/citas') }}" class="menu-link">
                             <div>Todas las Citas</div>
+                        </a>
+                    </li>
+                    <li class="menu-item <?= ($page == 'Citas' && $subpage == 'Crear citas') ? 'active' : '' ?>">
+                        <a href="{{ url('dashboard/citas/add') }}" class="menu-link">
+                            <div>Crear citas</div>
                         </a>
                     </li>
                     <?php
