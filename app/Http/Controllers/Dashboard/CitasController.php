@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard;
 
-use Illuminate\Support\Facades\Mail;
-use App\Mail\FormularioCompletado;
-use App\Mail\FormularioCompletadoNotifiInterno;
+use App\Services\SendPulseService;
 
 
 use App\Http\Controllers\Controller;
@@ -17,6 +15,12 @@ use App\Models\User;
 
 class CitasController extends Controller
 {
+    protected $sendPulse;
+
+    public function __construct(SendPulseService $sendPulse)
+    {
+        $this->sendPulse = $sendPulse;
+    }
     public function index()
     {
         $user = Auth::user();
@@ -533,25 +537,32 @@ class CitasController extends Controller
                 $save = DB::insert($sql);
                 if ($save) {
                     try {
-                        // Preparar los datos del formulario para el correo
-                        $formData = [
-                            'nombre_cliente' => $nombre_cliente,
-                            'nombre_sede' => $nombre_sede,
-                            'direccion_sede' => $direccion_sede,
-                            'apellido_cliente' => $apellido_cliente,
-                            'email_cliente' => $email_cliente,
-                            'telefono_cliente' => $telefono_cliente,
-                            'reserva_cita' => $reserva_cita,
-                            'rango_horario' => $rango_horario,
-                            'origen' => $origen,
-                            'tipo_dispositivo' => $tipo_dispositivo,
-                            'nombre_servicio' => $nombre_servicio,
-                        ];
 
+                        // Preparar los datos para la plantilla de SendPulse
+                        $templateVariables = [
+                            'nombre_cliente'   => $nombre_cliente,
+                            'apellido_cliente' => $apellido_cliente,
+                            'nombre_sede'      => $nombre_sede,
+                            'direccion_sede'   => $direccion_sede,
+                            'email_cliente'    => $email_cliente,
+                            'telefono_cliente' => $telefono_cliente,
+                            'reserva_cita'     => $reserva_cita,
+                            'rango_horario'    => $rango_horario,
+                            'origen'           => $origen,
+                            'tipo_dispositivo' => $tipo_dispositivo,
+                            'nombre_servicio'  => $nombre_servicio,
+                        ];
                         // Enviar el correo al cliente
-                        // Mail::to($email_cliente)->send(new FormularioCompletado($formData));
-                        // Enviar el correo a don miguel
-                        // Mail::to('jrubio@zocodigital.com')->send(new FormularioCompletadoNotifiInterno($formData));
+                        $enviadoCliente = $this->sendPulse->sendEmailConfirmacion(
+                            $email_cliente,
+                            $nombre_cliente,
+                            "Confirmación de cita",
+                            $templateVariables
+                        );
+
+                        if (!$enviadoCliente) {
+                            Log::error("Error al enviar el correo al cliente");
+                        }
                     } catch (\Exception $e) {
                         Log::error($e->getMessage());
                     }
