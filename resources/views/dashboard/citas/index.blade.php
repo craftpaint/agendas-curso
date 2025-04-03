@@ -30,7 +30,7 @@
                                 <div class="form-group form-group-grow">
                                     <input type="date" class="form-control" id="filtro-fecha-end" name="filtro-fecha-end">
                                 </div>
-                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador') { ?>
+                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
                                     <div class="form-group form-group-grow">
                                         <select id="filtro-sede" class="select2 form-select" placeholder="Seleccionar sede">
                                             <option value="">Todas las sedes</option>
@@ -70,7 +70,7 @@
                                         ?>
                                     </select>
                                 </div>
-                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador') { ?>
+                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
                                     <div class="form-group form-group-grow">
                                         <select id="filtro-responsable" class="select2 form-select" placeholder="Seleccionar origen">
                                             <option value="">Todos </option>
@@ -81,7 +81,7 @@
                                         </select>
                                     </div>
                                 <?php } ?>
-                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador') { ?>
+                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
                                     <div class="form-group form-group-grow">
                                         <select id="filtro-origen" class="select2 form-select" placeholder="Seleccionar Tag">
                                             <option value="">Todos los Tags</option>
@@ -118,7 +118,7 @@
                     <table class="datatables-citas table">
                         <thead>
                             <tr>
-                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador') { ?>
+                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
                                     <th>Cliente</th>
                                     <th>Sede</th>
                                     <th>Fecha Cita</th>

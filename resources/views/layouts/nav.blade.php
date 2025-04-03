@@ -27,7 +27,7 @@
             <span class="badge bg-label-primary">Rol: <?= $rol ?></span>
         </li>
         <?php
-        if ($rol == 'superadmin' || $rol == 'admin') {
+        if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'lidercallcenter') {
         ?>
             <li class="menu-item <?= ($page == 'Sedes') ? 'active open' : '' ?>">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
@@ -49,7 +49,7 @@
             </li>
         <?php
         }
-        if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'gestorsede') {
+        if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'gestorsede' || $rol == 'lidercallcenter') {
         ?>
             <li class="menu-item <?= ($page == 'Clientes') ? 'active open' : '' ?>">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
@@ -71,7 +71,7 @@
             </li>
         <?php
         }
-        if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'gestorsede' || $rol == 'liquidador') {
+        if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'gestorsede' || $rol == 'liquidador' || $rol == 'lidercallcenter') {
         ?>
             <li class="menu-item <?= ($page == 'Citas') ? 'active open' : '' ?>">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
@@ -91,7 +91,7 @@
                         </a>
                     </li>
                     <?php
-                    if ($rol == 'superadmin' || $rol == 'callcenter') {
+                    if ($rol == 'superadmin' || $rol == 'lidercallcenter') {
                     ?>
                         <li class="menu-item <?= ($page == 'Citas' && $subpage == 'Configuración') ? 'active' : '' ?>">
                             <a href="{{ url('dashboard/citas/configuracion') }}" class="menu-link">
@@ -104,7 +104,7 @@
                 </ul>
             </li>
         <?php }
-        if ($rol == 'superadmin' || $rol == 'admin') {
+        if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'lidercallcenter') {
         ?>
             <li class="menu-item <?= ($page == 'Usuarios') ? 'active' : '' ?>">
                 <a href="{{ url('dashboard/usuarios') }}" class="menu-link">
@@ -114,7 +114,7 @@
             </li>
         <?php
         }
-        if ($rol == 'superadmin' || $rol == 'liquidador' || $rol == 'admin' || $rol == 'callcenter') {
+        if ($rol == 'superadmin' || $rol == 'liquidador' || $rol == 'admin' || $rol == 'lidercallcenter') {
         ?>
             <li class="menu-item <?= ($page == 'Liquidador') ? 'active' : '' ?>">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
@@ -131,7 +131,7 @@
             </li>
         <?php
         }
-        if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter') {
+        if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'lidercallcenter') {
         ?>
             <li class="menu-item <?= ($page == 'Estadisticas') ? 'active open' : '' ?>">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">

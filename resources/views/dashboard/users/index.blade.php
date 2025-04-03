@@ -44,8 +44,11 @@
                                 <label class="form-label">Rol <span class="required_flied">*</span></label>
                                 <select class="form-select" id="rol-user" required name="role">
                                     <option value="">Seleccionar rol</option>
-                                    <option value="superadmin">Super administrador</option>
-                                    <option value="admin">Administrador</option>
+                                    <?php if ($rol == 'superadmin') { ?>
+                                        <option value="superadmin">Super administrador</option>
+                                        <option value="admin">Administrador</option>
+                                    <?php } ?>
+                                    <option value="lidercallcenter">Lider Call Center</option>
                                     <option value="gestorsede">Gestor sede</option>
                                     <option value="callcenter">Call center</option>
                                     <option value="liquidador">Liquidador</option>
@@ -99,8 +102,11 @@
                                 <label class="form-label">Rol <span class="required_flied">*</span></label>
                                 <select class="form-select" id="rol-user-edit" required name="role">
                                     <option value="">Seleccionar rol</option>
-                                    <option value="superadmin">Super administrador</option>
-                                    <option value="admin">Administrador</option>
+                                    <?php if ($rol == 'superadmin') { ?>
+                                        <option value="superadmin">Super administrador</option>
+                                        <option value="admin">Administrador</option>
+                                    <?php } ?>
+                                    <option value="lidercallcenter">Lider Call Center</option>
                                     <option value="gestorsede">Gestor sede</option>
                                     <option value="callcenter">Call center</option>
                                     <option value="liquidador">Liquidador</option>
@@ -112,10 +118,6 @@
                                     <input type="checkbox" name="callcenter_habilitado">
                                     <span class="slider"></span>
                                 </label>
-                                <!-- <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" name="callcenter_habilitado" role="switch" id="flexSwitchCheckDefault">
-                                    <label class="form-check-label" for="flexSwitchCheckDefault"></label>
-                                </div> -->
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Actualizar usuario</button>

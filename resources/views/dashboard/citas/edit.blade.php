@@ -14,7 +14,7 @@
                             <?= isset($cita->origen) ? '<small class="mb-2">Origen: <strong>' . $cita->origen . '</strong></small><br>' : '' ?>
                             <?= isset($cita->creado_por) ? '<small class="mb-2">Creado por: <strong>' . $cita->creado_por . '</strong></small><br>' : '' ?>
                         </div>
-                        <?php if ($rol === 'superadmin' || $rol == 'admin') { ?>
+                        <?php if ($rol === 'superadmin' || $rol == 'admin' || $rol == 'lidercallcenter') { ?>
                             <div class="mb-4 col-12 col-md-6">
                                 <label class="form-label">Agente Callcenter asginado: <span class="required_flied">*</span></label>
                                 <select class="select_search_agente_callcenter select2 form-select" name="id_agente_callcenter" required>
@@ -23,10 +23,7 @@
                                         foreach ($agentes_callcenter as $agente) {
                                             echo '<option ' . (($agente->id == $cita->id_agente_callcenter) ? 'selected' : '') . ' value="' . $agente->id . '">' . $agente->name . '</option>';
                                         }
-                                    }
-                                    ?>
-                                    <?php
-                                    if (isset($cita->id_agente_callcenter) && $cita->id_agente_callcenter != '' && $agentes_callcenter) {
+                                    } else if (isset($cita->id_agente_callcenter) && $cita->id_agente_callcenter != '' && $agentes_callcenter) {
                                         // echo '<option value="' . $cita->id_agente_callcenter . '">' . $cita->tipo_doc_cliente . $cita->doc_cliente . ': ' . $cita->nombre_cliente . ' ' . $cita->apellido_cliente . '</option>';
                                         echo '<option value="' . $agentes_callcenter->first()->id . '">' . $agentes_callcenter->first()->name . '</option>';
                                     } else {

@@ -38,7 +38,7 @@
                                     ?>
                                 </select>
                             </div>
-                            <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador') { ?>
+                            <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
                                 <div class="mb-4 col-md-6">
                                     <label class="form-label">Estado verificado de la cita <span class="required_flied">*</span></label>
                                     <select id="selectSede" class="form-select" required name="id_estado_verificado">
@@ -65,7 +65,7 @@
                                     <option value="">Seleccionar horario</option>
                                 </select>
                             </div>
-                            <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador') { ?>
+                            <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
                                 <div class="mb-4 col-md-6">
                                     <label class="form-label">Servicio Liquidador<span class="required_flied">*</span></label>
                                     <select id="selectSede" class="form-select" required name="id_servicio_liquidador">

@@ -493,13 +493,20 @@ class CitasController extends Controller
                     }
                 }
 
-                if ($rol == "callcenter") {
+                if ($rol == "callcenter" || $rol == "lidercallcenter") {
                     $idAgenteCallcenter = $user->id;
                 } else {
                     $agentes = User::role('callcenter')
                         ->where('callcenter_habilitado', 1)
                         ->orderBy('id', 'asc')
                         ->get();
+                    // log::info($agentes);
+                    $lideragentes = User::role('lidercallcenter')
+                        ->where('callcenter_habilitado', 1)
+                        ->orderBy('id', 'asc')
+                        ->get();
+
+                    $agentes = $agentes->merge($lideragentes);
                     // log::info($agentes);
                     //  LEER EL PUNTERO ACTUAL DESDE tb_config
                     $config = DB::table('tb_config')
@@ -510,6 +517,7 @@ class CitasController extends Controller
 
                     // SELECCIONAR AL AGENTE SIGUIENTE
                     $countAgentes = $agentes->count();
+                    $countAgentes += $lideragentes->count();
                     $idAgenteCallcenter = null;
                     if ($countAgentes > 0) {
                         // Si el puntero sobrepasa el total de agentes, reiniciamos a 0
@@ -556,7 +564,7 @@ class CitasController extends Controller
                         $enviadoCliente = $this->sendPulse->sendEmailConfirmacion(
                             $email_cliente,
                             $nombre_cliente,
-                            "Confirmación de cita",
+                            $nombre_cliente . " Confirmamos tu cita",
                             $templateVariables
                         );
 
@@ -656,9 +664,14 @@ class CitasController extends Controller
         $data['anotaciones'] = DB::select($sql);
         $sql = "SELECT * FROM tb_vehiculo WHERE id_cliente = $id";
         $data['vehiculos'] = DB::select($sql);
-        $data['agentes_callcenter'] = User::role('callcenter')
+        $agentes = User::role('callcenter')
             ->orderBy('id', 'asc')
             ->get();
+        $lideragentes = User::role('lidercallcenter')
+            ->orderBy('id', 'asc')
+            ->get();
+        $agentes = $agentes->merge($lideragentes);
+        $data['agentes_callcenter'] = $agentes;
         //Recorremos las anotaciones para ingresar el nombre del usuario
         foreach ($data['anotaciones'] as $key => $value) {
             $user = User::find($value->id_user);
@@ -2008,19 +2021,19 @@ class CitasController extends Controller
                 // Filtro de servicio liquidador
                 if (!empty($filtro_servicio_liquidador)) {
                     $sqlBase .= " AND t1.id_servicio_liquidador = $filtro_servicio_liquidador";
-                    log::info($filtro_servicio_liquidador . " - Si pasa");
+                    // log::info($filtro_servicio_liquidador . " - Si pasa");
                 }
 
                 // Filtro de estado validacion liquidador
                 if (!empty($filtro_estado_validacion_liquidador)) {
                     $sqlBase .= " AND l.estado_liquidador = '$filtro_estado_validacion_liquidador'";
-                    log::info($filtro_estado_validacion_liquidador . " - Si pasa");
+                    // log::info($filtro_estado_validacion_liquidador . " - Si pasa");
                 }
 
                 // Filtro de estado pago liquidador
                 if (!empty($filtro_estado_pago_liquidador)) {
                     $sqlBase .= " AND l.pago_liquidador = '$filtro_estado_pago_liquidador'";
-                    log::info($filtro_estado_pago_liquidador . " - Si pasa");
+                    // log::info($filtro_estado_pago_liquidador . " - Si pasa");
                 }
 
                 // Filtro de búsqueda

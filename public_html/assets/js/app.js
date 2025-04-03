@@ -222,6 +222,10 @@ $(function () {
                             <button type="button" data-id="${full.id_sede}" class="btn_delete_sede btn btn-icon btn-label-danger waves-effect">
                                 <i class="tf-icons ti ti-trash ti-md"></i>
                             </button>` : ``}
+                            ${(rol == 'lidercallcenter') ? `
+                            <a href="${url}/dashboard/sedes/edit/${full.id_sede}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-edit ti-md"></i>
+                            </a>` : ``}
                         </div>`	;
                     }
                 },
@@ -543,7 +547,7 @@ $(function () {
                             <button type="button" data-id="${full.id_cliente}" class="btn_delete_cliente btn btn-icon btn-label-danger waves-effect">
                                 <i class="tf-icons ti ti-trash ti-md"></i>
                             </button>` : ``}
-                            ${(rol == 'callcenter') ? `
+                            ${(rol == 'callcenter' || rol == 'lidercallcenter') ? `
                             <a href="${url}/dashboard/clientes/edit/${full.id_cliente}" class="btn btn-icon btn-label-primary waves-effect me-2">
                                 <i class="tf-icons ti ti-edit ti-md"></i>
                             </a>` : ``}
@@ -631,7 +635,7 @@ $(function () {
                             <button type="button" data-id="${full.id_vehiculo}" class="btn_delete_vehiculo btn btn-icon btn-label-danger waves-effect">
                                 <i class="tf-icons ti ti-trash ti-md"></i>
                             </button>` : ``}
-                            ${(rol == 'callcenter') ? `
+                            ${(rol == 'callcenter' || rol == 'lidercallcenter') ? `
                             <a href="${url}/dashboard/clientes/edit_vehiculos/${full.id_vehiculo}" class="btn btn-icon btn-label-primary waves-effect me-2">
                                 <i class="tf-icons ti ti-edit ti-md"></i>
                             </a>` : ``}
@@ -737,7 +741,7 @@ $(function () {
                     dias_disponibles_datapicker = [...new Set(dias_disponibles_datapicker)];
                     let dias_no_disponibles = dias_fijos.filter(elemento => !dias_disponibles_datapicker.includes(elemento));
                     var startDateDatepicker = new Date(); // Por defecto se restringe a partir de hoy
-                    if (rol === 'superadmin' || rol === 'admin' || rol === 'callcenter') {
+                    if (rol === 'superadmin' || rol === 'admin' || rol === 'callcenter' || rol == 'lidercallcenter') {
                         startDateDatepicker = null; // Permite seleccionar cualquier fecha
                     }
 
@@ -1023,7 +1027,7 @@ $(function () {
     //TABLAS DE CITAS
     if ($('.datatables-citas').length) {
         tipoCita = $('#tipo_cita').val();
-        if (rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'liquidador') {
+        if (rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'liquidador' || rol == 'lidercallcenter') {
             table_citas = $('.datatables-citas').DataTable({
                 ordering: true,
                 processing: true,
@@ -1109,7 +1113,7 @@ $(function () {
                             const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
                             return `
                         <div class="btn-group">
-                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'gestorsede') ? `
+                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'gestorsede' || rol == 'lidercallcenter') ? `
                             <button type="button" data-nombre_estado="${full.estado_actual_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</button>
                             <ul class="dropdown-menu" style="">` +
                                     estados.map(estado => {
@@ -1128,7 +1132,7 @@ $(function () {
                             const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
                             return `
                         <div class="btn-group">
-                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter') ? `
+                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'lidercallcenter') ? `
                             <button type="button" data-nombre_estado="${full.estado_verificado_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</button>
                             <ul class="dropdown-menu" style="">` +
                                     estados.map(estado => {
@@ -1155,7 +1159,7 @@ $(function () {
                                 : 'Sin servicio seleccionado';
                             return `
                         <div class="btn-group">
-                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter') ? `
+                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'lidercallcenter') ? `
                             <button type="button" data-nombre_estado="${currentServiceName}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</button>
                             <ul class="dropdown-menu">` +
                                     servicios_liquidador.map(serv => {
@@ -1211,7 +1215,7 @@ $(function () {
                             <button type="button" data-id="${full.id_cita}" class="btn_delete_cita btn btn-icon btn-label-danger waves-effect">
                                 <i class="tf-icons ti ti-trash ti-md"></i>
                             </button>` : ``}
-                            ${(rol == 'callcenter') ? `
+                            ${(rol == 'callcenter' || rol == 'lidercallcenter') ? `
                             <a href="${url}/dashboard/citas/edit/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
                                 <i class="tf-icons ti ti-edit ti-md"></i>
                             </a>` : ``}
@@ -1301,7 +1305,7 @@ $(function () {
                             const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
                             return `
                         <div class="btn-group">
-                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'gestorsede') ? `
+                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'gestorsede' || rol == 'lidercallcenter') ? `
                             <button type="button" data-nombre_estado="${full.estado_actual_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</button>
                             <ul class="dropdown-menu" style="">` +
                                     estados.map(estado => {
@@ -1320,7 +1324,7 @@ $(function () {
                             const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
                             return `
                         <div class="btn-group">
-                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter') ? `
+                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'lidercallcenter') ? `
                             <button type="button" data-nombre_estado="${full.estado_verificado_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</button>
                             <ul class="dropdown-menu" style="">` +
                                     estados.map(estado => {
@@ -1345,7 +1349,7 @@ $(function () {
                             <button type="button" data-id="${full.id_cita}" class="btn_delete_cita btn btn-icon btn-label-danger waves-effect">
                                 <i class="tf-icons ti ti-trash ti-md"></i>
                             </button>` : ``}
-                            ${(rol == 'callcenter') ? `
+                            ${(rol == 'callcenter' || rol == 'lidercallcenter') ? `
                             <a href="${url}/dashboard/citas/edit/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
                                 <i class="tf-icons ti ti-edit ti-md"></i>
                             </a>` : ``}
@@ -1575,6 +1579,10 @@ $(function () {
                             <button type="button" data-id="${full.id}" class="btn_delete_usuario btn btn-icon btn-label-danger waves-effect">
                                 <i class="tf-icons ti ti-trash ti-md"></i>
                             </button>` : ``}
+                            ${(rol == 'lidercallcenter') ? `
+                            <a href="#" data-id="${full.id}" class="btn_edit_usuario btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-edit ti-md"></i>
+                            </a>` : ``}
                         </div>`	;
                     }
                 },
@@ -1628,7 +1636,7 @@ $(function () {
                     $('.content_users_edit input[name="email"]').val(response.usuario.email);
                     $('.content_users_edit input[name="password"]').val('');
                     $('.content_users_edit select[name="role"]').val(response.usuario.role);
-                    if (response.usuario.role == 'callcenter') {
+                    if (response.usuario.role == 'callcenter' || response.usuario.role == 'lidercallcenter') {
                         $('#contenedor-rol-user-edit').addClass('col-3');
                         $('#contenedor-rol-user-edit').removeClass('col-6');
                         $('#contenedor-habilitar-call-edit').show();
@@ -1637,12 +1645,9 @@ $(function () {
                         $('#contenedor-rol-user-edit').removeClass('col-3');
                         $('#contenedor-habilitar-call-edit').hide();
                     }
-                    console.log(response.usuario.callcenter_habilitado);
                     if (response.usuario.callcenter_habilitado == 1) {
-                        console.log('deberia habilitar');
                         $('.content_users_edit input[name="callcenter_habilitado"]').prop('checked', true);
                     } else {
-                        console.log('deberia deshabilitar');
                         $('.content_users_edit input[name="callcenter_habilitado"]').prop('checked', false);
                     }
                     $('.content_users_add').hide();
@@ -1656,7 +1661,7 @@ $(function () {
             $('.content_users_add').fadeIn(200);
         });
         $('#rol-user').change(function () {
-            if ($(this).val() == 'callcenter') {
+            if ($(this).val() == 'callcenter' || $(this).val() == 'lidercallcenter') {
                 $('#contenedor-rol-user').addClass('col-3');
                 $('#contenedor-rol-user').removeClass('col-6');
                 $('#contenedor-habilitar-call').show();
@@ -1666,7 +1671,7 @@ $(function () {
                 $('#contenedor-habilitar-call').hide();
             }
         }); $('#rol-user-edit').change(function () {
-            if ($(this).val() == 'callcenter') {
+            if ($(this).val() == 'callcenter' || $(this).val() == 'lidercallcenter') {
                 $('#contenedor-rol-user-edit').addClass('col-3');
                 $('#contenedor-rol-user-edit').removeClass('col-6');
                 $('#contenedor-habilitar-call-edit').show();

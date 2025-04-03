@@ -9,7 +9,9 @@
                 <div class="p-4 d-flex align-items-center justify-content-between">
                     <h5 class="m-0">Vehiculos</h5>
                     <a href="{{ url('dashboard/clientes/add_vehiculos') }}" class="btn btn-primary" style="margin-left: auto;margin-right: 10px;">Agregar vehiculo</a>
-                    <a href="#" data-action="{{ url('dashboard/clientes/dowload') }}" data-type="vehiculos" class="btn_descagar btn btn-dark">Descargar</a>
+                    <?php if ($rol == 'superadmin' || $rol == 'admin'  || $rol == 'lidercallcenter') { ?>
+                        <a href="#" data-action="{{ url('dashboard/clientes/dowload') }}" data-type="cliente" class="btn_descagar btn btn-dark">Descargar</a>
+                    <?php } ?>
                 </div>
                 <div class="card-datatable text-nowrap">
                     <table class="datatables-vehiculos table">
