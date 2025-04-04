@@ -125,7 +125,7 @@
                                     <th>Fecha Creación</th>
                                     <th>Estado</th>
                                     <th>Estado Verificado</th>
-                                    <th>Servicio</th>
+                                    <th>Agente Callcenter</th>
                                     <th>Origen</th>
                                     <th>Tag</th>
                                     <th></th>
@@ -152,4 +152,5 @@
 <script>
     const estados = JSON.parse('<?php echo json_encode($estados); ?>');
     const servicios_liquidador = JSON.parse('<?php echo json_encode($servicios_liquidador); ?>');
+    const agentes = JSON.parse('<?php echo json_encode($agentes); ?>');
 </script>

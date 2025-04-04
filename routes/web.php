@@ -122,6 +122,7 @@ Route::controller(CitasController::class)->group(function () {
     Route::post('dashboard/citas/delete_estados', 'delete_estados')->middleware(['auth', 'verified', 'role:superadmin']);
     Route::post('dashboard/citas/change_estado', 'change_estado')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
     Route::post('dashboard/citas/change_estado_verificado', 'change_estado_verificado')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|lidercallcenter']);
+    Route::post('dashboard/citas/change_agente_call', 'change_agente_call')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|lidercallcenter']);
     Route::post('dashboard/citas/dowload', 'dowload')->middleware(['auth', 'verified', 'role:superadmin|admin|gestorsede|lidercallcenter']);
 
     Route::post('dashboard/citas/get_seguimiento_cita', 'get_seguimiento_cita')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador|lidercallcenter']);

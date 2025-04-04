@@ -65,23 +65,24 @@
                                     <option value="">Seleccionar horario</option>
                                 </select>
                             </div>
-                            <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
+                            <input type="hidden" name="id_agente_callcenter" value="2">
+                            <!-- <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
                                 <div class="mb-4 col-md-6">
                                     <label class="form-label">Servicio Liquidador<span class="required_flied">*</span></label>
                                     <select id="selectSede" class="form-select" required name="id_servicio_liquidador">
                                         <option value="">Seleccionar servicio</option>
                                         <?php
-                                        if (is_array($servicios_liquidador) && !empty($servicios_liquidador)) {
-                                            foreach ($servicios_liquidador as $key => $servicio) {
-                                                echo '<option value="' . $servicio->id_servicio_liquidador . '">' . $servicio->nombre_servicio_liquidador . '</option>';
-                                            }
-                                        }
+                                        // if (is_array($servicios_liquidador) && !empty($servicios_liquidador)) {
+                                        //     foreach ($servicios_liquidador as $key => $servicio) {
+                                        //         echo '<option value="' . $servicio->id_servicio_liquidador . '">' . $servicio->nombre_servicio_liquidador . '</option>';
+                                        //     }
+                                        // }
                                         ?>
                                     </select>
                                 </div>
                             <?php } else { ?>
                                 <input type="hidden" name="id_servicio_liquidador" value="5">
-                            <?php } ?>
+                            <?php } ?> -->
                             <div class="mb-4 col-md-12">
                                 <label class="form-label">Cliente <span class="required_flied">*</span></label>
                                 <select class="select_search_cliente" name="id_cliente" required>

@@ -45,6 +45,22 @@ class CitasController extends Controller
         //Estados
         $sql = "SELECT * FROM tb_estado";
         $data['estados'] = DB::select($sql);
+
+        $agentes = User::role('callcenter')
+            ->where('callcenter_habilitado', 1)
+            ->orderBy('id', 'asc')
+            ->get();
+        // log::info($agentes);
+        $lideragentes = User::role('lidercallcenter')
+            ->where('callcenter_habilitado', 1)
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $agentes = $agentes->merge($lideragentes);
+        $data['agentes'] = $agentes->toArray();
+
+        // Si quieres loguearlo en formato colección:
+        log::info(collect($data['agentes']));
         //Servicios Liquidador
         $sql = "SELECT * FROM tb_servicio_liquidador";
         $data['servicios_liquidador'] = DB::select($sql);
@@ -250,6 +266,7 @@ class CitasController extends Controller
                     t2.doc_cliente,
                     t2.tipo_doc_cliente,
                     t2.telefono_cliente,
+                    t2.email_cliente,
                     t3.id_estado AS estado_actual_id,
                     t3.nombre_estado AS estado_actual_nombre,
                     t3.color_estado AS estado_actual_color,
@@ -259,6 +276,7 @@ class CitasController extends Controller
                     t5.nombre_sede,
                     t5.id_servicio,
                     t6.tipo_servicio,
+                    a.name AS agente_callcenter,
                     l.id_liquidador,
                     l.estado_liquidador,
                     l.comentario_liquidador	,
@@ -277,6 +295,7 @@ class CitasController extends Controller
                 INNER JOIN tb_estado AS t4 ON t1.id_estado_verificado = t4.id_estado
                 INNER JOIN tb_sede AS t5 ON t1.id_sede = t5.id_sede
                 INNER JOIN tb_servicio AS t6 ON t5.id_servicio = t6.id_servicio
+                INNER JOIN users AS a ON t1.id_agente_callcenter = a.id
                 LEFT JOIN tb_liquidador AS l ON t1.id_cita = l.id_cita
                 LEFT JOIN tb_servicio_liquidador AS s ON t1.id_servicio_liquidador = s.id_servicio_liquidador
                 LEFT JOIN tb_vehiculo AS v ON t1.id_vehiculo = v.id_vehiculo
@@ -517,7 +536,6 @@ class CitasController extends Controller
 
                     // SELECCIONAR AL AGENTE SIGUIENTE
                     $countAgentes = $agentes->count();
-                    $countAgentes += $lideragentes->count();
                     $idAgenteCallcenter = null;
                     if ($countAgentes > 0) {
                         // Si el puntero sobrepasa el total de agentes, reiniciamos a 0
@@ -537,9 +555,9 @@ class CitasController extends Controller
                 }
                 $agenteValue   = is_null($idAgenteCallcenter) ? "NULL" : $idAgenteCallcenter;
                 if ($id_vehiculo) {
-                    $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado, id_vehiculo,id_estado_verificado, id_servicio_liquidador, id_agente_callcenter,reserva_cita, rango_horario, desc_cita,responsable_origen, creado_por, origen, tipo_dispositivo, created_at, updated_at) VALUES ($id_cliente, $id_sede, $id_estado, $id_vehiculo, $id_estado_verificado, $id_servicio_liquidador, $agenteValue, '$reserva_cita', '$rango_horario', '$desc_cita', '$responsable_origen', '$creado_por', '$origen', '$tipo_dispositivo', DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR))";
+                    $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado, id_vehiculo,id_estado_verificado, id_servicio_liquidador, id_agente_callcenter,reserva_cita, rango_horario, desc_cita,responsable_origen, creado_por, origen, tipo_dispositivo, created_at, updated_at) VALUES ($id_cliente, $id_sede, $id_estado, $id_vehiculo, $id_estado_verificado, 2, $agenteValue, '$reserva_cita', '$rango_horario', '$desc_cita', '$responsable_origen', '$creado_por', '$origen', '$tipo_dispositivo', DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR))";
                 } else {
-                    $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado,id_estado_verificado, id_servicio_liquidador, id_agente_callcenter,reserva_cita, rango_horario, desc_cita,responsable_origen, creado_por, origen, tipo_dispositivo, created_at, updated_at) VALUES ($id_cliente, $id_sede, $id_estado, $id_estado_verificado, $id_servicio_liquidador, $agenteValue, '$reserva_cita', '$rango_horario', '$desc_cita', '$responsable_origen', '$creado_por', '$origen', '$tipo_dispositivo', DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR))";
+                    $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado,id_estado_verificado, id_servicio_liquidador, id_agente_callcenter,reserva_cita, rango_horario, desc_cita,responsable_origen, creado_por, origen, tipo_dispositivo, created_at, updated_at) VALUES ($id_cliente, $id_sede, $id_estado, $id_estado_verificado, 2, $agenteValue, '$reserva_cita', '$rango_horario', '$desc_cita', '$responsable_origen', '$creado_por', '$origen', '$tipo_dispositivo', DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR))";
                 }
                 // $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado, reserva_cita, rango_horario, desc_cita) VALUES ($id_cliente, $id_sede, $id_estado, '$reserva_cita', '$rango_horario', '$desc_cita')";
                 $save = DB::insert($sql);
@@ -809,6 +827,37 @@ class CitasController extends Controller
                     'validate' => true,
                     'text' => 'Cita borrada correctamente'
                 ];
+            } catch (\Throwable $e) {
+                Log::error($e->getMessage());
+            }
+            //retornar respuesta
+            return response()->json($objLoad);
+        }
+    }
+    public function change_agente_call(Request $request)
+    {
+        if ($request->ajax()) {
+            $objLoad = ['validate' => false];
+            //Ejecución de la funcion
+            try {
+
+                $id_agente = $request->request->get('id_agente');
+                $id_cita = $request->request->get('id_cita');
+                $sql = "UPDATE tb_cita SET id_agente_callcenter = '$id_agente' WHERE id_cita = '$id_cita'";
+                $sqlupdate = DB::update($sql);
+                if ($sqlupdate) {
+                    $objLoad = [
+                        'validate' => true,
+                        'text' => 'Agente Callcenter actualizado correctamente',
+                        'id' => $id_cita
+                    ];
+                } else {
+                    $objLoad['text'] = 'No se realizaron cambios en el agente Callcenter.';
+                    log::error('No se realizaron cambios en el agente Callcenter.');
+                    log::error($sqlupdate);
+                    log::info($id_agente);
+                    log::info($id_cita);
+                }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }

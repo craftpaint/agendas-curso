@@ -866,9 +866,9 @@ $(function () {
         // console.log('Cliente seleccionado:', clientId);
         // console.log('Tipo de servicio actual:', currentServiceType);
         // Condiciones:
-        // 1. currentServiceType debe existir y ser "CDA"
+        // 1. currentServiceType debe existir y ser "CIA"
         // 2. Debe haber un cliente seleccionado
-        if (currentServiceType && currentServiceType == 'CDA' && clientId) {
+        if (currentServiceType && currentServiceType == 'CIA' && clientId) {
             loadVehiculos(clientId);
         } else {
             hideVehiculoSelect();
@@ -1078,11 +1078,11 @@ $(function () {
                         targets: 0,
                         render: function (data, type, full, meta) {
                             if (full.id_vehiculo) {
-                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small><br><span class="badge bg-label-dark">' + full.placa_vehiculo + '</span><small class="text-muted ml-2">' + full.tipo_vehiculo + ' - ' + full.modelo_vehiculo + '</small>';
+                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small><br><small class="text-muted">' + full.email_cliente + '</small><br><span class="badge bg-label-dark">' + full.placa_vehiculo + '</span><small class="text-muted ml-2">' + full.tipo_vehiculo + '</small>';
 
                                 // texto = '<h6 class="m-0">' + full.nombre_cliente + $full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + ' - Tipo: ' + full.tipo_vehiculo + ' - Modelo: ' + full.modelo_vehiculo + '</small>';
                             } else {
-                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small>';
+                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small><br><small class="text-muted">' + full.email_cliente + '</small>';
                             }
                             return texto;
                         }
@@ -1145,31 +1145,22 @@ $(function () {
                         }
                     },
                     {
-                        // Columna 6 -> Servicio liquidador
+                        // Columna 6 -> Agente Call Center
                         targets: 6,
                         render: function (data, type, full, meta) {
-                            var bgColor = "#e5e5e5"; // Color de fondo del servicio por defecto
-                            if (full.color_servicio_liquidador) {
-                                bgColor = full.color_servicio_liquidador; // Color de fondo del servicio
-                            }
-                            const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
-                            // Si no tiene servicio, mostrará “Selecciona un servicio”
-                            let currentServiceName = full.nombre_servicio_liquidador
-                                ? full.nombre_servicio_liquidador
-                                : 'Sin servicio seleccionado';
                             return `
-                        <div class="btn-group">
-                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'lidercallcenter') ? `
-                            <button type="button" data-nombre_estado="${currentServiceName}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</button>
-                            <ul class="dropdown-menu">` +
-                                    servicios_liquidador.map(serv => {
-                                        return `<li><a class="dropdown-item waves-effect change_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_servicio_liquidador="${serv.id_servicio_liquidador}">${serv.nombre_servicio_liquidador}</a></li>`;
+                            <div class="btn-group">
+                            ${(rol == 'superadmin' || rol == 'admin' || rol == 'lidercallcenter') ? `
+                                <button type="button" data-nombre_agente="${full.id_agente_callcenter}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false" >${full.agente_callcenter}</button>
+                                <ul class="dropdown-menu" style="">` +
+                                    agentes.map(agente => {
+                                        return `<li><a class="dropdown-item waves-effect change_agente_call" data-id_cita="${full.id_cita}" data-id_agente="${agente.id}">${agente.name}</a></li>`;
                                     }).join('')
                                     + `</ul>` : `
-                            <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</span>
-                            `}
-                        </div>
-                      `;
+                                <span class="badge bg-label-dark">${full.agente_callcenter}</span>
+                                `}
+                            </div>`;
+
                         }
                     },
                     {
@@ -1309,7 +1300,7 @@ $(function () {
                             <button type="button" data-nombre_estado="${full.estado_actual_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</button>
                             <ul class="dropdown-menu" style="">` +
                                     estados.map(estado => {
-                                        return `<li><a class="dropdown-item waves-effect change_estado_cita_verificado" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
+                                        return `<li><a class="dropdown-item waves-effect change_estado_cita" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
                                     }).join('')
                                     + `</ul>` : `
                             <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</span>
@@ -1504,6 +1495,22 @@ $(function () {
                 type: 'POST',
                 data: {
                     id_estado: id_estado,
+                    id_cita: id_cita
+                },
+                success: function (data) {
+                    table_citas.ajax.reload();
+                }
+            });
+        });
+        //Cambiamos el estado verificado
+        $('.datatables-citas').on('click', '.change_agente_call', function () {
+            let id_agente = $(this).data('id_agente');
+            let id_cita = $(this).data('id_cita');
+            $.ajax({
+                url: url + '/dashboard/citas/change_agente_call',
+                type: 'POST',
+                data: {
+                    id_agente: id_agente,
                     id_cita: id_cita
                 },
                 success: function (data) {
@@ -2381,7 +2388,7 @@ $(function () {
                             texto = `
                             <h6 class="m-0">${full.nombre_cliente} ${full.apellido_cliente}</h6>
                             <small>${full.tipo_doc_cliente} ${full.doc_cliente} - Telf: <a href="tel:${full.telefono_cliente}">${full.telefono_cliente}</a></small> <br>
-                            <span class="badge bg-label-dark">${full.placa_vehiculo}</span><small class="text-muted ml-2">${full.tipo_vehiculo} -  ${full.modelo_vehiculo}</small><br>
+                            <span class="badge bg-label-dark">${full.placa_vehiculo}</span><small class="text-muted ml-2">${full.tipo_vehiculo} </small><br>
                             <span class="badge mt-1" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</span>`;
                         } else {
                             texto = `

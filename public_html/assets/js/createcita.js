@@ -145,16 +145,16 @@ $(function () {
     function checkAndLoadVehiculos() {
         console.log('Tipo de servicio actual:', currentServiceType);
         // Condiciones:
-        // 1. currentServiceType debe existir y ser "CDA"
-        if (currentServiceType && currentServiceType == 'CDA') {
+        // 1. currentServiceType debe existir y ser "CIA"
+        if (currentServiceType && currentServiceType == 'CIA') {
             $('#divContentVehiculo').show();
             $('#selectTipoVehiculo').attr('required', true);
             $('#placa_vehiculo').attr('required', true);
             $('#modelo_vehiculo').attr('required', true);
         }
 
-        // 2. currentServiceType debe existir y ser "CDA"
-        if (currentServiceType && currentServiceType == 'CDA') {
+        // 2. currentServiceType debe existir y ser "CIA"
+        if (currentServiceType && currentServiceType == 'CIA') {
             $('#divContentVehiculo').show();
             $('#selectTipoVehiculo').attr('required', true);
             $('#placa_vehiculo').attr('required', true);
@@ -200,7 +200,9 @@ $(function () {
         e.preventDefault();
         let form = $(this);
         let url = form.attr('action');
+        let submitBtn = form.find('button[type="submit"]');
         let valid = true;
+
         form.find('input, select').each(function (index, element) {
             if ($(element).prop('required') && $(element).val() == '') {
                 valid = false;
@@ -219,6 +221,10 @@ $(function () {
             });
             return false;
         } else {
+            // Mostrar loader y deshabilitar botón
+            submitBtn.prop('disabled', true);
+            submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...');
+
             //Tipo de telefono
             if ($('#phoneCliente').length) {
                 const fullPhoneNumber = phoneInput.getNumber();
@@ -231,6 +237,10 @@ $(function () {
                 data: data,
                 dataType: 'json',
                 success: function (response) {
+                    // Revertir botón
+                    submitBtn.prop('disabled', false);
+                    submitBtn.html('Agendar');
+
                     if (response.validate) {
                         // Swal.fire({
                         //     title: '¡Cita agendada!',

@@ -103,10 +103,7 @@
                         <label class="form-label">Placa de vehiculo <span class="required_flied">*</span></label>
                         <input type="text" class="form-control" id="placa_vehiculo" name="placa_vehiculo" required>
                     </div>
-                    <div class="mb-4 col-6">
-                        <label class="form-label">Modelo de vehiculo <span class="required_flied">*</span></label>
-                        <input type="number" class="form-control" id="modelo_vehiculo" name="modelo_vehiculo" required>
-                    </div>
+                    <input type="hidden" class="form-control" id="modelo_vehiculo" name="modelo_vehiculo" value=0000>
                 </div>
                 <div class="checkbox col-12 mx-auto my-4 px-4">
                     <input id="form-checkbox-1" name="conscentimiento_subsidio" type="checkbox" required="required">
@@ -131,7 +128,7 @@
                             <rect mask="url(#checkbox-mask)" stroke-width="40" height="200" width="200"></rect>
                             <path stroke-width="15" d="M52 111.018L76.9867 136L149 64"></path>
                         </svg>
-                        <span class="text-center f18">Soy consciente que debo llegar 15 minutos antes de la cita, de lo contrario no podre tomar el curso.</span>
+                        <span class="text-center f18">Soy consciente que debo llegar 30 minutos antes de la cita, de lo contrario no podre tomar el curso.</span>
                     </label>
                 </div>
             </div>
