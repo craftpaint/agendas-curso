@@ -18,6 +18,7 @@ $(function () {
     let filtroOrigen = '';
     let filtroSearch = '';
     let tipoCita = '';
+    let filtroAgente = '';
 
     $('.send_form').on('submit', function (event) {
         event.preventDefault(); // Evita que el formulario se envíe inmediatamente
@@ -1054,6 +1055,7 @@ $(function () {
                         d.filtro_responsable = filtroResponsable;
                         d.filtro_origen = filtroOrigen;
                         d.filtro_search = filtroSearch;
+                        d.filtro_agente = filtroAgente;
                         d.tipo_cita = tipoCita;
                         // Parámetros necesarios para ordenamiento
                         d.order = d.order;
@@ -1068,7 +1070,7 @@ $(function () {
                     { data: 'fecha_create' },                   // Columna 3
                     { data: 'estado_actual_nombre' },           // Columna 4
                     { data: 'estado_verificado_nombre' },       // Columna 5
-                    { data: 'nombre_servicio_liquidador' },     // Columna 6
+                    { data: 'id_agente_callcenter' },           // Columna 6
                     { data: 'responsable_origen' },             // Columna 7
                     { data: 'origen' },                         // Columna 8
                     { data: null }                              // Columna 9 (botones)
@@ -1395,6 +1397,10 @@ $(function () {
         });
         $('#filtro-responsable').on('change', function () {
             filtroResponsable = $(this).val();
+            table_citas.ajax.reload();
+        });
+        $('#filtro-agente').on('change', function () {
+            filtroAgente = $(this).val();
             table_citas.ajax.reload();
         });
         $('#filtro-origen').on('change', function () {

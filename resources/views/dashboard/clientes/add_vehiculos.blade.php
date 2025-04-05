@@ -21,8 +21,8 @@
                                 <label class="form-label">Tipo de vehiculo <span class="required_flied">*</span></label>
                                 <select class="select2 form-select" required name="tipo_vehiculo">
                                     <option value="Motocicleta">Motocicleta</option>
-                                    <option value="Automóvil">Automóvil</option>
-                                    <option value="Publico">Publico</option>
+                                    <option value="Automotor">Automotor</option>
+                                    <option value="Otro">Otro</option>
                                 </select>
                             </div>
                             <div class="mb-4 col-md-4">

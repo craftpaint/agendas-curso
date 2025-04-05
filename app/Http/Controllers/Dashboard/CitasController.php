@@ -61,6 +61,20 @@ class CitasController extends Controller
 
         // Si quieres loguearlo en formato colección:
         log::info(collect($data['agentes']));
+
+        $agentes2 = User::role('callcenter')
+            ->orderBy('id', 'asc')
+            ->get();
+        // log::info($agentes);
+        $lideragentes2 = User::role('lidercallcenter')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $agentes2 = $agentes2->merge($lideragentes2);
+        $data['listado_agentes'] = $agentes2->toArray();
+
+        // Si quieres loguearlo en formato colección:
+        log::info(collect($data['agentes']));
         //Servicios Liquidador
         $sql = "SELECT * FROM tb_servicio_liquidador";
         $data['servicios_liquidador'] = DB::select($sql);
@@ -237,6 +251,7 @@ class CitasController extends Controller
                 $filtro_estado_verificado = $request->request->get('filtro_estado_verificado');
                 $filtro_responsable = $request->request->get('filtro_responsable');
                 $filtro_origen = $request->request->get('filtro_origen');
+                $filtro_agente = $request->request->get('filtro_agente');
                 $filtro_search = $request->request->get('filtro_search'); // Filtro de búsqueda
                 $fecha_actual = date('Y-m-d');
                 $order_column_index = $request->input('order.0.column'); // Índice de la columna a ordenar
@@ -249,7 +264,7 @@ class CitasController extends Controller
                     3 => 't1.created_at',
                     4 => 't3.nombre_estado',
                     5 => 't4.nombre_estado',
-                    6 => 's.nombre_servicio_liquidador',
+                    6 => 't1.id_agente_callcenter',
                     7 => 't1.responsable_origen',
                     8 => 't1.origen',
                 ];
@@ -258,6 +273,13 @@ class CitasController extends Controller
 
                 // Asegurarse de que la dirección sea válida
                 $order_direction = ($order_direction === 'asc') ? 'ASC' : 'DESC';
+
+                // Si se ordena por reserva_cita, agrega además el rango_horario
+                if ($order_column == 't1.reserva_cita') {
+                    $orderBy = "t1.reserva_cita $order_direction, t1.rango_horario ASC";
+                } else {
+                    $orderBy = "$order_column $order_direction";
+                }
 
                 $sql = "SELECT  t1.*,
                     t1.created_at AS fecha_create,
@@ -352,6 +374,10 @@ class CitasController extends Controller
                     $sql .= " AND t1.origen = '$filtro_origen'";
                     $sqlCount .= " AND t1.origen = '$filtro_origen'";
                 }
+                if ($filtro_agente != '') {
+                    $sql .= " AND t1.id_agente_callcenter = '$filtro_agente'";
+                    $sqlCount .= " AND t1.id_agente_callcenter = '$filtro_agente'";
+                }
                 if ($filtro_search != '') {
                     $sql .= " AND (t2.nombre_cliente LIKE '%$filtro_search%' OR t2.apellido_cliente LIKE '%$filtro_search%' OR t2.doc_cliente LIKE '%$filtro_search%' OR t2.telefono_cliente LIKE '%$filtro_search%')";
                     $sqlCount .= " AND (t2.nombre_cliente LIKE '%$filtro_search%' OR t2.apellido_cliente LIKE '%$filtro_search%' OR t2.doc_cliente LIKE '%$filtro_search%' OR t2.telefono_cliente LIKE '%$filtro_search%')";
@@ -365,7 +391,7 @@ class CitasController extends Controller
                 // Calcular el total de registros sin filtros
                 $recordsTotal = DB::selectOne($sqlCount)->total;
 
-                $sql .= " ORDER BY $order_column $order_direction LIMIT " . (int)$start . ", " . (int)$length;
+                $sql .= " ORDER BY $orderBy LIMIT " . (int)$start . ", " . (int)$length;
                 // Log::info($sql);
                 $data = DB::select($sql);
                 // log::info($data);

@@ -73,7 +73,7 @@
                 </div>
                 <div class="mb-4 col-12 col-md-6">
                     <label class="form-label">Teléfono <span class="required_flied">*</span></label><br>
-                    <input type="tel" class="form-control" id="phoneCliente" name="telefono_cliente" required>
+                    <input type="tel" class="form-control" id="phoneCliente" name="telefono_cliente" required minlength="10" maxlength="10">
                 </div>
                 <div class="mb-4 col-6">
                     <label class="form-label">Tipo de documento <span class="required_flied">*</span></label>
@@ -96,7 +96,8 @@
                         <label class="form-label">Tipo de vehiculo <span class="required_flied">*</span></label>
                         <select class="select2 form-select" id="selectTipoVehiculo" name="tipo_vehiculo">
                             <option value="Motocicleta">Motocicleta</option>
-                            <option value="Automóvil">Automóvil</option>
+                            <option value="Automotor">Automotor</option>
+                            <option value="Otro">Otro</option>
                         </select>
                     </div>
                     <div class="mb-4 col-6">

@@ -46,6 +46,7 @@
                                         </select>
                                     </div>
                                 <?php } ?>
+
                                 <div class="form-group form-group-grow">
                                     <select id="filtro-estado" class="select2 form-select" placeholder="Seleccionar estado">
                                         <option value="">Todos los estados</option>
@@ -93,6 +94,20 @@
                                             }
                                             ?>
                                             <option value=null>Null</option>
+                                        </select>
+                                    </div>
+                                <?php } ?>
+                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'lidercallcenter') { ?>
+                                    <div class="form-group form-group-grow">
+                                        <select id="filtro-agente" class="select2 form-select" placeholder="Seleccionar agente">
+                                            <option value="">Todas los agentes</option>
+                                            <?php
+                                            if (is_array($listado_agentes) && !empty($listado_agentes)) {
+                                                foreach ($listado_agentes as $key => $agente) {
+                                                    echo '<option value="' . $agente['id'] . '">' . $agente['name'] . '</option>';
+                                                }
+                                            }
+                                            ?>
                                         </select>
                                     </div>
                                 <?php } ?>
