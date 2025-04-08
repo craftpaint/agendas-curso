@@ -379,20 +379,27 @@ class CitasController extends Controller
                     $sqlCount .= " AND t1.id_agente_callcenter = '$filtro_agente'";
                 }
                 if ($filtro_search != '') {
-                    $search = trim($filtro_search);
-                    $searchLower = strtolower($search);
-                    $sql .= " AND (
-                                LOWER(t2.nombre_cliente) LIKE '%$searchLower%'
-                                OR LOWER(t2.apellido_cliente) LIKE '%$searchLower%'
-                                OR CAST(t2.doc_cliente AS CHAR) LIKE '%$search%'
-                                OR CAST(t2.telefono_cliente AS CHAR) LIKE '%$search%'
+                    // Eliminar espacios extra y dividir la búsqueda por espacios
+                    $palabras = preg_split('/\s+/', trim($filtro_search));
+
+                    foreach ($palabras as $palabra) {
+                        // Verificamos que la palabra no este vacía
+                        if (!empty($palabra)) {
+                            $sql .= " AND (
+                                t2.nombre_cliente LIKE '%" . addslashes($palabra) . "%'
+                                OR t2.apellido_cliente LIKE '%" . addslashes($palabra) . "%'
+                                OR t2.doc_cliente LIKE '%" . addslashes($palabra) . "%'
+                                OR t2.telefono_cliente LIKE '%" . addslashes($palabra) . "%'
                             )";
-                    $sqlCount .= " AND (
-                                    LOWER(t2.nombre_cliente) LIKE '%$searchLower%'
-                                    OR LOWER(t2.apellido_cliente) LIKE '%$searchLower%'
-                                    OR CAST(t2.doc_cliente AS CHAR) LIKE '%$search%'
-                                    OR CAST(t2.telefono_cliente AS CHAR) LIKE '%$search%'
-                                )";
+
+                            $sqlCount .= " AND (
+                                t2.nombre_cliente LIKE '%" . addslashes($palabra) . "%'
+                                OR t2.apellido_cliente LIKE '%" . addslashes($palabra) . "%'
+                                OR t2.doc_cliente LIKE '%" . addslashes($palabra) . "%'
+                                OR t2.telefono_cliente LIKE '%" . addslashes($palabra) . "%'
+                            )";
+                        }
+                    }
                 }
 
                 if ($tipo_cita) {
