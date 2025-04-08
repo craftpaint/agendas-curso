@@ -74,7 +74,7 @@ class CitasController extends Controller
         $data['listado_agentes'] = $agentes2->toArray();
 
         // Si quieres loguearlo en formato colección:
-        log::info(collect($data['agentes']));
+        //log::info(collect($data['agentes']));
         //Servicios Liquidador
         $sql = "SELECT * FROM tb_servicio_liquidador";
         $data['servicios_liquidador'] = DB::select($sql);
@@ -276,7 +276,7 @@ class CitasController extends Controller
 
                 // Si se ordena por reserva_cita, agrega además el rango_horario
                 if ($order_column == 't1.reserva_cita') {
-                    $orderBy = "t1.reserva_cita $order_direction, t1.rango_horario ASC";
+                    $orderBy = "t1.reserva_cita $order_direction, STR_TO_DATE(SUBSTRING_INDEX(t1.rango_horario, ' -', 1), '%h:%i %p') ASC";
                 } else {
                     $orderBy = "$order_column $order_direction";
                 }
@@ -379,8 +379,20 @@ class CitasController extends Controller
                     $sqlCount .= " AND t1.id_agente_callcenter = '$filtro_agente'";
                 }
                 if ($filtro_search != '') {
-                    $sql .= " AND (t2.nombre_cliente LIKE '%$filtro_search%' OR t2.apellido_cliente LIKE '%$filtro_search%' OR t2.doc_cliente LIKE '%$filtro_search%' OR t2.telefono_cliente LIKE '%$filtro_search%')";
-                    $sqlCount .= " AND (t2.nombre_cliente LIKE '%$filtro_search%' OR t2.apellido_cliente LIKE '%$filtro_search%' OR t2.doc_cliente LIKE '%$filtro_search%' OR t2.telefono_cliente LIKE '%$filtro_search%')";
+                    $search = trim($filtro_search);
+                    $searchLower = strtolower($search);
+                    $sql .= " AND (
+                                LOWER(t2.nombre_cliente) LIKE '%$searchLower%'
+                                OR LOWER(t2.apellido_cliente) LIKE '%$searchLower%'
+                                OR CAST(t2.doc_cliente AS CHAR) LIKE '%$search%'
+                                OR CAST(t2.telefono_cliente AS CHAR) LIKE '%$search%'
+                            )";
+                    $sqlCount .= " AND (
+                                    LOWER(t2.nombre_cliente) LIKE '%$searchLower%'
+                                    OR LOWER(t2.apellido_cliente) LIKE '%$searchLower%'
+                                    OR CAST(t2.doc_cliente AS CHAR) LIKE '%$search%'
+                                    OR CAST(t2.telefono_cliente AS CHAR) LIKE '%$search%'
+                                )";
                 }
 
                 if ($tipo_cita) {
@@ -581,9 +593,9 @@ class CitasController extends Controller
                 }
                 $agenteValue   = is_null($idAgenteCallcenter) ? "NULL" : $idAgenteCallcenter;
                 if ($id_vehiculo) {
-                    $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado, id_vehiculo,id_estado_verificado, id_servicio_liquidador, id_agente_callcenter,reserva_cita, rango_horario, desc_cita,responsable_origen, creado_por, origen, tipo_dispositivo, created_at, updated_at) VALUES ($id_cliente, $id_sede, $id_estado, $id_vehiculo, $id_estado_verificado, 2, $agenteValue, '$reserva_cita', '$rango_horario', '$desc_cita', '$responsable_origen', '$creado_por', '$origen', '$tipo_dispositivo', DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR))";
+                    $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado, id_vehiculo,id_estado_verificado, id_servicio_liquidador, id_agente_callcenter,reserva_cita, rango_horario, desc_cita,responsable_origen, creado_por, origen, tipo_dispositivo, created_at, updated_at) VALUES ($id_cliente, $id_sede, $id_estado, $id_vehiculo, $id_estado_verificado, 5, $agenteValue, '$reserva_cita', '$rango_horario', '$desc_cita', '$responsable_origen', '$creado_por', '$origen', '$tipo_dispositivo', DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR))";
                 } else {
-                    $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado,id_estado_verificado, id_servicio_liquidador, id_agente_callcenter,reserva_cita, rango_horario, desc_cita,responsable_origen, creado_por, origen, tipo_dispositivo, created_at, updated_at) VALUES ($id_cliente, $id_sede, $id_estado, $id_estado_verificado, 2, $agenteValue, '$reserva_cita', '$rango_horario', '$desc_cita', '$responsable_origen', '$creado_por', '$origen', '$tipo_dispositivo', DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR))";
+                    $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado,id_estado_verificado, id_servicio_liquidador, id_agente_callcenter,reserva_cita, rango_horario, desc_cita,responsable_origen, creado_por, origen, tipo_dispositivo, created_at, updated_at) VALUES ($id_cliente, $id_sede, $id_estado, $id_estado_verificado, 5, $agenteValue, '$reserva_cita', '$rango_horario', '$desc_cita', '$responsable_origen', '$creado_por', '$origen', '$tipo_dispositivo', DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR))";
                 }
                 // $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado, reserva_cita, rango_horario, desc_cita) VALUES ($id_cliente, $id_sede, $id_estado, '$reserva_cita', '$rango_horario', '$desc_cita')";
                 $save = DB::insert($sql);

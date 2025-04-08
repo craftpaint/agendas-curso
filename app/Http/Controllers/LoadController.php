@@ -198,7 +198,7 @@ class LoadController extends Controller
 
                 //Creamos la cita
                 $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado, id_estado_verificado,id_servicio_liquidador,id_agente_callcenter, id_vehiculo, reserva_cita, rango_horario, desc_cita,responsable_origen, creado_por, origen, url_variables, tipo_dispositivo, created_at, updated_at)
-                    VALUES ($id_cliente, $id_sede, 1 , 1 , 2 , $agenteValue, $id_vehiculo, '$reserva_cita', '$rango_horario', 'Creada por el cliente','$responsable_origen', '$creado_por', '$origen','" . json_encode($urlVariablesArray) . "', '$tipo_dispositivo', DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR))";
+                    VALUES ($id_cliente, $id_sede, 1 , 1 , 5 , $agenteValue, $id_vehiculo, '$reserva_cita', '$rango_horario', 'Creada por el cliente','$responsable_origen', '$creado_por', '$origen','" . json_encode($urlVariablesArray) . "', '$tipo_dispositivo', DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR))";
                 $save = DB::insert($sql);
                 if ($save) {
 
