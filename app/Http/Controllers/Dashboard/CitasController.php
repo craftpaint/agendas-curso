@@ -62,7 +62,7 @@ class CitasController extends Controller
         $data['agentes'] = $agentes->toArray();
 
         // Si quieres loguearlo en formato colección:
-        log::info(collect($data['agentes']));
+        // log::info(collect($data['agentes']));
 
         $agentes2 = User::role('callcenter')
             ->orderBy('id', 'asc')
@@ -75,9 +75,6 @@ class CitasController extends Controller
         $agentes2 = $agentes2->merge($lideragentes2);
         $data['listado_agentes'] = $agentes2->toArray();
 
-        // Si quieres loguearlo en formato colección:
-        //log::info(collect($data['agentes']));
-        //Servicios Liquidador
         $sql = "SELECT * FROM tb_servicio_liquidador";
         $data['servicios_liquidador'] = DB::select($sql);
         //Origenes

@@ -60,7 +60,7 @@
                                     </select>
                                 </div>
                                 <div class="form-group form-group-grow">
-                                    <select id="filtro-estado-verificado" class="select2 form-select" multiple="multiple" placeholder="Seleccionar estado">
+                                    <select id="filtro-estado-verificado" class="select2 form-select" multiple="multiple" placeholder="Seleccionar estado Verificado">
                                         <option value="">Todos los estados</option>
                                         <?php
                                         if (is_array($estados) && !empty($estados)) {
