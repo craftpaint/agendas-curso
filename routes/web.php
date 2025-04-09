@@ -126,6 +126,8 @@ Route::controller(CitasController::class)->group(function () {
     Route::post('dashboard/citas/dowload', 'dowload')->middleware(['auth', 'verified', 'role:superadmin|admin|gestorsede|lidercallcenter']);
 
     Route::post('dashboard/citas/get_seguimiento_cita', 'get_seguimiento_cita')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador|lidercallcenter']);
+    Route::post('dashboard/citas/get_seguimiento_cita_con_actualizacion', 'get_seguimiento_cita_con_actualizacion')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador|lidercallcenter']);
+    Route::post('dashboard/citas/save_seguimiento', 'save_seguimiento')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador|lidercallcenter']);
 
     Route::get('dashboard/citas/get_new_records', 'get_new_records')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
 })->name('citas');

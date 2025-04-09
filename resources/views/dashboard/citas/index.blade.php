@@ -32,7 +32,7 @@
                                 </div>
                                 <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
                                     <div class="form-group form-group-grow">
-                                        <select id="filtro-sede" class="select2 form-select" placeholder="Seleccionar sede">
+                                        <select id="filtro-sede" class="select2 form-select" multiple="multiple" placeholder="Seleccionar sede">
                                             <option value="">Todas las sedes</option>
                                             <?php
                                             if (is_array($sedes) && !empty($sedes)) {
@@ -48,7 +48,7 @@
                                 <?php } ?>
 
                                 <div class="form-group form-group-grow">
-                                    <select id="filtro-estado" class="select2 form-select" placeholder="Seleccionar estado">
+                                    <select id="filtro-estado" class="select2 form-select" multiple="multiple" placeholder="Seleccionar estado">
                                         <option value="">Todos los estados</option>
                                         <?php
                                         if (is_array($estados) && !empty($estados)) {
@@ -60,7 +60,7 @@
                                     </select>
                                 </div>
                                 <div class="form-group form-group-grow">
-                                    <select id="filtro-estado-verificado" class="select2 form-select" placeholder="Seleccionar estado">
+                                    <select id="filtro-estado-verificado" class="select2 form-select" multiple="multiple" placeholder="Seleccionar estado">
                                         <option value="">Todos los estados</option>
                                         <?php
                                         if (is_array($estados) && !empty($estados)) {
@@ -73,7 +73,7 @@
                                 </div>
                                 <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
                                     <div class="form-group form-group-grow">
-                                        <select id="filtro-responsable" class="select2 form-select" placeholder="Seleccionar origen">
+                                        <select id="filtro-responsable" class="select2 form-select" multiple="multiple" placeholder="Seleccionar origen">
                                             <option value="">Todos </option>
                                             <option value="Desconocido">Desconocido</option>
                                             <option value="Sede">Sede</option>
@@ -84,7 +84,7 @@
                                 <?php } ?>
                                 <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
                                     <div class="form-group form-group-grow">
-                                        <select id="filtro-origen" class="select2 form-select" placeholder="Seleccionar Tag">
+                                        <select id="filtro-origen" class="select2 form-select" multiple="multiple" placeholder="Seleccionar Tag">
                                             <option value="">Todos los Tags</option>
                                             <?php
                                             if (is_array($origenes) && !empty($origenes)) {
@@ -99,7 +99,7 @@
                                 <?php } ?>
                                 <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'lidercallcenter') { ?>
                                     <div class="form-group form-group-grow">
-                                        <select id="filtro-agente" class="select2 form-select" placeholder="Seleccionar agente">
+                                        <select id="filtro-agente" class="select2 form-select" multiple="multiple" placeholder="Seleccionar agente">
                                             <option value="">Todas los agentes</option>
                                             <?php
                                             if (is_array($listado_agentes) && !empty($listado_agentes)) {
@@ -135,6 +135,7 @@
                             <tr>
                                 <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
                                     <th>Cliente</th>
+                                    <th></th>
                                     <th>Sede</th>
                                     <th>Fecha Cita</th>
                                     <th>Fecha Creación</th>
@@ -146,6 +147,7 @@
                                     <th></th>
                                 <?php } else { ?>
                                     <th>Cliente</th>
+                                    <th></th>
                                     <th>Fecha Cita</th>
                                     <th>Fecha Creación</th>
                                     <th>Estado</th>

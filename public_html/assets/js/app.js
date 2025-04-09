@@ -1065,15 +1065,16 @@ $(function () {
                 },
                 columns: [
                     { data: 'nombre_cliente' },                 // Columna 0
-                    { data: 'nombre_sede' },                    // Columna 1
-                    { data: 'reserva_cita' },                   // Columna 2
-                    { data: 'fecha_create' },                   // Columna 3
-                    { data: 'estado_actual_nombre' },           // Columna 4
-                    { data: 'estado_verificado_nombre' },       // Columna 5
-                    { data: 'id_agente_callcenter' },           // Columna 6
-                    { data: 'responsable_origen' },             // Columna 7
-                    { data: 'origen' },                         // Columna 8
-                    { data: null }                              // Columna 9 (botones)
+                    { data: null },                             // Columna 1
+                    { data: 'nombre_sede' },                    // Columna 2
+                    { data: 'reserva_cita' },                   // Columna 3
+                    { data: 'fecha_create' },                   // Columna 4
+                    { data: 'estado_actual_nombre' },           // Columna 5
+                    { data: 'estado_verificado_nombre' },       // Columna 6
+                    { data: 'id_agente_callcenter' },           // Columna 7
+                    { data: 'responsable_origen' },             // Columna 8
+                    { data: 'origen' },                         // Columna 9
+                    { data: null }                              // Columna 10 (botones)
                 ],
                 columnDefs: [
                     {
@@ -1090,26 +1091,52 @@ $(function () {
                         }
                     },
                     {
-                        targets: 1,
+                        targets: 1, // Comentario Liquidador
+                        orderable: false,
+                        render: function (data, type, full, meta) {
+                            // Si existen anotaciones, mostramos también la cantidad en un badge
+                            let badgeAnotaciones = '';
+                            iconColorAnotaciones = 'text-muted';
+                            if (full.total_anotaciones && parseInt(full.total_anotaciones) > 0) {
+                                badgeAnotaciones = `<span class="badge rounded-pill text-bg-danger badge-notifications px-1">${full.total_anotaciones}</span>`;
+                                iconColorAnotaciones = 'text-success';
+                            }
+
+                            return `
+                            <div style="position:relative; display:inline-block;">
+                                <!-- Botón para ver el seguimiento -->
+                                <button type="button"
+                                    class="btn btn-sm btn-light btn-open-seguimiento-modal ${iconColorAnotaciones}"
+                                    data-id-cita="${full.id_cita}"
+                                    title="Ver seguimiento">
+                                    <i class="ti ti-eye"></i>
+                                </button>
+                                ${badgeAnotaciones}
+                            </div>
+                          `;
+                        }
+                    },
+                    {
+                        targets: 2,
                         render: function (data, type, full, meta) {
                             return `<span class="badge bg-label-dark">${full.nombre_sede}</span>`;
                         }
                     },
                     {
-                        targets: 2,
+                        targets: 3,
                         render: function (data, type, full, meta) {
                             let fecha = full.reserva_cita.split(" ")[0];
                             return `<h6 class="m-0">${fecha} ${full.rango_horario}</h6>`;
                         }
                     },
                     {
-                        targets: 3,
+                        targets: 4,
                         render: function (data, type, full, meta) {
                             return `<h6 class="m-0">${full.fecha_create}</h6>`;
                         }
                     },
                     {
-                        targets: 4,
+                        targets: 5,
                         render: function (data, type, full, meta) {
                             const bgColor = full.estado_actual_color; // Color de fondo del estado
                             const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
@@ -1128,7 +1155,7 @@ $(function () {
                         }
                     },
                     {
-                        targets: 5,
+                        targets: 6,
                         render: function (data, type, full, meta) {
                             const bgColor = full.estado_verificado_color; // Color de fondo del estado
                             const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
@@ -1148,7 +1175,7 @@ $(function () {
                     },
                     {
                         // Columna 6 -> Agente Call Center
-                        targets: 6,
+                        targets: 7,
                         render: function (data, type, full, meta) {
                             return `
                             <div class="btn-group">
@@ -1166,7 +1193,7 @@ $(function () {
                         }
                     },
                     {
-                        targets: 7,
+                        targets: 8,
                         render: function (data, type, full, meta) {
                             if (full.responsable_origen == 'Desconocido') {
                                 return `<span class="badge bg-label-dark">${full.responsable_origen}</span>`;
@@ -1178,7 +1205,7 @@ $(function () {
                         }
                     },
                     {
-                        targets: 8,
+                        targets: 9,
                         render: function (data, type, full, meta) {
                             if (full.origen == null || full.origen == 'null' || full.origen == 'Desconocido') {
                                 return `<span class="badge bg-label-secondary">${full.origen}</span> <br>
@@ -1197,7 +1224,7 @@ $(function () {
                     },
                     {
                         orderable: false,
-                        targets: 9,
+                        targets: 10,
                         render: function (data, type, full, meta) {
                             return `
                         <div class="d-flex justify-content-end">
@@ -1258,11 +1285,12 @@ $(function () {
                 },
                 columns: [
                     { data: 'nombre_cliente' },                 // Columna 0
-                    { data: 'reserva_cita' },                   // Columna 1
-                    { data: 'fecha_create' },                   // Columna 2
-                    { data: 'estado_actual_nombre' },           // Columna 3
-                    { data: 'estado_verificado_nombre' },       // Columna 4
-                    { data: null }                              // Columna 5 (botones)
+                    { data: null },                             // Columna 1
+                    { data: 'reserva_cita' },                   // Columna 2
+                    { data: 'fecha_create' },                   // Columna 3
+                    { data: 'estado_actual_nombre' },           // Columna 4
+                    { data: 'estado_verificado_nombre' },       // Columna 5
+                    { data: null }                              // Columna 6 (botones)
                 ],
                 columnDefs: [
                     {
@@ -1279,20 +1307,51 @@ $(function () {
                         }
                     },
                     {
-                        targets: 1,
+                        targets: 1, // Comentario Liquidador
+                        orderable: false,
+                        render: function (data, type, full, meta) {
+                            // data = full.comentario_liquidador
+                            let hasComment = (full.comentario_liquidador && full.comentario_liquidador.trim() !== '');
+                            let iconColor = hasComment ? 'text-success' : 'text-muted';
+                            let iconNotify = hasComment ? `<i class="ti ti-circle-filled text-danger" style="font-size:10px; position:absolute; right:0; top:0;"></i>` : '';
+
+                            // Si existen anotaciones, mostramos también la cantidad en un badge
+                            let badgeAnotaciones = '';
+                            iconColorAnotaciones = 'text-muted';
+                            if (full.total_anotaciones && parseInt(full.total_anotaciones) > 0) {
+                                badgeAnotaciones = `<span class="badge rounded-pill text-bg-danger badge-notifications px-1">${full.total_anotaciones}</span>`;
+                                iconColorAnotaciones = 'text-success';
+                            }
+
+                            return `
+                            <div style="position:relative; display:inline-block;">
+                                <!-- Botón para ver el seguimiento -->
+                                <button type="button"
+                                    class="btn btn-sm btn-light btn-open-seguimiento-modal ${iconColorAnotaciones}"
+                                    data-id-cita="${full.id_cita}"
+                                    title="Ver seguimiento">
+                                    <i class="ti ti-eye"></i>
+                                </button>
+                                ${badgeAnotaciones}
+                            </div>
+                          `;
+                        }
+                    },
+                    {
+                        targets: 2,
                         render: function (data, type, full, meta) {
                             let fecha = full.reserva_cita.split(" ")[0];
                             return `<h6 class="m-0">${fecha} ${full.rango_horario}</h6>`;
                         }
                     },
                     {
-                        targets: 2,
+                        targets: 3,
                         render: function (data, type, full, meta) {
                             return `<h6 class="m-0">${full.fecha_create}</h6>`;
                         }
                     },
                     {
-                        targets: 3,
+                        targets: 4,
                         render: function (data, type, full, meta) {
                             const bgColor = full.estado_actual_color; // Color de fondo del estado
                             const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
@@ -1311,7 +1370,7 @@ $(function () {
                         }
                     },
                     {
-                        targets: 4,
+                        targets: 5,
                         render: function (data, type, full, meta) {
                             const bgColor = full.estado_verificado_color; // Color de fondo del estado
                             const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
@@ -1331,7 +1390,7 @@ $(function () {
                     },
                     {
                         orderable: false,
-                        targets: 5,
+                        targets: 6,
                         render: function (data, type, full, meta) {
                             return `
                         <div class="d-flex justify-content-end">
@@ -1432,6 +1491,111 @@ $(function () {
             console.log("Filtro sede: " + $('#filtro-sede').val());
             table_citas.ajax.reload();
         });
+        // Cuando se hace clic en el botón para abrir el modal de seguimiento
+        $('.datatables-citas').on('click', '.btn-open-seguimiento-modal', function () {
+            // Se obtiene el ID de la cita desde el atributo data-id-cita del botón
+            let idCita = $(this).data('id-cita');
+
+            // Se realiza la petición AJAX para obtener el HTML del seguimiento y el formulario
+            $.ajax({
+                url: url + '/dashboard/citas/get_seguimiento_cita_con_actualizacion', // Asegúrate de que 'url' está definida con la ruta base
+                method: 'POST',
+                data: { id_cita: idCita },
+                success: function (response) {
+                    if (response.validate) {
+                        // Se abre el modal con SweetAlert2 y se inyecta el HTML recibido (línea de tiempo + formulario)
+                        Swal.fire({
+                            title: 'Seguimiento de la Cita',
+                            html: response.html,
+                            width: '80%',
+                            showCancelButton: true,
+                            cancelButtonText: 'Cerrar',
+                            showConfirmButton: false,
+                            customClass: {
+                                cancelButton: 'btn btn-outline-danger ml-1'
+                            }
+                        });
+
+                        // Dado que el HTML se inyecta de manera dinámica, debemos esperar a que se cargue en el DOM
+                        // y luego asignamos el evento "submit" al formulario dentro del modal.
+                        $('#form-seguimiento-modal').on('submit', function (e) {
+                            e.preventDefault(); // Evita el envío tradicional del formulario
+
+                            // Se serializan los datos del formulario. El campo "id_cita" ya se encuentra en el formulario.
+                            let formData = $(this).serialize();
+
+                            // Petición AJAX para guardar el nuevo seguimiento
+                            $.ajax({
+                                url: url + '/dashboard/citas/save_seguimiento', // Endpoint para guardar
+                                method: 'POST',
+                                data: formData,
+                                success: function (resp) {
+                                    if (resp.validate) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Éxito',
+                                            text: resp.text,
+                                            confirmButtonText: 'OK',
+                                            customClass: {
+                                                confirmButton: 'btn btn-primary'
+                                            }
+                                        });
+                                        table_citas.ajax.reload();
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Error',
+                                            text: resp.text,
+                                            confirmButtonText: 'OK',
+                                            customClass: {
+                                                confirmButton: 'btn btn-primary'
+                                            }
+                                        });
+                                    }
+                                },
+                                error: function () {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: 'No se pudo conectar con el servidor.',
+                                        confirmButtonText: 'OK',
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary'
+                                        }
+                                    });
+                                }
+                            });
+                        });
+                    } else {
+                        // Si no se pudo obtener el seguimiento, mostramos un mensaje de error
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.text || 'No se pudo obtener el seguimiento.',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                                cancelButton: 'btn btn-outline-danger ml-1'
+                            }
+                        });
+                    }
+                },
+                error: function () {
+                    // Manejo de error en caso de no poder conectar con el servidor
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo conectar con el servidor.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                            cancelButton: 'btn btn-outline-danger ml-1'
+                        }
+                    });
+                }
+            });
+        });
+
         // Función para formatear fecha en formato 'YYYY-MM-DD'
         function formatDate(date) {
             const d = new Date(date);

@@ -332,3 +332,7 @@ table tbody tr:nth-child(even) {
 .checkbox input[type="checkbox"]:checked+label svg path {
     stroke-dashoffset: 0;
 }
+
+.timeline {
+    height: auto !important;
+}

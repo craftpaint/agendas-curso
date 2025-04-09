@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\AdminHelper;
 use App\Models\User;
+use Carbon\Carbon;
+
 
 class CitasController extends Controller
 {
@@ -236,202 +238,213 @@ class CitasController extends Controller
     {
         if ($request->ajax()) {
             $objLoad = ['validate' => false];
-            //Ejecución de la funcion
+
             try {
                 $user = Auth::user();
-                $rol =  $user->getRoleNames()->first();
-                $length = $request->request->get('length');
-                $start = $request->request->get('start');
-                $draw = $request->request->get('draw');
-                $tipo_cita = $request->request->get('tipo_cita');
-                $filtro_dia = $request->request->get('filtro_dia');
-                $filtro_dia_end = $request->request->get('filtro_dia_end');
-                $filtro_sede = $request->request->get('filtro_sede');
-                $filtro_estado = $request->request->get('filtro_estado');
-                $filtro_estado_verificado = $request->request->get('filtro_estado_verificado');
-                $filtro_responsable = $request->request->get('filtro_responsable');
-                $filtro_origen = $request->request->get('filtro_origen');
-                $filtro_agente = $request->request->get('filtro_agente');
-                $filtro_search = $request->request->get('filtro_search'); // Filtro de búsqueda
+                $rol = $user->getRoleNames()->first();
+
+                // Obtener los parámetros del request
+                $length = $request->input('length');
+                $start = $request->input('start');
+                $draw = $request->input('draw');
+                $tipo_cita = $request->input('tipo_cita');
+                $filtro_dia = $request->input('filtro_dia');
+                $filtro_dia_end = $request->input('filtro_dia_end');
+                $filtro_sede = $request->input('filtro_sede');
+                $filtro_estado = $request->input('filtro_estado');
+                $filtro_estado_verificado = $request->input('filtro_estado_verificado');
+                $filtro_responsable = $request->input('filtro_responsable');
+                $filtro_origen = $request->input('filtro_origen');
+                $filtro_agente = $request->input('filtro_agente');
+                $filtro_search = $request->input('filtro_search');
                 $fecha_actual = date('Y-m-d');
-                $order_column_index = $request->input('order.0.column'); // Índice de la columna a ordenar
-                $order_direction = $request->input('order.0.dir', 'asc'); // Dirección (asc o desc), por defecto 'asc'
-                // Definir las columnas permitidas y sus alias en la base de datos
-                $columnsConsulta = [
-                    0 => 't2.nombre_cliente',
-                    1 => 't5.nombre_sede',
-                    2 => 't1.reserva_cita',
-                    3 => 't1.created_at',
-                    4 => 't3.nombre_estado',
-                    5 => 't4.nombre_estado',
-                    6 => 't1.id_agente_callcenter',
-                    7 => 't1.responsable_origen',
-                    8 => 't1.origen',
-                ];
-                // Validar y obtener el nombre de la columna
-                $order_column = isset($columnsConsulta[$order_column_index]) ? $columnsConsulta[$order_column_index] : 't1.reserva_cita';
 
-                // Asegurarse de que la dirección sea válida
-                $order_direction = ($order_direction === 'asc') ? 'ASC' : 'DESC';
+                // Construir el query base utilizando el Query Builder
+                $query = DB::table('tb_cita as t1')
+                    ->select(
+                        't1.*',
+                        't1.created_at as fecha_create',
+                        't2.nombre_cliente',
+                        't2.apellido_cliente',
+                        't2.doc_cliente',
+                        't2.tipo_doc_cliente',
+                        't2.telefono_cliente',
+                        't2.email_cliente',
+                        't3.id_estado as estado_actual_id',
+                        't3.nombre_estado as estado_actual_nombre',
+                        't3.color_estado as estado_actual_color',
+                        't4.id_estado as estado_verificado_id',
+                        't4.nombre_estado as estado_verificado_nombre',
+                        't4.color_estado as estado_verificado_color',
+                        't5.nombre_sede',
+                        't5.id_servicio',
+                        't6.tipo_servicio',
+                        'a.name as agente_callcenter',
+                        'l.id_liquidador',
+                        'l.estado_liquidador',
+                        'l.comentario_liquidador',
+                        'l.pago_liquidador',
+                        's.id_servicio_liquidador',
+                        's.nombre_servicio_liquidador',
+                        's.valor_servicio_liquidador',
+                        's.color_servicio_liquidador',
+                        'v.id_vehiculo',
+                        'v.placa_vehiculo',
+                        'v.tipo_vehiculo',
+                        'v.modelo_vehiculo'
+                    )
+                    ->addSelect(DB::raw("(SELECT COUNT(*) FROM tb_seguimiento AS ts WHERE ts.id_cita = t1.id_cita) AS total_anotaciones"))
+                    ->join('tb_cliente as t2', 't1.id_cliente', '=', 't2.id_cliente')
+                    ->join('tb_estado as t3', 't1.id_estado', '=', 't3.id_estado')
+                    ->join('tb_estado as t4', 't1.id_estado_verificado', '=', 't4.id_estado')
+                    ->join('tb_sede as t5', 't1.id_sede', '=', 't5.id_sede')
+                    ->join('tb_servicio as t6', 't5.id_servicio', '=', 't6.id_servicio')
+                    ->join('users as a', 't1.id_agente_callcenter', '=', 'a.id')
+                    ->leftJoin('tb_liquidador as l', 't1.id_cita', '=', 'l.id_cita')
+                    ->leftJoin('tb_servicio_liquidador as s', 't1.id_servicio_liquidador', '=', 's.id_servicio_liquidador')
+                    ->leftJoin('tb_vehiculo as v', 't1.id_vehiculo', '=', 'v.id_vehiculo')
+                    ->where('t1.id_cita', '>', 0);
 
-                // Si se ordena por reserva_cita, agrega además el rango_horario
-                if ($order_column == 't1.reserva_cita') {
-                    $orderBy = "t1.reserva_cita $order_direction, STR_TO_DATE(SUBSTRING_INDEX(t1.rango_horario, ' -', 1), '%h:%i %p') ASC";
-                } else {
-                    $orderBy = "$order_column $order_direction";
-                }
-
-                $sql = "SELECT  t1.*,
-                    t1.created_at AS fecha_create,
-                    t2.nombre_cliente,
-                    t2.apellido_cliente,
-                    t2.doc_cliente,
-                    t2.tipo_doc_cliente,
-                    t2.telefono_cliente,
-                    t2.email_cliente,
-                    t3.id_estado AS estado_actual_id,
-                    t3.nombre_estado AS estado_actual_nombre,
-                    t3.color_estado AS estado_actual_color,
-                    t4.id_estado AS estado_verificado_id,
-                    t4.nombre_estado AS estado_verificado_nombre,
-                    t4.color_estado AS estado_verificado_color,
-                    t5.nombre_sede,
-                    t5.id_servicio,
-                    t6.tipo_servicio,
-                    a.name AS agente_callcenter,
-                    l.id_liquidador,
-                    l.estado_liquidador,
-                    l.comentario_liquidador	,
-                    l.pago_liquidador,
-                    s.id_servicio_liquidador,
-                    s.nombre_servicio_liquidador,
-                    s.valor_servicio_liquidador,
-                    s.color_servicio_liquidador,
-                    v.id_vehiculo,
-                    v.placa_vehiculo,
-                    v.tipo_vehiculo,
-                    v.modelo_vehiculo
-                FROM tb_cita AS t1
-                INNER JOIN tb_cliente AS t2 ON t1.id_cliente = t2.id_cliente
-                INNER JOIN tb_estado AS t3 ON t1.id_estado = t3.id_estado
-                INNER JOIN tb_estado AS t4 ON t1.id_estado_verificado = t4.id_estado
-                INNER JOIN tb_sede AS t5 ON t1.id_sede = t5.id_sede
-                INNER JOIN tb_servicio AS t6 ON t5.id_servicio = t6.id_servicio
-                INNER JOIN users AS a ON t1.id_agente_callcenter = a.id
-                LEFT JOIN tb_liquidador AS l ON t1.id_cita = l.id_cita
-                LEFT JOIN tb_servicio_liquidador AS s ON t1.id_servicio_liquidador = s.id_servicio_liquidador
-                LEFT JOIN tb_vehiculo AS v ON t1.id_vehiculo = v.id_vehiculo
-                WHERE t1.id_cita > 0";
-
-                $sqlCount = "SELECT COUNT(*) as total
-             FROM tb_cita AS t1
-             INNER JOIN tb_cliente AS t2 ON t1.id_cliente = t2.id_cliente
-             INNER JOIN tb_estado AS t3 ON t1.id_estado = t3.id_estado
-             INNER JOIN tb_estado AS t4 ON t1.id_estado_verificado = t4.id_estado
-             INNER JOIN tb_sede AS t5 ON t1.id_sede = t5.id_sede
-             INNER JOIN tb_servicio AS t6 ON t5.id_servicio = t6.id_servicio
-             LEFT JOIN tb_liquidador AS l ON t1.id_cita = l.id_cita
-             LEFT JOIN tb_servicio_liquidador AS s ON t1.id_servicio_liquidador = s.id_servicio_liquidador
-             WHERE t1.id_cita > 0";
-
+                // Aplicar filtros por rol
                 if ($rol == 'gestorsede') {
-                    $sql .= " AND t5.id_sede = " . $user->id_sede;
-                    $sqlCount .= " AND t5.id_sede = " . $user->id_sede;
+                    $query->where('t5.id_sede', $user->id_sede);
                 }
                 if ($rol == 'callcenter') {
-                    $sql .= " AND t1.id_agente_callcenter = " . $user->id;
-                    $sqlCount .= " AND t1.id_agente_callcenter = " . $user->id;
+                    $query->where('t1.id_agente_callcenter', $user->id);
                 }
-                //filtros de fecha
-                if ($filtro_dia != '' && $filtro_dia_end != '') {
-                    $sql .= " AND t1.reserva_cita BETWEEN '$filtro_dia' AND '$filtro_dia_end'";
-                    $sqlCount .= " AND t1.reserva_cita BETWEEN '$filtro_dia' AND '$filtro_dia_end'";
-                } elseif ($filtro_dia != '') {
-                    $sql .= " AND t1.reserva_cita = '$filtro_dia'";
-                    $sqlCount .= " AND t1.reserva_cita = '$filtro_dia'";
+
+                // Filtros de fechas
+                if ($filtro_dia && $filtro_dia_end) {
+                    $query->whereBetween('t1.reserva_cita', [$filtro_dia, $filtro_dia_end]);
+                } elseif ($filtro_dia) {
+                    $query->where('t1.reserva_cita', $filtro_dia);
                 } else {
-                    $sql .= " AND t1.reserva_cita >= '$fecha_actual'";
-                    $sqlCount .= " AND t1.reserva_cita >= '$fecha_actual'";
+                    $query->where('t1.reserva_cita', '>=', $fecha_actual);
                 }
 
-                if ($filtro_sede != '') {
-                    $sql .= " AND t5.id_sede = $filtro_sede";
-                    $sqlCount .= " AND t5.id_sede = $filtro_sede";
+                // Otros filtros
+                if ($filtro_sede) {
+                    if (is_array($filtro_sede)) {
+                        $query->whereIn('t5.id_sede', $filtro_sede);
+                    } else {
+                        $query->where('t5.id_sede', $filtro_sede);
+                    }
                 }
-                if ($filtro_estado != '') {
-                    $sql .= " AND t3.id_estado = $filtro_estado";
-                    $sqlCount .= " AND t3.id_estado = $filtro_estado";
+
+                if ($filtro_estado) {
+                    if (is_array($filtro_estado)) {
+                        $query->whereIn('t3.id_estado', $filtro_estado);
+                    } else {
+                        $query->where('t3.id_estado', $filtro_estado);
+                    }
                 }
-                if ($filtro_estado_verificado != '') {
-                    $sql .= " AND t4.id_estado = $filtro_estado_verificado";
-                    $sqlCount .= " AND t4.id_estado = $filtro_estado_verificado";
+
+                if ($filtro_estado_verificado) {
+                    if (is_array($filtro_estado_verificado)) {
+                        $query->whereIn('t4.id_estado', $filtro_estado_verificado);
+                    } else {
+                        $query->where('t4.id_estado', $filtro_estado_verificado);
+                    }
                 }
-                if ($filtro_responsable != '') {
-                    $sql .= " AND t1.responsable_origen = '$filtro_responsable'";
-                    $sqlCount .= " AND t1.responsable_origen = '$filtro_responsable'";
+
+                if ($filtro_responsable) {
+                    if (is_array($filtro_responsable)) {
+                        $query->whereIn('t1.responsable_origen', $filtro_responsable);
+                    } else {
+                        $query->where('t1.responsable_origen', $filtro_responsable);
+                    }
                 }
-                if ($filtro_origen != '') {
-                    $sql .= " AND t1.origen = '$filtro_origen'";
-                    $sqlCount .= " AND t1.origen = '$filtro_origen'";
+
+                if ($filtro_origen) {
+                    if (is_array($filtro_origen)) {
+                        $query->whereIn('t1.origen', $filtro_origen);
+                    } else {
+                        $query->where('t1.origen', $filtro_origen);
+                    }
                 }
-                if ($filtro_agente != '') {
-                    $sql .= " AND t1.id_agente_callcenter = '$filtro_agente'";
-                    $sqlCount .= " AND t1.id_agente_callcenter = '$filtro_agente'";
+
+                if ($filtro_agente) {
+                    if (is_array($filtro_agente)) {
+                        $query->whereIn('t1.id_agente_callcenter', $filtro_agente);
+                    } else {
+                        $query->where('t1.id_agente_callcenter', $filtro_agente);
+                    }
                 }
-                if ($filtro_search != '') {
-                    // Eliminar espacios extra y dividir la búsqueda por espacios
+
+                // Filtro de búsqueda dividido en palabras
+                if ($filtro_search) {
                     $palabras = preg_split('/\s+/', trim($filtro_search));
-
                     foreach ($palabras as $palabra) {
-                        // Verificamos que la palabra no este vacía
                         if (!empty($palabra)) {
-                            $sql .= " AND (
-                                t2.nombre_cliente LIKE '%" . addslashes($palabra) . "%'
-                                OR t2.apellido_cliente LIKE '%" . addslashes($palabra) . "%'
-                                OR t2.doc_cliente LIKE '%" . addslashes($palabra) . "%'
-                                OR t2.telefono_cliente LIKE '%" . addslashes($palabra) . "%'
-                            )";
-
-                            $sqlCount .= " AND (
-                                t2.nombre_cliente LIKE '%" . addslashes($palabra) . "%'
-                                OR t2.apellido_cliente LIKE '%" . addslashes($palabra) . "%'
-                                OR t2.doc_cliente LIKE '%" . addslashes($palabra) . "%'
-                                OR t2.telefono_cliente LIKE '%" . addslashes($palabra) . "%'
-                            )";
+                            $query->where(function ($q) use ($palabra) {
+                                $q->where('t2.nombre_cliente', 'like', '%' . $palabra . '%')
+                                    ->orWhere('t2.apellido_cliente', 'like', '%' . $palabra . '%')
+                                    ->orWhere('t2.doc_cliente', 'like', '%' . $palabra . '%')
+                                    ->orWhere('t2.telefono_cliente', 'like', '%' . $palabra . '%');
+                            });
                         }
                     }
                 }
 
                 if ($tipo_cita) {
-                    $sql .= " AND t6.tipo_servicio = '$tipo_cita'";
-                    $sqlCount .= " AND t6.tipo_servicio = '$tipo_cita'";
+                    $query->where('t6.tipo_servicio', $tipo_cita);
                 }
 
-                // Calcular el total de registros sin filtros
-                $recordsTotal = DB::selectOne($sqlCount)->total;
+                // Manejo de ordenamiento
+                $columnsConsulta = [
+                    0 => 't2.nombre_cliente',
+                    1 => '',
+                    2 => 't5.nombre_sede',
+                    3 => 't1.reserva_cita',
+                    4 => 't1.created_at',
+                    5 => 't3.nombre_estado',
+                    6 => 't4.nombre_estado',
+                    7 => 't1.id_agente_callcenter',
+                    8 => 't1.responsable_origen',
+                    9 => 't1.origen',
+                ];
 
-                $sql .= " ORDER BY $orderBy LIMIT " . (int)$start . ", " . (int)$length;
-                // Log::info($sql);
-                $data = DB::select($sql);
-                // log::info($data);
+                $order_column_index = $request->input('order.0.column');
+                $order_direction = $request->input('order.0.dir', 'asc');
+                $order_direction = ($order_direction === 'asc') ? 'asc' : 'desc';
 
-                // $total_response = 999999;
-                //Retornamos la respuesta
-                $objLoad = array(
+                // Se define la columna a ordenar. Si el índice no corresponde o está vacío, se ordena por 't1.reserva_cita'
+                $order_column = isset($columnsConsulta[$order_column_index]) && $columnsConsulta[$order_column_index]
+                    ? $columnsConsulta[$order_column_index]
+                    : 't1.reserva_cita';
+
+                if ($order_column == 't1.reserva_cita') {
+                    // Ordenamiento compuesto: primero por reserva_cita y luego por rango_horario (convertido a formato de hora)
+                    $query->orderBy('t1.reserva_cita', $order_direction);
+                    // Se utiliza DB::raw para usar la función MySQL STR_TO_DATE() junto con SUBSTRING_INDEX sobre rango_horario
+                    $query->orderBy(DB::raw("STR_TO_DATE(SUBSTRING_INDEX(t1.rango_horario, ' -', 1), '%h:%i %p')"), 'asc');
+                } else {
+                    $query->orderBy($order_column, $order_direction);
+                }
+
+                // Obtener el total de registros filtrados
+                $recordsTotal = $query->count();
+
+                // Aplicar paginación y obtener la data
+                $data = $query->skip($start)->take($length)->get();
+
+                // Preparar la respuesta
+                $objLoad = [
                     "draw" => $draw,
                     "recordsTotal" => $recordsTotal,
                     "recordsFiltered" => $recordsTotal,
                     "data" => $data,
-                    "validate" => true
-                );
+                    "validate" => true,
+                ];
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
                 $objLoad['text'] = 'Error al obtener los datos';
             }
-            //retornar respuesta
+
             return response()->json($objLoad);
         }
     }
+
     //Crear citas
     public function add()
     {
@@ -1561,13 +1574,20 @@ class CitasController extends Controller
 
                 // Filtro de búsqueda
                 if (!empty($filtro_search)) {
-                    $sqlBase .= "
-                AND (
-                    t2.nombre_cliente   LIKE '%$filtro_search%' OR
-                    t2.apellido_cliente LIKE '%$filtro_search%' OR
-                    t2.doc_cliente      LIKE '%$filtro_search%' OR
-                    t2.telefono_cliente LIKE '%$filtro_search%'
-                )";
+                    // Eliminar espacios extra y dividir la búsqueda por espacios
+                    $palabras = preg_split('/\s+/', trim($filtro_search));
+
+                    foreach ($palabras as $palabra) {
+                        // Verificamos que la palabra no este vacía
+                        if (!empty($palabra)) {
+                            $sqlBase .= " AND (
+                                t2.nombre_cliente LIKE '%" . addslashes($palabra) . "%'
+                                OR t2.apellido_cliente LIKE '%" . addslashes($palabra) . "%'
+                                OR t2.doc_cliente LIKE '%" . addslashes($palabra) . "%'
+                                OR t2.telefono_cliente LIKE '%" . addslashes($palabra) . "%'
+                            )";
+                        }
+                    }
                 }
 
                 if ($tipo_cita) {
@@ -1627,7 +1647,7 @@ class CitasController extends Controller
                             ORDER BY $order_column, t1.rango_horario, t1.id_sede $order_direction
                             LIMIT " . (int)$start . ", " . (int)$length;
 
-
+                log::info($sqlData);
                 $data = DB::select($sqlData);
 
                 // --------------------------------------
@@ -1770,6 +1790,138 @@ class CitasController extends Controller
             return response()->json($objLoad);
         }
     }
+    public function get_seguimiento_cita_con_actualizacion(Request $request)
+    {
+        if ($request->ajax()) {
+            $objLoad = [
+                'validate' => false,
+                'text'     => 'Error al obtener el seguimiento'
+            ];
+            try {
+                $id_cita = $request->input('id_cita');
+                if (empty($id_cita)) {
+                    throw new \Exception("No se proporcionó el ID de la cita");
+                }
+
+                // Obtener las anotaciones (seguimiento) de la cita, ordenadas por fecha (más recientes primero)
+                $anotaciones = DB::table('tb_seguimiento')
+                    ->where('id_cita', $id_cita)
+                    ->orderBy('created_at', 'ASC')
+                    ->get();
+
+                // Construir el HTML de la línea de tiempo
+                $html = '<div class="container mx-auto row justify-content-around">';
+                $html .= '<div class="col-12 col-md-6 mb-4">';
+                $html .= '<ul class="timeline mb-0 py-2" style="heigth:auto !important;">';
+                if (!$anotaciones->isEmpty()) {
+                    foreach ($anotaciones as $anotacion) {
+                        // Buscar el nombre del usuario autor de la anotación
+                        $user = User::find($anotacion->id_user);
+                        $nombre_user = $user ? $user->name : 'Desconocido';
+                        $rol = $user->getRoleNames()->first();
+
+                        $html .= '<li class="timeline-item timeline-item-transparent"> ';
+                        if ($rol == 'callcenter' || $rol == 'lidercallcenter') {
+                            $html .= '  <span class="timeline-point timeline-point-success"></span>';
+                        } elseif ($rol == 'gestorsede') {
+                            $html .= '  <span class="timeline-point timeline-point-warning"></span>';
+                        } else {
+                            $html .= '  <span class="timeline-point timeline-point-info"></span>';
+                        }
+                        $html .= '  <div class="timeline-event text-left">';
+                        $html .= '      <div class="timeline-header mb-2">';
+                        $html .= '          <h6 class="mb-0">' . htmlspecialchars($anotacion->titulo_seguimiento) . '</h6>';
+                        $html .= '          <small class="text-muted">' . $anotacion->created_at . '</small>';
+                        $html .= '      </div>';
+                        $html .= '      <p class="m-0" style="text-align: left;">' . htmlspecialchars($anotacion->nota_seguimiento) . '</p>';
+                        $html .= '      <p class="m-0" style="text-align: left;"><small>Autor: <strong>' . htmlspecialchars($nombre_user) . '</strong></small><br><small>' . $rol . '</small></p>';
+                        $html .= '  </div>';
+                        $html .= '</li>';
+                    }
+                } else {
+                    $html .= '<li class="timeline-item timeline-item-transparent">';
+                    $html .= '  <div class="timeline-event">';
+                    $html .= '      <p class="m-0">No se encontró seguimiento para esta cita.</p>';
+                    $html .= '  </div>';
+                    $html .= '</li>';
+                }
+                $html .= '</ul>';
+                $html .= '</div>';
+
+                // Agregar el formulario para agregar un nuevo seguimiento
+                $html .= '
+                <div class="col-12 col-md-5 mb-4">
+                <h5>Agregar Seguimiento</h5>
+                <form id="form-seguimiento-modal">
+                    <input type="hidden" name="id_cita" value="' . htmlspecialchars($id_cita) . '">
+                    <div class="mb-3 text-left">
+                        <label class="form-label">Título del seguimiento</label>
+                        <input type="text" class="form-control" name="titulo_seguimiento" id="titulo_seguimiento" required>
+                    </div>
+                    <div class="mb-3 text-left">
+                        <label class="form-label">Nota del seguimiento</label>
+                        <textarea class="form-control" rows="3" name="nota_seguimiento" id="nota_seguimiento" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success">Guardar Seguimiento</button>
+                </form>
+                </div>
+                </div>
+            ';
+
+                $objLoad = [
+                    'validate' => true,
+                    'html'     => $html
+                ];
+            } catch (\Throwable $e) {
+                Log::error($e->getMessage());
+                $objLoad['text'] = $e->getMessage();
+            }
+            return response()->json($objLoad);
+        }
+    }
+
+    public function save_seguimiento(Request $request)
+    {
+        if ($request->ajax()) {
+            $objLoad = [
+                'validate' => false,
+                'text'     => 'Error al guardar seguimiento'
+            ];
+            try {
+                $id_cita = $request->input('id_cita');
+                $titulo  = $request->input('titulo_seguimiento');
+                $nota    = $request->input('nota_seguimiento');
+
+                if (empty($id_cita) || empty($titulo) || empty($nota)) {
+                    throw new \Exception('Todos los campos son requeridos');
+                }
+
+                // Obtener la hora actual y restar 5 horas para ajustar a la hora UTC de Bogotá
+                $now = Carbon::now()->subHours(5);
+
+                // Insertar la nueva anotación en la base de datos
+                DB::table('tb_seguimiento')->insert([
+                    'titulo_seguimiento' => $titulo,
+                    'nota_seguimiento'   => $nota,
+                    'id_cita'            => $id_cita,
+                    'id_user'            => Auth::user()->id,
+                    'created_at'         => $now,
+                    'updated_at'         => $now
+                ]);
+
+                $objLoad = [
+                    'validate' => true,
+                    'text'     => 'Seguimiento guardado correctamente'
+                ];
+            } catch (\Throwable $e) {
+                Log::error($e->getMessage());
+                $objLoad['text'] = $e->getMessage();
+            }
+            return response()->json($objLoad);
+        }
+    }
+
+
     //Obtener las actividades de la base de datos
     public function get_servicio_liquidador(Request $request)
     {
