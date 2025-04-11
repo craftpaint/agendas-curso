@@ -96,19 +96,29 @@
                                 </select>
                             </div>
                             <input type="hidden" name="id_servicio_liquidador" value="2">
-                            <!-- <div class="mb-4 col-md-6">
+                            <div class="mb-4 col-md-6">
                                 <label class="form-label">Servicio Liquidador<span class="required_flied">*</span></label>
                                 <select id="SelectServicioLiquidador" class="form-select" required name="id_servicio_liquidador">
                                     <option value="">Seleccionar servicio</option>
                                     <?php
-                                    // if (is_array($servicios_liquidador) && !empty($servicios_liquidador)) {
-                                    //     foreach ($servicios_liquidador as $key => $servicio) {
-                                    //         echo '<option ' . (($cita->id_servicio_liquidador == $servicio->id_servicio_liquidador) ? 'selected' : '') . ' value="' . $servicio->id_servicio_liquidador . '">' . $servicio->nombre_servicio_liquidador . '</option>';
-                                    //     }
-                                    // }
+                                    if (is_array($servicios_liquidador) && !empty($servicios_liquidador)) {
+                                        foreach ($servicios_liquidador as $key => $servicio) {
+                                            echo '<option ' . (($cita->id_servicio_liquidador == $servicio->id_servicio_liquidador) ? 'selected' : '') . ' value="' . $servicio->id_servicio_liquidador . '">' . $servicio->nombre_servicio_liquidador . '</option>';
+                                        }
+                                    }
                                     ?>
                                 </select>
-                            </div> -->
+                            </div>
+                            <div class="mb-4 col-12 col-md-6">
+                                <label class="form-label">Codigo de Comparendo</label>
+                                <script>
+                                    var codigo_comparendo_tagify;
+                                </script>
+                                <input id="codigo_comparendo_tagify" name="codigo_comparendo" class="form-control" placeholder="Codigo de comparendo" value='<?= $cita->codigos_comparendo ?>' />
+                                <!-- <script>
+                                    codigo_comparendo_tagify.addTags(<?= $cita->codigos_comparendo ?>);
+                                </script> -->
+                            </div>
                             <div class="mb-4 col-md-12">
                                 <label class="form-label">Cliente <span class="required_flied">*</span></label>
                                 <select class="select_search_cliente" name="id_cliente" required>

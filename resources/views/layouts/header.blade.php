@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="{{url('assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.css')}}" />
     <link rel="stylesheet" href="{{url('assets/vendor/libs/flatpickr/flatpickr.css')}}" />
     <link rel="stylesheet" href="{{url('assets/vendor/libs/apex-charts/apex-charts.css')}}" />
+    <link rel="stylesheet" href="{{url('assets/vendor/libs/tagify/tagify.css')}}" />
     <link rel="stylesheet" href="{{url('assets/css/style.css')}}" />
     <script src="{{url('assets/vendor/js/helpers.js')}}"></script>
     <script src="{{url('assets/js/config.js')}}"></script>

@@ -30,6 +30,7 @@
             <script src="{{url('assets/vendor/libs/flatpickr/flatpickr.js')}}"></script>
             <script src="{{url('assets/vendor/libs/apex-charts/apexcharts.js')}}"></script>
             <script src="{{url('assets/vendor/libs/moment/moment.js')}}"></script>
+            <script src="{{url('assets/vendor/libs/tagify/tagify.js')}}"></script>
             <script src="{{url('assets/js/app.js')}}"></script>
             </body>
 

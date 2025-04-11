@@ -136,11 +136,12 @@
                                 <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
                                     <th>Cliente</th>
                                     <th></th>
-                                    <th>Sede</th>
+                                    <th>Sede - comparendo</th>
                                     <th>Fecha Cita</th>
                                     <th>Fecha Creación</th>
                                     <th>Estado</th>
                                     <th>Estado Verificado</th>
+                                    <th>Servicio</th>
                                     <th>Agente Callcenter</th>
                                     <th>Origen</th>
                                     <th>Tag</th>
@@ -148,10 +149,12 @@
                                 <?php } else { ?>
                                     <th>Cliente</th>
                                     <th></th>
+                                    <th>Comparendo</th>
                                     <th>Fecha Cita</th>
                                     <th>Fecha Creación</th>
                                     <th>Estado</th>
                                     <th>Estado Verificado</th>
+                                    <th>Servicio</th>
                                     <th></th>
                                 <?php } ?>
                             </tr>

@@ -66,6 +66,26 @@
                                     <option value="">Seleccionar horario</option>
                                 </select>
                             </div>
+                            <div class="mb-4 col-md-6">
+                                <label class="form-label">Servicio Liquidador<span class="required_flied">*</span></label>
+                                <select id="SelectServicioLiquidador" class="form-select" required name="id_servicio_liquidador" disabled>
+                                    <option value="">Seleccionar servicio</option>
+                                    <?php
+                                    if (is_array($servicios_liquidador) && !empty($servicios_liquidador)) {
+                                        foreach ($servicios_liquidador as $key => $servicio) {
+                                            echo '<option ' . (($cita->id_servicio_liquidador == $servicio->id_servicio_liquidador) ? 'selected' : '') . ' value="' . $servicio->id_servicio_liquidador . '">' . $servicio->nombre_servicio_liquidador . '</option>';
+                                        }
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                            <div class="mb-4 col-12 col-md-6">
+                                <label class="form-label">Codigo de Comparendo</label>
+                                <script>
+                                    var codigo_comparendo_tagify;
+                                </script>
+                                <input id="codigo_comparendo_tagify" name="codigo_comparendo" class="form-control" placeholder="Codigo de comparendo" disabled value='<?= $cita->codigos_comparendo ?>' />
+                            </div>
                             <div class="mb-4 col-md-12">
                                 <label class="form-label">Cliente <span class="required_flied">*</span></label>
                                 <select disabled class="select_search_cliente" name="id_cliente" required>
@@ -80,7 +100,7 @@
                             </div>
                             <div class="mb-4 col-md-12">
                                 <label class="form-label">Descripción de la cita <span class="required_flied">*</span></label>
-                                <textarea readonly class="form-control" rows="3" name="desc_cita" required><?= $cita->desc_cita ?></textarea>
+                                <textarea readonly class="form-control" rows="3" name="desc_cita" required disabled><?= $cita->desc_cita ?></textarea>
                             </div>
                             <hr>
                             <h5>Anotaciones</h5>

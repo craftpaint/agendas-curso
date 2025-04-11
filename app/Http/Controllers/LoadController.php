@@ -44,10 +44,13 @@ class LoadController extends Controller
             $request->session()->put('utm_source', $urlParams['utm_source']);
         }
 
+        $sql = "SELECT * FROM tb_servicio_liquidador";
+        $servicios_liquidador = DB::select($sql);
         $data = [
             'id_sede' => $id_sede,
             'sede' => AdminHelper::get_sede_by_id($id_sede),
-            'urlParams' => $urlParams
+            'urlParams' => $urlParams,
+            'servicios_liquidador' => $servicios_liquidador
         ];
         echo view('load/createcita', $data);
     }
@@ -71,6 +74,9 @@ class LoadController extends Controller
                 $placa_vehiculo = strtoupper($request->request->get('placa_vehiculo'));
                 $modelo_vehiculo = $request->request->get('modelo_vehiculo');
                 $reserva_cita = $request->request->get('reserva_cita');
+                $servicio_liquidador = $request->request->get('servicio_liquidador');
+                $codigo_comparendo = $request->request->get('codigo_comparendo');
+                // log::info($codigo_comparendo);
 
                 // Obtener nombre de la sede
                 $sede = DB::table('tb_sede')->where('id_sede', $id_sede)->first();
@@ -150,7 +156,7 @@ class LoadController extends Controller
                         DB::insert($sql);
                         $id_vehiculo = DB::getPdo()->lastInsertId();
                     } else {
-                        log::info($vehiculo[0]['id_vehiculo']);
+                        // log::info($vehiculo[0]['id_vehiculo']);
                         $id_vehiculo = $vehiculo[0]['id_vehiculo'];
                     }
                 }
@@ -177,7 +183,7 @@ class LoadController extends Controller
                 $countAgentes = $agentes->count();
                 $idAgenteCallcenter = null;
 
-                log::info("Numero de agentes" . $countAgentes);
+                // log::info("Numero de agentes" . $countAgentes);
                 if ($countAgentes > 0) {
                     // Si el puntero sobrepasa el total de agentes, reiniciamos a 0
                     if ($puntero >= $countAgentes) {
@@ -193,13 +199,31 @@ class LoadController extends Controller
                         ['config_value' => $puntero]
                     );
                 }
-                log::info($idAgenteCallcenter);
+                // log::info($idAgenteCallcenter);
                 $agenteValue   = is_null($idAgenteCallcenter) ? "NULL" : $idAgenteCallcenter;
 
                 //Creamos la cita
-                $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado, id_estado_verificado,id_servicio_liquidador,id_agente_callcenter, id_vehiculo, reserva_cita, rango_horario, desc_cita,responsable_origen, creado_por, origen, url_variables, tipo_dispositivo, created_at, updated_at)
-                    VALUES ($id_cliente, $id_sede, 1 , 1 , 5 , $agenteValue, $id_vehiculo, '$reserva_cita', '$rango_horario', 'Creada por el cliente','$responsable_origen', '$creado_por', '$origen','" . json_encode($urlVariablesArray) . "', '$tipo_dispositivo', DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR))";
-                $save = DB::insert($sql);
+                $save = DB::table('tb_cita')->insert([
+                    'id_cliente' => $id_cliente,
+                    'id_sede' => $id_sede,
+                    'id_estado' => 1,
+                    'id_estado_verificado' => 1,
+                    'id_servicio_liquidador' => $servicio_liquidador,
+                    'id_agente_callcenter' => $agenteValue,
+                    'codigos_comparendo' => $codigo_comparendo, // Este puede ser un string JSON
+                    'id_vehiculo' => $id_vehiculo,
+                    'reserva_cita' => $reserva_cita,
+                    'rango_horario' => $rango_horario,
+                    'desc_cita' => 'Creada por el cliente',
+                    'responsable_origen' => $responsable_origen,
+                    'creado_por' => $creado_por,
+                    'origen' => $origen,
+                    'url_variables' => json_encode($urlVariablesArray),
+                    'tipo_dispositivo' => $tipo_dispositivo,
+                    'created_at' => DB::raw('DATE_SUB(NOW(), INTERVAL 5 HOUR)'),
+                    'updated_at' => DB::raw('DATE_SUB(NOW(), INTERVAL 5 HOUR)')
+                ]);
+
                 if ($save) {
 
                     try {

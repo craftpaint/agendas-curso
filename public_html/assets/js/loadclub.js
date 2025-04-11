@@ -3,7 +3,7 @@
     const dom_listener = document.currentScript.getAttribute("dom_listener") ? document.currentScript.getAttribute("dom_listener") : false;
     const url_widget = document.currentScript.getAttribute("url") ? document.currentScript.getAttribute("url") : false;
     const redirect = document.currentScript.getAttribute("redirect") ? document.currentScript.getAttribute("redirect") : false;
-    const altura = (window.innerWidth <= 760) ? '830px' : '530px';
+    const altura = (window.innerWidth <= 760) ? '850px' : '80vh';
 
     if (dom_content && dom_listener && url_widget) {
         const dom_content_element = document.querySelector(dom_content);

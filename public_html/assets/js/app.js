@@ -1072,9 +1072,10 @@ $(function () {
                     { data: 'estado_actual_nombre' },           // Columna 5
                     { data: 'estado_verificado_nombre' },       // Columna 6
                     { data: 'id_agente_callcenter' },           // Columna 7
-                    { data: 'responsable_origen' },             // Columna 8
-                    { data: 'origen' },                         // Columna 9
-                    { data: null }                              // Columna 10 (botones)
+                    { data: 'nombre_servicio_liquidador' },     // Columna 8
+                    { data: 'responsable_origen' },             // Columna 9
+                    { data: 'origen' },                         // Columna 10
+                    { data: null }                              // Columna 11 (botones)
                 ],
                 columnDefs: [
                     {
@@ -1119,7 +1120,31 @@ $(function () {
                     {
                         targets: 2,
                         render: function (data, type, full, meta) {
-                            return `<span class="badge bg-label-dark">${full.nombre_sede}</span>`;
+                            // Badge con el nombre de la sede.
+                            let html = `<span class="badge bg-label-dark mb-1">${full.nombre_sede}</span>`;
+
+                            if (full.codigos_comparendo) {
+                                let tags = [];
+                                try {
+                                    tags = JSON.parse(full.codigos_comparendo);
+                                } catch (e) {
+                                    tags = full.codigos_comparendo;
+                                }
+                                if (Array.isArray(tags) && tags.length > 0) {
+                                    html += '<br>';
+                                    // Iteramos para imprimir en grupos de 3
+                                    tags.forEach((tag, index) => {
+                                        html += `<span class="badge bg-label-primary me-1 mb-1">${tag.value}</span>`;
+                                        // Insertar salto de línea después de cada 3 badges,
+                                        // pero si no es el último badge
+                                        if ((index + 1) % 3 === 0 && index !== tags.length - 1) {
+                                            html += '<br>';
+                                        }
+                                    });
+                                }
+                            }
+
+                            return html;
                         }
                     },
                     {
@@ -1193,7 +1218,34 @@ $(function () {
                         }
                     },
                     {
-                        targets: 8,
+                        targets: 8, // Servicio Liquidador
+                        render: function (data, type, full, meta) {
+                            var bgColor = "#e5e5e5"; // Color de fondo del servicio por defecto
+                            if (full.color_servicio_liquidador) {
+                                bgColor = full.color_servicio_liquidador; // Color de fondo del servicio
+                            }
+                            const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                            // Si no tiene servicio, mostrará “Selecciona un servicio”
+                            let currentServiceName = full.nombre_servicio_liquidador
+                                ? full.nombre_servicio_liquidador
+                                : 'Sin servicio seleccionado';
+                            return `
+                            <div class="btn-group">
+                            ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter') ? `
+                                <button type="button" data-nombre_estado="${currentServiceName}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</button>
+                                <ul class="dropdown-menu">` +
+                                    servicios_liquidador.map(serv => {
+                                        return `<li><a class="dropdown-item waves-effect change_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_servicio_liquidador="${serv.id_servicio_liquidador}">${serv.nombre_servicio_liquidador}</a></li>`;
+                                    }).join('')
+                                    + `</ul>` : `
+                                <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</span>
+                                `}
+                            </div>
+                          `;
+                        }
+                    },
+                    {
+                        targets: 9,
                         render: function (data, type, full, meta) {
                             if (full.responsable_origen == 'Desconocido') {
                                 return `<span class="badge bg-label-dark">${full.responsable_origen}</span>`;
@@ -1205,7 +1257,7 @@ $(function () {
                         }
                     },
                     {
-                        targets: 9,
+                        targets: 10,
                         render: function (data, type, full, meta) {
                             if (full.origen == null || full.origen == 'null' || full.origen == 'Desconocido') {
                                 return `<span class="badge bg-label-secondary">${full.origen}</span> <br>
@@ -1224,7 +1276,7 @@ $(function () {
                     },
                     {
                         orderable: false,
-                        targets: 10,
+                        targets: 11,
                         render: function (data, type, full, meta) {
                             return `
                         <div class="d-flex justify-content-end">
@@ -1290,7 +1342,8 @@ $(function () {
                     { data: 'fecha_create' },                   // Columna 3
                     { data: 'estado_actual_nombre' },           // Columna 4
                     { data: 'estado_verificado_nombre' },       // Columna 5
-                    { data: null }                              // Columna 6 (botones)
+                    { data: 'nombre_servicio_liquidador' },     // Columna 6
+                    { data: null }                              // Columna 7 (botones)
                 ],
                 columnDefs: [
                     {
@@ -1340,18 +1393,45 @@ $(function () {
                     {
                         targets: 2,
                         render: function (data, type, full, meta) {
-                            let fecha = full.reserva_cita.split(" ")[0];
-                            return `<h6 class="m-0">${fecha} ${full.rango_horario}</h6>`;
+                            let html = '';
+                            if (full.codigos_comparendo) {
+                                let tags = [];
+                                try {
+                                    tags = JSON.parse(full.codigos_comparendo);
+                                } catch (e) {
+                                    tags = full.codigos_comparendo;
+                                }
+                                if (Array.isArray(tags) && tags.length > 0) {
+                                    // Iteramos para imprimir en grupos de 3
+                                    tags.forEach((tag, index) => {
+                                        html += `<span class="badge bg-label-primary me-1 mb-1">${tag.value}</span>`;
+                                        // Insertar salto de línea después de cada 3 badges,
+                                        // pero si no es el último badge
+                                        if ((index + 1) % 3 === 0 && index !== tags.length - 1) {
+                                            html += '<br>';
+                                        }
+                                    });
+                                }
+                            }
+
+                            return html;
                         }
                     },
                     {
                         targets: 3,
                         render: function (data, type, full, meta) {
-                            return `<h6 class="m-0">${full.fecha_create}</h6>`;
+                            let fecha = full.reserva_cita.split(" ")[0];
+                            return `<h6 class="m-0">${fecha} ${full.rango_horario}</h6>`;
                         }
                     },
                     {
                         targets: 4,
+                        render: function (data, type, full, meta) {
+                            return `<h6 class="m-0">${full.fecha_create}</h6>`;
+                        }
+                    },
+                    {
+                        targets: 5,
                         render: function (data, type, full, meta) {
                             const bgColor = full.estado_actual_color; // Color de fondo del estado
                             const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
@@ -1370,7 +1450,7 @@ $(function () {
                         }
                     },
                     {
-                        targets: 5,
+                        targets: 6,
                         render: function (data, type, full, meta) {
                             const bgColor = full.estado_verificado_color; // Color de fondo del estado
                             const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
@@ -1389,8 +1469,35 @@ $(function () {
                         }
                     },
                     {
+                        targets: 7,
+                        render: function (data, type, full, meta) {
+                            var bgColor = "#e5e5e5"; // Color de fondo del servicio por defecto
+                            if (full.color_servicio_liquidador) {
+                                bgColor = full.color_servicio_liquidador; // Color de fondo del servicio
+                            }
+                            const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                            // Si no tiene servicio, mostrará “Selecciona un servicio”
+                            let currentServiceName = full.nombre_servicio_liquidador
+                                ? full.nombre_servicio_liquidador
+                                : 'Sin servicio seleccionado';
+                            return `
+                            <div class="btn-group">
+                            ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter') ? `
+                                <button type="button" data-nombre_estado="${currentServiceName}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</button>
+                                <ul class="dropdown-menu">` +
+                                    servicios_liquidador.map(serv => {
+                                        return `<li><a class="dropdown-item waves-effect change_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_servicio_liquidador="${serv.id_servicio_liquidador}">${serv.nombre_servicio_liquidador}</a></li>`;
+                                    }).join('')
+                                    + `</ul>` : `
+                                <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</span>
+                                `}
+                            </div>
+                          `;
+                        }
+                    },
+                    {
                         orderable: false,
-                        targets: 6,
+                        targets: 8,
                         render: function (data, type, full, meta) {
                             return `
                         <div class="d-flex justify-content-end">
@@ -3255,4 +3362,37 @@ $(function () {
         });
     });
 
+    if ($('#codigo_comparendo_tagify').length) {
+
+        const codigo_comparendo = document.querySelector("#codigo_comparendo_tagify");
+
+        const whitelist = [
+            "A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "A11", "A12",
+            "B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B10", "B11", "B12",
+            "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23",
+            "C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08", "C09", "C10", "C11", "C12",
+            "C13", "C14", "C15", "C16", "C17", "C18", "C19", "C20", "C21", "C22", "C23", "C24",
+            "C25", "C26", "C27", "C28", "C29", "C30", "C31", "C32", "C33", "C34", "C35", "C36",
+            "C37", "C38", "C39", "C40",
+            "D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "D09", "D10", "D11", "D12",
+            "D13", "D14", "D15", "D16", "D17",
+            "E01", "E02", "E04",
+            "F01", "F02", "F03", "F04", "F05", "F06", "F07",
+            "G01", "G02",
+            "H01", "H02", "H03", "H04", "H05", "H06", "H07", "H08", "H09", "H10", "H11", "H12"
+        ];
+
+        // Inline
+        codigo_comparendo_tagify = new Tagify(codigo_comparendo, {
+            whitelist: whitelist,
+            maxTags: 5, // allows to select max items
+            dropdown: {
+                maxItems: 20, // display max items
+                classname: "tags-inline", // Custom inline class
+                enabled: 0,
+                closeOnSelect: false
+            }
+        });
+    }
 });
+

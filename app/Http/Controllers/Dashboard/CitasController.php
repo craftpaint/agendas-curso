@@ -515,6 +515,7 @@ class CitasController extends Controller
                 $id_sede_horario  = $request->request->get('id_sede_horario');
                 $reserva_cita = $request->request->get('reserva_cita');
                 $id_servicio_liquidador = $request->request->get('id_servicio_liquidador');
+                $codigo_comparendo = $request->request->get('codigo_comparendo');
                 $desc_cita = $request->request->get('desc_cita');
 
                 // Obtener nombre de la sede
@@ -608,15 +609,36 @@ class CitasController extends Controller
                         );
                     }
                 }
-                $agenteValue   = is_null($idAgenteCallcenter) ? "NULL" : $idAgenteCallcenter;
+                // Insertar cita
+                $now = Carbon::now()->subHours(5);
+                $citaData = [
+                    'id_cliente' => $id_cliente,
+                    'id_sede' => $id_sede,
+                    'id_estado' => $id_estado,
+                    'id_estado_verificado' => $id_estado_verificado,
+                    'id_servicio_liquidador' => 5,
+                    'id_agente_callcenter' => $idAgenteCallcenter ?? null,
+                    'id_servicio_liquidador' => $id_servicio_liquidador,
+                    'codigos_comparendo'      => $codigo_comparendo,
+                    'reserva_cita' => $reserva_cita,
+                    'rango_horario' => $rango_horario,
+                    'desc_cita' => $desc_cita,
+                    'responsable_origen' => 'Curso Comparendo',
+                    'creado_por' => $rol . "-" . $user->name,
+                    'origen' => 'Curso Comparendo',
+                    'tipo_dispositivo' => $tipo_dispositivo,
+                    'created_at' => $now,
+                    'updated_at' => $now
+                ];
+
                 if ($id_vehiculo) {
-                    $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado, id_vehiculo,id_estado_verificado, id_servicio_liquidador, id_agente_callcenter,reserva_cita, rango_horario, desc_cita,responsable_origen, creado_por, origen, tipo_dispositivo, created_at, updated_at) VALUES ($id_cliente, $id_sede, $id_estado, $id_vehiculo, $id_estado_verificado, 5, $agenteValue, '$reserva_cita', '$rango_horario', '$desc_cita', '$responsable_origen', '$creado_por', '$origen', '$tipo_dispositivo', DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR))";
-                } else {
-                    $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado,id_estado_verificado, id_servicio_liquidador, id_agente_callcenter,reserva_cita, rango_horario, desc_cita,responsable_origen, creado_por, origen, tipo_dispositivo, created_at, updated_at) VALUES ($id_cliente, $id_sede, $id_estado, $id_estado_verificado, 5, $agenteValue, '$reserva_cita', '$rango_horario', '$desc_cita', '$responsable_origen', '$creado_por', '$origen', '$tipo_dispositivo', DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR))";
+                    $citaData['id_vehiculo'] = $id_vehiculo;
                 }
-                // $sql = "INSERT INTO tb_cita (id_cliente, id_sede, id_estado, reserva_cita, rango_horario, desc_cita) VALUES ($id_cliente, $id_sede, $id_estado, '$reserva_cita', '$rango_horario', '$desc_cita')";
-                $save = DB::insert($sql);
-                if ($save) {
+
+                $id_cita = DB::table('tb_cita')->insertGetId($citaData);
+
+
+                if ($id_cita) {
                     try {
 
                         // Preparar los datos para la plantilla de SendPulse
@@ -647,16 +669,15 @@ class CitasController extends Controller
                     } catch (\Exception $e) {
                         Log::error($e->getMessage());
                     }
-                    // Obtener el ID de la cita recién creada
-                    $id_cita = DB::getPdo()->lastInsertId();
                     try {
-                        $saveliquidador = DB::table('tb_liquidador')->insert([
+                        // Crear liquidador
+                        DB::table('tb_liquidador')->insert([
                             'id_cita' => $id_cita,
                             'estado_liquidador' => "Pendiente",
                             'comentario_liquidador' => "",
                             'pago_liquidador' => "Pendiente",
-                            'created_at' => DB::raw('DATE_SUB(NOW(), INTERVAL 5 HOUR)'),
-                            'updated_at' => DB::raw('DATE_SUB(NOW(), INTERVAL 5 HOUR)')
+                            'created_at' => $now,
+                            'updated_at' => $now
                         ]);
                     } catch (\Throwable $e) {
                         Log::error($e->getMessage());
@@ -756,69 +777,114 @@ class CitasController extends Controller
         echo view('layouts.footer', $data);
     }
     //Actualizar cita
+
     public function update(Request $request)
     {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
-                'text' => 'Error al actualizar la cita'
+                'text'     => 'Error al actualizar la cita'
             ];
+
             try {
-                $id_sede = $request->request->get('id_sede');
-                $id_cita = $request->request->get('id_cita');
-                $id_cliente = $request->request->get('id_cliente');
-                $id_vehiculo = $request->request->get('id_vehiculo');
-                $id_estado = $request->request->get('id_estado');
-                $id_estado_verificado = $request->request->get('id_estado_verificado');
-                $id_sede_horario  = $request->request->get('id_sede_horario');
-                $id_servicio_liquidador = $request->request->get('id_servicio_liquidador');
-                $reserva_cita = $request->request->get('reserva_cita');
-                $desc_cita = $request->request->get('desc_cita');
-                $id_agente_callcenter = $request->request->get('id_agente_callcenter');
+                // Obtener datos del request
+                $id_sede                = $request->input('id_sede');
+                $id_cita                = $request->input('id_cita');
+                $id_cliente             = $request->input('id_cliente');
+                $id_vehiculo            = $request->input('id_vehiculo');
+                $id_estado              = $request->input('id_estado');
+                $id_estado_verificado   = $request->input('id_estado_verificado');
+                $id_sede_horario        = $request->input('id_sede_horario');
+                $id_servicio_liquidador = $request->input('id_servicio_liquidador');
+                $reserva_cita           = $request->input('reserva_cita');
+                $desc_cita              = $request->input('desc_cita');
+                $id_agente_callcenter   = $request->input('id_agente_callcenter');
+                $codigo_comparendo      = $request->input('codigo_comparendo');
+
+                // Convertir la fecha de formato d/m/Y a Y-m-d
                 $date = \DateTime::createFromFormat('d/m/Y', $reserva_cita);
                 if ($date) {
                     $reserva_cita = $date->format('Y-m-d');
                 } else {
                     throw new \Exception("El formato de la fecha es incorrecto");
                 }
+
+                // Obtener el horario de la sede
                 $horario_sedes = AdminHelper::get_horario_by_id($id_sede_horario);
                 if (is_array($horario_sedes) && !empty($horario_sedes)) {
                     $cupo_sede_horario = $horario_sedes['cupo_sede_horario'];
                     $id_horario = $horario_sedes['id_horario'];
-                    //Obtenemos el rango horario by id
+                    // Obtener el rango horario
                     $horario = AdminHelper::get_horarios_by_id($id_horario);
                     $rango_horario = $horario['rango_horario'];
-                    $sql = "SELECT * FROM tb_cita WHERE id_sede = $id_sede AND reserva_cita = '$reserva_cita' AND rango_horario = '$rango_horario'  AND id_cita <> $id_cita";
-                    $citas = DB::select($sql);
-                    if (count($citas) >= $cupo_sede_horario) {
+
+                    // Verificar cupo usando Query Builder
+                    $citasCount = DB::table('tb_cita')
+                        ->where('id_sede', $id_sede)
+                        ->where('reserva_cita', $reserva_cita)
+                        ->where('rango_horario', $rango_horario)
+                        ->where('id_cita', '<>', $id_cita)
+                        ->count();
+
+                    if ($citasCount >= $cupo_sede_horario) {
                         $objLoad['text'] = 'No hay cupo disponible para la cita';
                         return response()->json($objLoad);
                     }
                 }
+
+                // Preparar datos para la actualización.
+                // Si $id_vehiculo viene, se actualiza ese campo; si no, se omite o se deja nulo.
+                $updateData = [
+                    'id_cliente'             => $id_cliente,
+                    'id_sede'                => $id_sede,
+                    'id_estado'              => $id_estado,
+                    'id_estado_verificado'   => $id_estado_verificado,
+                    'id_servicio_liquidador' => $id_servicio_liquidador,
+                    'codigos_comparendo'      => $codigo_comparendo,
+                    'id_agente_callcenter'   => $id_agente_callcenter,
+                    'reserva_cita'           => $reserva_cita,
+                    'rango_horario'          => $rango_horario,
+                    'desc_cita'              => $desc_cita,
+                    'updated_at'             => Carbon::now()->subHours(5)
+                ];
+
+                // Agregar id_vehiculo si se proporciona
                 if ($id_vehiculo) {
-                    $sql = "UPDATE tb_cita SET id_cliente = $id_cliente, id_sede = $id_sede, id_estado = $id_estado, id_vehiculo = $id_vehiculo, id_estado_verificado = $id_estado_verificado, id_servicio_liquidador = $id_servicio_liquidador, id_agente_callcenter = $id_agente_callcenter, reserva_cita = '$reserva_cita', rango_horario = '$rango_horario', desc_cita = '$desc_cita' WHERE id_cita = $id_cita";
-                } else {
-                    $sql = "UPDATE tb_cita SET id_cliente = $id_cliente, id_sede = $id_sede, id_estado = $id_estado, id_estado_verificado = $id_estado_verificado, id_servicio_liquidador = $id_servicio_liquidador, id_agente_callcenter = $id_agente_callcenter, reserva_cita = '$reserva_cita', rango_horario = '$rango_horario', desc_cita = '$desc_cita' WHERE id_cita = $id_cita";
+                    $updateData['id_vehiculo'] = $id_vehiculo;
                 }
-                DB::update($sql);
-                //Verificamos si viene anotaciones
-                $nota_seguimiento = $request->request->get('nota_seguimiento');
-                $titulo_seguimiento = $request->request->get('titulo_seguimiento');
-                if ($nota_seguimiento != '' && $titulo_seguimiento != '') {
-                    $sql = "INSERT INTO tb_seguimiento (titulo_seguimiento, nota_seguimiento, id_cita, id_user) VALUES ('$titulo_seguimiento', '$nota_seguimiento', $id_cita, " . Auth::user()->id . ")";
-                    DB::insert($sql);
+
+                // Realizar la actualización
+                DB::table('tb_cita')
+                    ->where('id_cita', $id_cita)
+                    ->update($updateData);
+
+                // Verificar si se envían anotaciones para seguimiento
+                $nota_seguimiento  = $request->input('nota_seguimiento');
+                $titulo_seguimiento = $request->input('titulo_seguimiento');
+                if (!empty($nota_seguimiento) && !empty($titulo_seguimiento)) {
+                    DB::table('tb_seguimiento')->insert([
+                        'titulo_seguimiento' => $titulo_seguimiento,
+                        'nota_seguimiento'   => $nota_seguimiento,
+                        'id_cita'            => $id_cita,
+                        'id_user'            => Auth::user()->id,
+                        'created_at'         => Carbon::now()->subHours(5),
+                        'updated_at'         => Carbon::now()->subHours(5)
+                    ]);
                 }
+
                 $objLoad = [
                     'validate' => true,
-                    'text' => 'Cita actualizada correctamente',
-                    'id' => $id_cita
+                    'text'     => 'Cita actualizada correctamente',
+                    'id'       => $id_cita
                 ];
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
+
             return response()->json($objLoad);
         }
     }
+
     //Vamos a borrar la sede
     public function delete(Request $request)
     {

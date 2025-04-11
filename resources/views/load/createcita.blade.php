@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="{{url('assets/vendor/libs/select2/select2.css')}}" />
     <link rel="stylesheet" href="{{url('assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.css')}}" />
     <link rel="stylesheet" href="{{url('assets/css/style.css')}}" />
+    <link rel="stylesheet" href="{{url('assets/vendor/libs/tagify/tagify.css')}}" />
     <script src="{{url('assets/vendor/js/helpers.js')}}"></script>
     <script src="{{url('assets/js/config.js')}}"></script>
     <script>
@@ -69,7 +70,7 @@
                 </div>
                 <div class="mb-4 col-12 col-md-6">
                     <label class="form-label">Correo <span class="required_flied">*</span></label>
-                    <input type="text" class="form-control" name="email_cliente" required>
+                    <input type="email" class="form-control" name="email_cliente" required>
                 </div>
                 <div class="mb-4 col-12 col-md-6">
                     <label class="form-label">Teléfono <span class="required_flied">*</span></label><br>
@@ -89,6 +90,33 @@
                 <div class="mb-4 col-6">
                     <label class="form-label">Número de documento <span class="required_flied">*</span></label>
                     <input type="text" class="form-control" name="doc_cliente" required>
+                </div>
+                <div class="mb-4 col-12 col-md-6">
+                    <label class="form-label">Numero de Comparendo <span class="required_flied">*</span></label>
+                    <select class="select2 form-select" id="selectServicioLiquidador" required name="servicio_liquidador">
+                        <option value="" selected disabled>Seleccione una opción</option>
+                        <?php
+                        if (is_array($servicios_liquidador) && !empty($servicios_liquidador)) {
+                            foreach ($servicios_liquidador as $key => $servicio) {
+                                if ($servicio->nombre_servicio_liquidador == "1 comparendo") {
+                                    echo '<option value="' . $servicio->id_servicio_liquidador . '"> 1 comparendo = 1 curso</option>';
+                                } elseif ($servicio->nombre_servicio_liquidador == "2 comparendos") {
+                                    echo '<option value="' . $servicio->id_servicio_liquidador . '"> 2 comparendos = 2 cursos</option>';
+                                } elseif ($servicio->nombre_servicio_liquidador == "3 comparendos") {
+                                    echo '<option value="' . $servicio->id_servicio_liquidador . '"> 3 comparendos = 3 cursos</option>';
+                                } elseif ($servicio->nombre_servicio_liquidador == "+3 comparendos") {
+                                    echo '<option value="' . $servicio->id_servicio_liquidador . '"> Más de 3 comparendos</option>';
+                                }
+                            }
+                        }
+                        ?>
+                    </select>
+                    <p class="text-muted">Recuerde que por cada comparendo se debe realizar un curso.</p>
+                </div>
+                <div class="mb-4 col-12 col-md-6">
+                    <label class="form-label">Codigo de Comparendo</label>
+                    <input id="codigo_comparendo_tagify" name="codigo_comparendo" class="form-control" placeholder="Escribe tu codigo de comparendo si lo conoces" autocomplete="off">
+                    <p class="text-muted">Si conoce el codigo del Comparendo, puede ingresarlo aquí. de lo contrario puedes dejarlo vacio.</p>
                 </div>
                 <div class="col-12 row mx-auto p-0" id="divContentVehiculo">
                     <hr>
@@ -129,7 +157,7 @@
                             <rect mask="url(#checkbox-mask)" stroke-width="40" height="200" width="200"></rect>
                             <path stroke-width="15" d="M52 111.018L76.9867 136L149 64"></path>
                         </svg>
-                        <span class="text-center f18">Soy consciente que debo llegar 30 minutos antes de la cita, de lo contrario no podre tomar el curso.</span>
+                        <span class="text-center f18">Soy consciente que debo llegar <strong>30 MINUTOS ANTES</strong> de la cita, de lo contrario no podre tomar el curso.</span>
                     </label>
                 </div>
             </div>
@@ -147,6 +175,7 @@
     <script>
         id_sede = '<?= $id_sede ?>'
         festivos = <?= json_encode($festivos) ?>;
+        const servicios_liquidador = JSON.parse('<?php echo json_encode($servicios_liquidador); ?>');
         const phoneInputField = document.querySelector("#phoneCliente");
         const phoneInput = window.intlTelInput(phoneInputField, {
             initialCountry: "co",
@@ -164,6 +193,7 @@
     <script src="{{url('assets/vendor/libs/select2/select2.js')}}"></script>
     <script src="{{url('assets/vendor/libs/sweetalert2/sweetalert2.js')}}"></script>
     <script src="{{url('assets/vendor/libs/bootstrap-datepicker/bootstrap-datepicker.js')}}"></script>
+    <script src="{{url('assets/vendor/libs/tagify/tagify.js')}}"></script>
     <script src="{{url('assets/js/createcita.js')}}?v=1.0.1"></script>
     <style>
         body {
@@ -190,7 +220,37 @@
             margin: auto !important;
         }
     </style>
+    <script>
+        const codigo_comparendo = document.querySelector("#codigo_comparendo_tagify");
 
+        const whitelist = [
+            "A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "A11", "A12",
+            "B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B10", "B11", "B12",
+            "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23",
+            "C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08", "C09", "C10", "C11", "C12",
+            "C13", "C14", "C15", "C16", "C17", "C18", "C19", "C20", "C21", "C22", "C23", "C24",
+            "C25", "C26", "C27", "C28", "C29", "C30", "C31", "C32", "C33", "C34", "C35", "C36",
+            "C37", "C38", "C39", "C40",
+            "D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "D09", "D10", "D11", "D12",
+            "D13", "D14", "D15", "D16", "D17",
+            "E01", "E02", "E04",
+            "F01", "F02", "F03", "F04", "F05", "F06", "F07",
+            "G01", "G02",
+            "H01", "H02", "H03", "H04", "H05", "H06", "H07", "H08", "H09", "H10", "H11", "H12"
+        ];
+
+        // Inline
+        let codigo_comparendo_tagify = new Tagify(codigo_comparendo, {
+            whitelist: whitelist,
+            maxTags: 5, // allows to select max items
+            dropdown: {
+                maxItems: 20, // display max items
+                classname: "tags-inline", // Custom inline class
+                enabled: 0,
+                closeOnSelect: false
+            }
+        });
+    </script>
 
 </body>
 
