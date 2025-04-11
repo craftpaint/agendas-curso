@@ -159,7 +159,6 @@
                                 <?php } ?>
                             </tr>
                         </thead>
-
                     </table>
                 </div>
             </div>

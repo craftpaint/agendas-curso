@@ -1082,11 +1082,11 @@ $(function () {
                         targets: 0,
                         render: function (data, type, full, meta) {
                             if (full.id_vehiculo) {
-                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small><br><small class="text-muted">' + full.email_cliente + '</small><br><span class="badge bg-label-dark">' + full.placa_vehiculo + '</span><small class="text-muted ml-2">' + full.tipo_vehiculo + '</small>';
+                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.doc_cliente + '" target="_blank" rel="noreferrer">' + full.tipo_doc_cliente + full.doc_cliente + '</a> - Telf: <a href="tel:' + full.telefono_cliente + '" targer="_blank">' + full.telefono_cliente + '</a></small><br><small class="text-muted">' + full.email_cliente + '</small><br><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.placa_vehiculo + '" <span class="badge bg-label-dark">' + full.placa_vehiculo + '</span></a><small class="text-muted ml-2">' + full.tipo_vehiculo + '</small>';
 
                                 // texto = '<h6 class="m-0">' + full.nombre_cliente + $full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + ' - Tipo: ' + full.tipo_vehiculo + ' - Modelo: ' + full.modelo_vehiculo + '</small>';
                             } else {
-                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small><br><small class="text-muted">' + full.email_cliente + '</small>';
+                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.doc_cliente + '" target="_blank" rel="noreferrer">' + full.tipo_doc_cliente + full.doc_cliente + '</a> - Telf: <a href="tel:' + full.telefono_cliente + '" targer="_blank">' + full.telefono_cliente + '</a></small><br><small class="text-muted">' + full.email_cliente + '</small>';
                             }
                             return texto;
                         }
