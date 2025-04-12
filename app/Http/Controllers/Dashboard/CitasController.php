@@ -1163,67 +1163,188 @@ class CitasController extends Controller
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
-                'text' => 'Error al borrar el estado'
+                'text' => 'Error al descargar el listado de las citas'
             ];
             try {
                 $user = Auth::user();
-                $rol =  $user->getRoleNames()->first();
-                $start = $request->request->get('start');
+                $rol = $user->getRoleNames()->first();
+                $start = $request->input('start'); // Se recibe desde ajax
                 $length = 100;
-                // Filtros
-                $filtro_dia = $request->input('filtro_dia');
-                $filtro_dia_end = $request->input('filtro_dia_end');
-                $filtro_sede = $request->input('filtro_sede');
-                $filtro_estado = $request->input('filtro_estado');
+
+                // Filtros personalizados recibidos desde el request
+                $filtro_dia      = $request->input('filtro_dia');
+                $filtro_dia_end  = $request->input('filtro_dia_end');
+                $filtro_sede     = $request->input('filtro_sede');
+                $filtro_search   = $request->input('filtro_search');
+                $filtro_estado   = $request->input('filtro_estado');
+                $filtro_estado_verificado = $request->input('filtro_estado_verificado');
+                $filtro_responsable = $request->input('filtro_responsable');
+                $filtro_origen   = $request->input('filtro_origen');
+                $filtro_agente   = $request->input('filtro_agente');
+                // Filtros específicos para liquidador (si llegan desde JS)
+                $filtro_servicio_liquidador = $request->input('filtro_servicios_liquidador');
+                $filtro_estado_validacion_liquidador = $request->input('filtro_estado_validacion_liquidador');
+                $filtro_estado_pago_liquidador = $request->input('filtro_estado_pago_liquidador');
+
+                $tipo_cita       = $request->input('tipo_cita');
                 $fecha_actual = date('Y-m-d');
-                // Construcción de la consulta
+                // Rango por defecto: primer y último día del mes actual
+                $startOfMonth = date('Y-m-01');
+                $endOfMonth   = date('Y-m-t');
 
+                // --------------------------------------
+                // 1) Construcción de la consulta base (SQL directo)
+                // --------------------------------------
+                $sqlBase = "
+                    FROM tb_cita AS t1
+                    INNER JOIN tb_cliente AS t2 ON t1.id_cliente = t2.id_cliente
+                    INNER JOIN tb_estado AS t3 ON t1.id_estado = t3.id_estado
+                    INNER JOIN tb_estado AS t4 ON t1.id_estado_verificado = t4.id_estado
+                    INNER JOIN tb_sede AS t5 ON t1.id_sede = t5.id_sede
+                    INNER JOIN tb_servicio AS t6 ON t5.id_servicio = t6.id_servicio
+                    LEFT JOIN tb_liquidador AS l ON t1.id_cita = l.id_cita
+                    LEFT JOIN tb_vehiculo AS v ON t1.id_vehiculo = v.id_vehiculo
+                    LEFT JOIN tb_servicio_liquidador AS s ON t1.id_servicio_liquidador = s.id_servicio_liquidador
+                    WHERE t1.id_cita > 0
+                ";
 
+                // Filtro para el rol 'gestorsede'
                 if ($rol == 'gestorsede') {
-                    $sql = "SELECT *, t1.created_at as fecha_create FROM tb_cita as t1
-                    INNER JOIN tb_cliente as t2 ON t1.id_cliente = t2.id_cliente
-                    INNER JOIN tb_estado as t3 ON t1.id_estado = t3.id_estado
-                    INNER JOIN tb_sede as t5 ON t1.id_sede = t5.id_sede WHERE t1.id_cita > 0 AND t5.id_sede = " . $user->id_sede;
-                } else {
-                    $sql = "SELECT *, t1.created_at as fecha_create FROM tb_cita as t1
-                    INNER JOIN tb_cliente as t2 ON t1.id_cliente = t2.id_cliente
-                    INNER JOIN tb_estado as t3 ON t1.id_estado = t3.id_estado
-                    INNER JOIN tb_sede as t5 ON t1.id_sede = t5.id_sede WHERE t1.id_cita > 0";
+                    $sqlBase .= " AND t5.id_sede = " . $user->id_sede;
                 }
 
-                // Aplicar filtros
-                if ($filtro_dia && $filtro_dia_end) {
-                    $sql .= " AND t1.reserva_cita BETWEEN '$filtro_dia' AND '$filtro_dia_end'";
-                } elseif ($filtro_dia) {
-                    $sql .= " AND t1.reserva_cita = '$filtro_dia'";
+                // Filtro de fechas: si se envían ambos, se filtra entre esas fechas; si no se envían, se utiliza el mes actual
+                if (!empty($filtro_dia) && !empty($filtro_dia_end)) {
+                    $sqlBase .= " AND t1.reserva_cita BETWEEN '$filtro_dia' AND '$filtro_dia_end'";
+                    $dateNomArchivo = $filtro_dia . "-" . $filtro_dia_end;
                 } else {
-                    $sql .= " AND t1.reserva_cita >= '$fecha_actual'";
+                    $sqlBase .= " AND t1.reserva_cita BETWEEN '$startOfMonth' AND '$endOfMonth'";
+                    $dateNomArchivo = $startOfMonth . "-" . $endOfMonth;
                 }
-                if ($filtro_sede) {
-                    $sql .= " AND t5.id_sede = $filtro_sede";
+
+                // Filtro de sede
+                if (!empty($filtro_sede)) {
+                    $sqlBase .= " AND t5.id_sede = $filtro_sede";
                 }
-                if ($filtro_estado) {
-                    $sql .= " AND t3.id_estado = $filtro_estado";
+
+                // Filtro de servicio liquidador
+                if (!empty($filtro_servicio_liquidador)) {
+                    $sqlBase .= " AND t1.id_servicio_liquidador = $filtro_servicio_liquidador";
                 }
-                // Limitar registros por página
-                $sql .= " LIMIT $start, $length";
-                $records = DB::select($sql);
+
+                // Filtro de estado validación liquidador
+                if (!empty($filtro_estado_validacion_liquidador)) {
+                    $sqlBase .= " AND l.estado_liquidador = '$filtro_estado_validacion_liquidador'";
+                }
+
+                // Filtro de estado pago liquidador
+                if (!empty($filtro_estado_pago_liquidador)) {
+                    $sqlBase .= " AND l.pago_liquidador = '$filtro_estado_pago_liquidador'";
+                }
+
+                // Filtro de búsqueda (nombre, apellido, documento o teléfono del cliente)
+                if (!empty($filtro_search)) {
+                    $sqlBase .= " AND (
+                        t2.nombre_cliente   LIKE '%$filtro_search%' OR
+                        t2.apellido_cliente LIKE '%$filtro_search%' OR
+                        t2.doc_cliente      LIKE '%$filtro_search%' OR
+                        t2.telefono_cliente LIKE '%$filtro_search%'
+                    )";
+                }
+
+                // Filtro por tipo de cita
+                if (!empty($tipo_cita)) {
+                    $sqlBase .= " AND t6.tipo_servicio = '$tipo_cita'";
+                }
+
+                // Aquí podrías agregar otros filtros (como responsable, origen, agente) si fuese necesario
+                if (!empty($filtro_responsable)) {
+                    $sqlBase .= " AND t1.responsable_origen = '$filtro_responsable'";
+                }
+                if (!empty($filtro_origen)) {
+                    $sqlBase .= " AND t1.origen = '$filtro_origen'";
+                }
+                if (!empty($filtro_agente)) {
+                    $sqlBase .= " AND t1.id_agente_callcenter = $filtro_agente";
+                }
+
+                // --------------------------------------
+                // 2) Construcción de la consulta de datos con paginación
+                // --------------------------------------
+                $sqlData = "SELECT t1.*,
+                            t1.created_at AS fecha_create,
+                            t2.nombre_cliente,
+                            t2.apellido_cliente,
+                            t2.doc_cliente,
+                            t2.tipo_doc_cliente,
+                            t2.telefono_cliente,
+                            t2.email_cliente,
+                            t2.desc_cliente,
+                            t3.id_estado AS estado_actual_id,
+                            t3.nombre_estado AS estado_actual_nombre,
+                            t3.color_estado AS estado_actual_color,
+                            t4.id_estado AS estado_verificado_id,
+                            t4.nombre_estado AS estado_verificado_nombre,
+                            t4.color_estado AS estado_verificado_color,
+                            t4.desc_estado AS estado_verificado_desc,
+                            t5.nombre_sede,
+                            t5.direccion_sede,
+                            t5.tel_sede,
+                            t5.estado_sede,
+                            t6.tipo_servicio,
+                            l.id_liquidador,
+                            l.estado_liquidador,
+                            l.comentario_liquidador,
+                            l.pago_liquidador,
+                            v.id_vehiculo,
+                            v.placa_vehiculo,
+                            v.tipo_vehiculo,
+                            v.modelo_vehiculo,
+                            s.id_servicio_liquidador,
+                            s.nombre_servicio_liquidador,
+                            s.valor_servicio_liquidador,
+                            s.color_servicio_liquidador,
+                            (
+                                SELECT GROUP_CONCAT(
+                                        CONCAT_WS(' - ', titulo_seguimiento, nota_seguimiento)
+                                        SEPARATOR '|'
+                                )
+                                FROM tb_seguimiento
+                                WHERE id_cita = t1.id_cita
+                            ) AS comentarios
+                        " . $sqlBase . "
+                        ORDER BY t1.reserva_cita, t1.rango_horario, t1.id_sede ASC
+                        LIMIT " . (int)$start . ", " . (int)$length;
+
+                // Ejecutar la consulta
+                $records = DB::select($sqlData);
+
+                // Si ya no hay registros, se envía la respuesta 'completed' con la URL del archivo
                 if (empty($records)) {
                     return response()->json([
                         'status' => 'completed',
-                        'url' => url('data/data_cita.csv')
+                        'url' => url('data/export-citas-' . $dateNomArchivo . '.csv')
                     ]);
                 }
-                // Ruta y apertura del archivo CSV en la carpeta public/data
-                $filePath = 'public_html/data/data_cita.csv';
+
+                // --------------------------------------
+                // 3) Escritura del archivo CSV
+                // --------------------------------------
+                $filePath = 'public_html/data/export-citas-' . $dateNomArchivo . '.csv';
                 $fullPath = base_path($filePath);
-                // Crear la carpeta 'data' si no existe
+                // Crear la carpeta 'public_html/data' si no existe
                 if (!file_exists(base_path('public_html/data'))) {
                     mkdir(base_path('public_html/data'), 0777, true);
                 }
-                $file = fopen($fullPath, $start == 0 ? 'w' : 'a');
+
+                // Abrir el archivo. Con 'w' en el inicio y luego 'a' para anexar si es paginación.
+                $file = fopen($fullPath, ($start == 0 ? 'w' : 'a'));
+
                 if ($start == 0) {
-                    // Encabezados en la primera escritura
+                    // Escribir el BOM y configuración de separador para Excel
+                    fwrite($file, chr(239) . chr(187) . chr(191));
+                    fwrite($file, "sep=;\n");
+                    // Escribir encabezados
                     fputcsv($file, [
                         'ID Cita',
                         'Cliente',
@@ -1233,49 +1354,64 @@ class CitasController extends Controller
                         'Fecha de Reserva',
                         'Descripción',
                         'Fecha Creación',
-                        'Nombre Cliente',
-                        'Apellido Cliente',
                         'Tipo Documento',
                         'Documento Cliente',
                         'Teléfono Cliente',
                         'Email Cliente',
-                        'Descripción Cliente',
-                        'Nombre Estado',
-                        'Descripción Estado',
-                        'Nombre Sede',
-                        'Dirección Sede',
-                        'Teléfono Sede',
-                        'Estado Sede',
-                        'Horario de Rango'
-                    ]);
+                        'Estado Liquidador',
+                        'Tipo Servicio',
+                        'Costo',
+                        'Comentario Liquidador',
+                        'Seguimiento cita',
+                        'Placa Vehiculo',
+                        'Tipo Vehiculo',
+                        'Modelo Vehiculo',
+                        'Creado Por',
+                        'Origen',
+                        'Url Variables',
+                        'Tipo dispositivo'
+                    ], ';');
                 }
+
+                // Recorrer los registros y escribirlos en el CSV
                 foreach ($records as $record) {
                     fputcsv($file, [
                         $record->id_cita,
                         $record->nombre_cliente . ' ' . $record->apellido_cliente,
-                        $record->nombre_estado,
+                        $record->estado_verificado_nombre,
                         $record->nombre_sede,
                         $record->rango_horario,
                         $record->reserva_cita,
                         $record->desc_cita,
                         $record->created_at,
-                        $record->nombre_cliente,
-                        $record->apellido_cliente,
                         $record->tipo_doc_cliente,
                         $record->doc_cliente,
-                        $record->telefono_cliente,
+                        "\t" . $record->telefono_cliente,
                         $record->email_cliente,
-                        $record->desc_cliente,
-                        $record->nombre_estado,
-                        $record->desc_estado,
-                        $record->nombre_sede,
-                        $record->direccion_sede,
-                        $record->tel_sede,
-                        $record->estado_sede,
-                        $record->rango_horario
-                    ]);
+                        $record->estado_liquidador,
+                        $record->nombre_servicio_liquidador,
+                        $record->valor_servicio_liquidador,
+                        $record->comentario_liquidador,
+                        $record->comentarios,
+                        $record->placa_vehiculo,
+                        $record->tipo_vehiculo,
+                        $record->modelo_vehiculo,
+                        $record->placa_vehiculo,  // 'Creado Por' (ajusta si es otro campo)
+                        $record->origen,
+                        $record->url_variables,
+                        $record->tipo_dispositivo
+                    ], ';');
                 }
                 fclose($file);
+
+                // Si después de escribir se determinó que no hay registros (terminó de paginar), se retorna la descarga
+                if (empty($records)) {
+                    return response()->download($fullPath, 'export-citas-' . $dateNomArchivo . '.csv', [
+                        'Content-Type' => 'text/csv; charset=UTF-8',
+                        'Content-Disposition' => 'attachment; filename="export-citas-' . $dateNomArchivo . '.csv"'
+                    ]);
+                }
+                // Si aún hay registros por procesar, se retorna el estado in_progress con el siguiente start
                 return response()->json(['status' => 'in_progress', 'nextStart' => $start + $length]);
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
