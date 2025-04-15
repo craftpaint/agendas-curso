@@ -5,6 +5,10 @@
 /public/storage
 /public/data
 /public_html/data
+/public_html/.htaccess
+/public_html/php_errorlog
+/webstats
+/logs
 /storage/*.key
 /vendor
 .env

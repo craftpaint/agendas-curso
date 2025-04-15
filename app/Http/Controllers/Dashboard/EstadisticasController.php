@@ -34,7 +34,6 @@ class EstadisticasController extends Controller
         } else {
             $data['sedes'] = DB::table('tb_sede')->get();
         }
-        $data['sedes'] = DB::select($sql);;
         //Estados
         $sql = "SELECT * FROM tb_estado";
         $data['estados'] = DB::select($sql);
@@ -66,7 +65,6 @@ class EstadisticasController extends Controller
         } else {
             $data['sedes'] = DB::table('tb_sede')->get();
         }
-        $data['sedes'] = DB::select($sql);;
         //Estados
         $sql = "SELECT * FROM tb_estado";
         $data['estados'] = DB::select($sql);
