@@ -4,6 +4,7 @@
 /public/hot
 /public/storage
 /public/data
+/public_html/data
 /storage/*.key
 /vendor
 .env
