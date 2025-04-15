@@ -97,48 +97,50 @@ $(function () {
                 if (icon === 'success') {
                     if ($('.content_sede').length) {
                         if (response?.id) {
-                            if (rol == 'gestorsede') {
-                                window.location = url + '/dashboard/sedes/view/' + response.id;
-                            } else {
+                            // Si el usuario tiene permiso para editar sedes, lo redirige a la edición;
+                            // de lo contrario, lo redirige a la vista.
+                            if (typeof canEditSedes !== 'undefined' && canEditSedes) {
                                 window.location = url + '/dashboard/sedes/edit/' + response.id;
+                            } else {
+                                window.location = url + '/dashboard/sedes/view/' + response.id;
                             }
                         }
                     }
                     if ($('.content_clientes').length) {
                         if (response?.id) {
-                            if (rol == 'gestorsede') {
-                                window.location = url + '/dashboard/clientes/view/' + response.id;
-                            } else {
+                            if (typeof canEditClientes !== 'undefined' && canEditClientes) {
                                 window.location = url + '/dashboard/clientes/edit/' + response.id;
+                            } else {
+                                window.location = url + '/dashboard/clientes/view/' + response.id;
                             }
                         }
                     }
                     if ($('.content_vehiculos').length) {
                         if (response?.id) {
-                            if (rol == 'gestorsede') {
-                                window.location = url + '/dashboard/clientes/view_vehiculos/' + response.id;
-                            } else {
+                            if (typeof canEditVehiculos !== 'undefined' && canEditVehiculos) {
                                 window.location = url + '/dashboard/clientes/edit_vehiculos/' + response.id;
+                            } else {
+                                window.location = url + '/dashboard/clientes/get_vehiculo/' + response.id;
                             }
                         }
                     }
                     if ($('.content_citas').length) {
-                        ;
                         if (response?.id) {
-                            if (rol == 'gestorsede') {
-                                window.location = url + '/dashboard/citas/view/' + response.id;
-                            } else {
+                            if (typeof canEditCitas !== 'undefined' && canEditCitas) {
                                 window.location = url + '/dashboard/citas/edit/' + response.id;
+                            } else {
+                                window.location = url + '/dashboard/citas/view/' + response.id;
                             }
                         }
                     }
                     if ($('.content_citas_edit_estados').length) {
-                        ;
                         if (response?.id) {
-                            if (rol == 'gestorsede') {
-                                window.location = url + '/dashboard/citas';
-                            } else {
+                            // Por ejemplo: si el usuario tiene permiso para editar estados, se lo redirige a la configuración de citas;
+                            // de lo contrario, regresa al listado de citas.
+                            if (typeof canEditEstadoCitas !== 'undefined' && canEditEstadoCitas) {
                                 window.location = url + '/dashboard/citas/configuracion';
+                            } else {
+                                window.location = url + '/dashboard/citas';
                             }
                         }
                     }
@@ -216,17 +218,14 @@ $(function () {
                     render: function (data, type, full, meta) {
                         return `
                         <div class="d-flex justify-content-end">
-                            ${(rol == 'superadmin') ? `
-                            <a href="${url}/dashboard/sedes/edit/${full.id_sede}" class="btn btn-icon btn-label-primary waves-effect me-2">
-                                <i class="tf-icons ti ti-edit ti-md"></i>
-                            </a>
-                            <button type="button" data-id="${full.id_sede}" class="btn_delete_sede btn btn-icon btn-label-danger waves-effect">
-                                <i class="tf-icons ti ti-trash ti-md"></i>
-                            </button>` : ``}
-                            ${(rol == 'lidercallcenter') ? `
+                            ${(canEditSedes) ? `
                             <a href="${url}/dashboard/sedes/edit/${full.id_sede}" class="btn btn-icon btn-label-primary waves-effect me-2">
                                 <i class="tf-icons ti ti-edit ti-md"></i>
                             </a>` : ``}
+                            ${(canDeleteSedes) ? `
+                            <button type="button" data-id="${full.id_sede}" class="btn_delete_sede btn btn-icon btn-label-danger waves-effect">
+                                <i class="tf-icons ti ti-trash ti-md"></i>
+                            </button>` : ``}
                         </div>`	;
                     }
                 },
@@ -291,7 +290,7 @@ $(function () {
                     render: function (data, type, full, meta) {
                         return `
                         <div class="d-flex justify-content-end">
-                            ${(rol == 'superadmin') ? `
+                            ${(canDeleteHorarios) ? `
                             <button type="button" data-id="${full.id_horario}" class="btn_delete_horario btn btn-icon btn-label-danger waves-effect">
                                 <i class="tf-icons ti ti-trash ti-md"></i>
                             </button>` : ``}
@@ -359,7 +358,7 @@ $(function () {
                     render: function (data, type, full, meta) {
                         return `
                         <div class="d-flex justify-content-end">
-                            ${(rol == 'superadmin') ? `
+                            ${(canDeleteFestivos) ? `
                             <button type="button" data-id="${full.id}" data-fecha="${full.fecha}" class="btn_delete_festivo btn btn-icon btn-label-danger waves-effect">
                                 <i class="tf-icons ti ti-trash ti-md"></i>
                             </button>` : ``}
@@ -435,7 +434,7 @@ $(function () {
                     render: function (data, type, full, meta) {
                         return `
                         <div class="d-flex justify-content-end">
-                            ${(rol == 'superadmin') ? `
+                            ${(canDeleteServicios) ? `
                             <button type="button" data-id="${full.id_servicio}" class="btn_delete_servicio btn btn-icon btn-label-danger waves-effect">
                                 <i class="tf-icons ti ti-trash ti-md"></i>
                             </button>` : ``}
@@ -541,21 +540,16 @@ $(function () {
                     render: function (data, type, full, meta) {
                         return `
                         <div class="d-flex justify-content-end">
-                            ${(rol == 'superadmin') ? `
-                            <a href="${url}/dashboard/clientes/edit/${full.id_cliente}" class="btn btn-icon btn-label-primary waves-effect me-2">
-                                <i class="tf-icons ti ti-edit ti-md"></i>
-                            </a>
-                            <button type="button" data-id="${full.id_cliente}" class="btn_delete_cliente btn btn-icon btn-label-danger waves-effect">
-                                <i class="tf-icons ti ti-trash ti-md"></i>
-                            </button>` : ``}
-                            ${(rol == 'callcenter' || rol == 'lidercallcenter') ? `
-                            <a href="${url}/dashboard/clientes/edit/${full.id_cliente}" class="btn btn-icon btn-label-primary waves-effect me-2">
-                                <i class="tf-icons ti ti-edit ti-md"></i>
-                            </a>` : ``}
-                            ${(rol == 'gestorsede') ? `
-                                <a href="${url}/dashboard/clientes/view/${full.id_cliente}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                            ${(canEditClientes) ? `
+                                <a href="${url}/dashboard/clientes/edit/${full.id_cliente}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                    <i class="tf-icons ti ti-edit ti-md"></i>
+                                </a>` : ` <a href="${url}/dashboard/clientes/view/${full.id_cliente}" class="btn btn-icon btn-label-primary waves-effect me-2">
                                     <i class="tf-icons ti ti-search ti-md"></i>
-                                </a>` : ``}
+                                </a>`}
+                             ${(canDeleteClientes) ? `
+                                <button type="button" data-id="${full.id_cliente}" class="btn_delete_cliente btn btn-icon btn-label-danger waves-effect">
+                                    <i class="tf-icons ti ti-trash ti-md"></i>
+                                </button>` : ``}
                         </div>`	;
                     }
                 },
@@ -629,21 +623,17 @@ $(function () {
                     render: function (data, type, full, meta) {
                         return `
                         <div class="d-flex justify-content-end">
-                            ${(rol == 'superadmin') ? `
+                            ${(canEditVehiculos) ? `
                             <a href="${url}/dashboard/clientes/edit_vehiculos/${full.id_vehiculo}" class="btn btn-icon btn-label-primary waves-effect me-2">
                                 <i class="tf-icons ti ti-edit ti-md"></i>
-                            </a>
+                            </a>` : `
+                            <a href="${url}/dashboard/clientes/get_vehiculo/${full.id_vehiculo}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <i class="tf-icons ti ti-search ti-md"></i>
+                            </a>`}
+                            ${(canDeleteVehiculos) ? `
                             <button type="button" data-id="${full.id_vehiculo}" class="btn_delete_vehiculo btn btn-icon btn-label-danger waves-effect">
                                 <i class="tf-icons ti ti-trash ti-md"></i>
                             </button>` : ``}
-                            ${(rol == 'callcenter' || rol == 'lidercallcenter') ? `
-                            <a href="${url}/dashboard/clientes/edit_vehiculos/${full.id_vehiculo}" class="btn btn-icon btn-label-primary waves-effect me-2">
-                                <i class="tf-icons ti ti-edit ti-md"></i>
-                            </a>` : ``}
-                             ${(rol == 'gestorsede') ? `
-                                <a href="${url}/dashboard/clientes/view_vehiculos/${full.id_cliente}" class="btn btn-icon btn-label-primary waves-effect me-2">
-                                    <i class="tf-icons ti ti-search ti-md"></i>
-                                </a>` : ``}
                         </div>`	;
                     }
                 }
@@ -742,7 +732,7 @@ $(function () {
                     dias_disponibles_datapicker = [...new Set(dias_disponibles_datapicker)];
                     let dias_no_disponibles = dias_fijos.filter(elemento => !dias_disponibles_datapicker.includes(elemento));
                     var startDateDatepicker = new Date(); // Por defecto se restringe a partir de hoy
-                    if (rol === 'superadmin' || rol === 'admin' || rol === 'callcenter' || rol == 'lidercallcenter') {
+                    if (canEditCualquierFecha) {
                         startDateDatepicker = null; // Permite seleccionar cualquier fecha
                     }
 
@@ -978,13 +968,14 @@ $(function () {
                     render: function (data, type, full, meta) {
                         return `
                         <div class="d-flex justify-content-end">
-                            ${(rol == 'superadmin') ? `
-														<a href="${url}/dashboard/citas/edit_estados/${full.id_estado}" class="btn btn-icon btn-label-primary waves-effect me-2">
-                                <i class="tf-icons ti ti-edit ti-md"></i>
-                            </a>
-                            <button type="button" data-id="${full.id_estado}" class="btn_delete_estado btn btn-icon btn-label-danger waves-effect">
-                                <i class="tf-icons ti ti-trash ti-md"></i>
-                            </button>` : ``}
+                            ${(canEditEstadoCitas) ? `
+								<a href="${url}/dashboard/citas/edit_estados/${full.id_estado}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                    <i class="tf-icons ti ti-edit ti-md"></i>
+                                </a>` : ``}
+                            ${(canDeleteEstadoCitas) ? `
+                                <button type="button" data-id="${full.id_estado}" class="btn_delete_estado btn btn-icon btn-label-danger waves-effect">
+                                    <i class="tf-icons ti ti-trash ti-md"></i>
+                                </button>` : ``}
                         </div>`	;
                     }
                 },
@@ -1028,501 +1019,302 @@ $(function () {
     //TABLAS DE CITAS
     if ($('.datatables-citas').length) {
         tipoCita = $('#tipo_cita').val();
-        if (rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'liquidador' || rol == 'lidercallcenter') {
-            table_citas = $('.datatables-citas').DataTable({
-                ordering: true,
-                processing: true,
-                serverSide: true,
-                searching: false,
-                info: true,
-                pageLength: 50, // Cambiar la paginación a 50 entradas
-                language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
-                    info: "Mostrando _START_ a _END_ de _MAX_ registros",
-                    infoEmpty: "No hay datos disponibles",
-                    infoFiltered: "(filtrados de un total de _MAX_ registros)"
+        table_citas = $('.datatables-citas').DataTable({
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            searching: false,
+            info: true,
+            pageLength: 50, // Cambiar la paginación a 50 entradas
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
+                info: "Mostrando _START_ a _END_ de _MAX_ registros",
+                infoEmpty: "No hay datos disponibles",
+                infoFiltered: "(filtrados de un total de _MAX_ registros)"
+            },
+            dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+            ajax: {
+                url: url + '/dashboard/citas/get_citas',
+                type: "POST",
+                data: function (d) {
+                    d.filtro_dia = filtroDia;
+                    d.filtro_dia_end = filtroDiaEnd;
+                    d.filtro_sede = filtroSede;
+                    d.filtro_estado = filtroEstado;
+                    d.filtro_estado_verificado = filtroEstadoVerificado;
+                    d.filtro_responsable = filtroResponsable;
+                    d.filtro_origen = filtroOrigen;
+                    d.filtro_search = filtroSearch;
+                    d.filtro_agente = filtroAgente;
+                    d.tipo_cita = tipoCita;
+                    // Parámetros necesarios para ordenamiento
+                    d.order = d.order;
+                    d.columns = d.columns;
+                    d.search = d.search;
                 },
-                dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
-                ajax: {
-                    url: url + '/dashboard/citas/get_citas',
-                    type: "POST",
-                    data: function (d) {
-                        d.filtro_dia = filtroDia;
-                        d.filtro_dia_end = filtroDiaEnd;
-                        d.filtro_sede = filtroSede;
-                        d.filtro_estado = filtroEstado;
-                        d.filtro_estado_verificado = filtroEstadoVerificado;
-                        d.filtro_responsable = filtroResponsable;
-                        d.filtro_origen = filtroOrigen;
-                        d.filtro_search = filtroSearch;
-                        d.filtro_agente = filtroAgente;
-                        d.tipo_cita = tipoCita;
-                        // Parámetros necesarios para ordenamiento
-                        d.order = d.order;
-                        d.columns = d.columns;
-                        d.search = d.search;
-                    },
+            },
+            columns: [
+                { data: 'nombre_cliente' },                 // Columna 0
+                { data: null },                             // Columna 1
+                {
+                    data: 'nombre_sede',
+                },                    // Columna 2
+                { data: 'reserva_cita' },                   // Columna 3
+                { data: 'fecha_create' },                   // Columna 4
+                { data: 'estado_actual_nombre' },           // Columna 5
+                { data: 'estado_verificado_nombre' },       // Columna 6
+                {
+                    data: 'id_agente_callcenter',
+                    visible: canViewCallCenter
+                },           // Columna 7
+                {
+                    data: 'nombre_servicio_liquidador',
+                    visible: canViewServiciosLiquidador
+                },     // Columna 8
+                {
+                    data: 'responsable_origen',
+                    visible: canViewOrigen
+                },              // Columna 9
+                {
+                    data: 'origen',
+                    visible: canViwTag
+                },                         // Columna 10
+                { data: null }                              // Columna 11 (botones)
+            ],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        if (full.id_vehiculo) {
+                            texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.doc_cliente + '" target="_blank" rel="noreferrer">' + full.tipo_doc_cliente + full.doc_cliente + '</a> - Telf: <a href="tel:' + full.telefono_cliente + '" targer="_blank">' + full.telefono_cliente + '</a></small><br><small class="text-muted">' + full.email_cliente + '</small><br><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.placa_vehiculo + '" target="_blank"> <span class="badge bg-label-dark">' + full.placa_vehiculo + '</span> </a> <small class="text-muted ml-2"> ' + full.tipo_vehiculo + '</small>';
+
+                            // texto = '<h6 class="m-0">' + full.nombre_cliente + $full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + ' - Tipo: ' + full.tipo_vehiculo + ' - Modelo: ' + full.modelo_vehiculo + '</small>';
+                        } else {
+                            texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.doc_cliente + '" target="_blank" rel="noreferrer">' + full.tipo_doc_cliente + full.doc_cliente + '</a> - Telf: <a href="tel:' + full.telefono_cliente + '" targer="_blank">' + full.telefono_cliente + '</a></small><br><small class="text-muted">' + full.email_cliente + '</small>';
+                        }
+                        return texto;
+                    }
                 },
-                columns: [
-                    { data: 'nombre_cliente' },                 // Columna 0
-                    { data: null },                             // Columna 1
-                    { data: 'nombre_sede' },                    // Columna 2
-                    { data: 'reserva_cita' },                   // Columna 3
-                    { data: 'fecha_create' },                   // Columna 4
-                    { data: 'estado_actual_nombre' },           // Columna 5
-                    { data: 'estado_verificado_nombre' },       // Columna 6
-                    { data: 'id_agente_callcenter' },           // Columna 7
-                    { data: 'nombre_servicio_liquidador' },     // Columna 8
-                    { data: 'responsable_origen' },             // Columna 9
-                    { data: 'origen' },                         // Columna 10
-                    { data: null }                              // Columna 11 (botones)
-                ],
-                columnDefs: [
-                    {
-                        targets: 0,
-                        render: function (data, type, full, meta) {
-                            if (full.id_vehiculo) {
-                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.doc_cliente + '" target="_blank" rel="noreferrer">' + full.tipo_doc_cliente + full.doc_cliente + '</a> - Telf: <a href="tel:' + full.telefono_cliente + '" targer="_blank">' + full.telefono_cliente + '</a></small><br><small class="text-muted">' + full.email_cliente + '</small><br><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.placa_vehiculo + '" target="_blank"> <span class="badge bg-label-dark">' + full.placa_vehiculo + '</span> </a> <small class="text-muted ml-2"> ' + full.tipo_vehiculo + '</small>';
+                {
+                    targets: 1, // Comentario Liquidador
+                    orderable: false,
+                    render: function (data, type, full, meta) {
+                        // Si existen anotaciones, mostramos también la cantidad en un badge
+                        let badgeAnotaciones = '';
+                        iconColorAnotaciones = 'text-muted';
+                        if (full.total_anotaciones && parseInt(full.total_anotaciones) > 0) {
+                            badgeAnotaciones = `<span class="badge rounded-pill text-bg-danger badge-notifications px-1">${full.total_anotaciones}</span>`;
+                            iconColorAnotaciones = 'text-success';
+                        }
 
-                                // texto = '<h6 class="m-0">' + full.nombre_cliente + $full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + ' - Tipo: ' + full.tipo_vehiculo + ' - Modelo: ' + full.modelo_vehiculo + '</small>';
-                            } else {
-                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.doc_cliente + '" target="_blank" rel="noreferrer">' + full.tipo_doc_cliente + full.doc_cliente + '</a> - Telf: <a href="tel:' + full.telefono_cliente + '" targer="_blank">' + full.telefono_cliente + '</a></small><br><small class="text-muted">' + full.email_cliente + '</small>';
+                        return `
+                        <div style="position:relative; display:inline-block;">
+                            <!-- Botón para ver el seguimiento -->
+                            <button type="button"
+                                class="btn btn-sm btn-light btn-open-seguimiento-modal ${iconColorAnotaciones}"
+                                data-id-cita="${full.id_cita}"
+                                title="Ver seguimiento">
+                                <i class="ti ti-eye"></i>
+                            </button>
+                            ${badgeAnotaciones}
+                        </div>
+                      `;
+                    }
+                },
+                {
+                    targets: 2,
+                    render: function (data, type, full, meta) {
+
+                        // Luego, actualiza el encabezado de la columna deseada:
+                        var headerCell = table_citas.column(2).header(); // Cambia 7 al índice correcto
+                        let html = '';
+                        // Verificamos si el usuario tiene permiso para ver la sede
+                        if (canViewSedeCita) {
+                            headerCell.innerHTML = "Sede - Comparendo";
+                            html = `<span class="badge bg-label-dark mb-1">${full.nombre_sede}</span>`;
+                        } else {
+                            headerCell.innerHTML = "comparendo";
+                        }
+
+                        // Badge con el nombre de la sede.
+
+                        if (full.codigos_comparendo) {
+                            let tags = [];
+                            try {
+                                tags = JSON.parse(full.codigos_comparendo);
+                            } catch (e) {
+                                tags = full.codigos_comparendo;
                             }
-                            return texto;
-                        }
-                    },
-                    {
-                        targets: 1, // Comentario Liquidador
-                        orderable: false,
-                        render: function (data, type, full, meta) {
-                            // Si existen anotaciones, mostramos también la cantidad en un badge
-                            let badgeAnotaciones = '';
-                            iconColorAnotaciones = 'text-muted';
-                            if (full.total_anotaciones && parseInt(full.total_anotaciones) > 0) {
-                                badgeAnotaciones = `<span class="badge rounded-pill text-bg-danger badge-notifications px-1">${full.total_anotaciones}</span>`;
-                                iconColorAnotaciones = 'text-success';
+                            if (Array.isArray(tags) && tags.length > 0) {
+                                html += '<br>';
+                                // Iteramos para imprimir en grupos de 3
+                                tags.forEach((tag, index) => {
+                                    html += `<span class="badge bg-label-primary me-1 mb-1">${tag.value}</span>`;
+                                    // Insertar salto de línea después de cada 3 badges,
+                                    // pero si no es el último badge
+                                    if ((index + 1) % 3 === 0 && index !== tags.length - 1) {
+                                        html += '<br>';
+                                    }
+                                });
                             }
+                        }
 
-                            return `
-                            <div style="position:relative; display:inline-block;">
-                                <!-- Botón para ver el seguimiento -->
-                                <button type="button"
-                                    class="btn btn-sm btn-light btn-open-seguimiento-modal ${iconColorAnotaciones}"
-                                    data-id-cita="${full.id_cita}"
-                                    title="Ver seguimiento">
-                                    <i class="ti ti-eye"></i>
-                                </button>
-                                ${badgeAnotaciones}
-                            </div>
-                          `;
-                        }
-                    },
-                    {
-                        targets: 2,
-                        render: function (data, type, full, meta) {
-                            // Badge con el nombre de la sede.
-                            let html = `<span class="badge bg-label-dark mb-1">${full.nombre_sede}</span>`;
-
-                            if (full.codigos_comparendo) {
-                                let tags = [];
-                                try {
-                                    tags = JSON.parse(full.codigos_comparendo);
-                                } catch (e) {
-                                    tags = full.codigos_comparendo;
-                                }
-                                if (Array.isArray(tags) && tags.length > 0) {
-                                    html += '<br>';
-                                    // Iteramos para imprimir en grupos de 3
-                                    tags.forEach((tag, index) => {
-                                        html += `<span class="badge bg-label-primary me-1 mb-1">${tag.value}</span>`;
-                                        // Insertar salto de línea después de cada 3 badges,
-                                        // pero si no es el último badge
-                                        if ((index + 1) % 3 === 0 && index !== tags.length - 1) {
-                                            html += '<br>';
-                                        }
-                                    });
-                                }
-                            }
-
-                            return html;
-                        }
-                    },
-                    {
-                        targets: 3,
-                        render: function (data, type, full, meta) {
-                            let fecha = full.reserva_cita.split(" ")[0];
-                            return `<h6 class="m-0">${fecha} ${full.rango_horario}</h6>`;
-                        }
-                    },
-                    {
-                        targets: 4,
-                        render: function (data, type, full, meta) {
-                            return `<h6 class="m-0">${full.fecha_create}</h6>`;
-                        }
-                    },
-                    {
-                        targets: 5,
-                        render: function (data, type, full, meta) {
-                            const bgColor = full.estado_actual_color; // Color de fondo del estado
-                            const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
-                            return `
+                        return html;
+                    }
+                },
+                {
+                    targets: 3,
+                    render: function (data, type, full, meta) {
+                        let fecha = full.reserva_cita.split(" ")[0];
+                        return `<h6 class="m-0">${fecha} ${full.rango_horario}</h6>`;
+                    }
+                },
+                {
+                    targets: 4,
+                    render: function (data, type, full, meta) {
+                        return `<h6 class="m-0">${full.fecha_create}</h6>`;
+                    }
+                },
+                {
+                    targets: 5,
+                    render: function (data, type, full, meta) {
+                        const bgColor = full.estado_actual_color; // Color de fondo del estado
+                        const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                        return `
+                    <div class="btn-group">
+                    ${(canEditEstadoCitas) ? `
+                        <button type="button" data-nombre_estado="${full.estado_actual_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</button>
+                        <ul class="dropdown-menu" style="">` +
+                                estados.map(estado => {
+                                    return `<li><a class="dropdown-item waves-effect change_estado_cita" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
+                                }).join('')
+                                + `</ul>` : `
+                        <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</span>
+                        `}
+                    </div>`;
+                    }
+                },
+                {
+                    targets: 6,
+                    render: function (data, type, full, meta) {
+                        const bgColor = full.estado_verificado_color; // Color de fondo del estado
+                        const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                        return `
+                    <div class="btn-group">
+                    ${(canEditEstadoCitasVerificado) ? `
+                        <button type="button" data-nombre_estado="${full.estado_verificado_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</button>
+                        <ul class="dropdown-menu" style="">` +
+                                estados.map(estado => {
+                                    return `<li><a class="dropdown-item waves-effect change_estado_cita_verificado" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
+                                }).join('')
+                                + `</ul>` : `
+                        <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</span>
+                        `}
+                    </div>`;
+                    }
+                },
+                {
+                    // Columna 6 -> Agente Call Center
+                    targets: 7,
+                    render: function (data, type, full, meta) {
+                        return `
                         <div class="btn-group">
-                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'gestorsede' || rol == 'lidercallcenter') ? `
-                            <button type="button" data-nombre_estado="${full.estado_actual_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</button>
+                        ${(canEditCallCenter) ? `
+                            <button type="button" data-nombre_agente="${full.id_agente_callcenter}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false" >${full.agente_callcenter}</button>
                             <ul class="dropdown-menu" style="">` +
-                                    estados.map(estado => {
-                                        return `<li><a class="dropdown-item waves-effect change_estado_cita" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
-                                    }).join('')
-                                    + `</ul>` : `
-                            <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</span>
+                                agentes.map(agente => {
+                                    return `<li><a class="dropdown-item waves-effect change_agente_call" data-id_cita="${full.id_cita}" data-id_agente="${agente.id}">${agente.name}</a></li>`;
+                                }).join('')
+                                + `</ul>` : `
+                            <span class="badge bg-label-dark">${full.agente_callcenter}</span>
                             `}
                         </div>`;
-                        }
-                    },
-                    {
-                        targets: 6,
-                        render: function (data, type, full, meta) {
-                            const bgColor = full.estado_verificado_color; // Color de fondo del estado
-                            const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
-                            return `
-                        <div class="btn-group">
-                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'lidercallcenter') ? `
-                            <button type="button" data-nombre_estado="${full.estado_verificado_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</button>
-                            <ul class="dropdown-menu" style="">` +
-                                    estados.map(estado => {
-                                        return `<li><a class="dropdown-item waves-effect change_estado_cita_verificado" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
-                                    }).join('')
-                                    + `</ul>` : `
-                            <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</span>
-                            `}
-                        </div>`;
-                        }
-                    },
-                    {
-                        // Columna 6 -> Agente Call Center
-                        targets: 7,
-                        render: function (data, type, full, meta) {
-                            return `
-                            <div class="btn-group">
-                            ${(rol == 'superadmin' || rol == 'admin' || rol == 'lidercallcenter') ? `
-                                <button type="button" data-nombre_agente="${full.id_agente_callcenter}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false" >${full.agente_callcenter}</button>
-                                <ul class="dropdown-menu" style="">` +
-                                    agentes.map(agente => {
-                                        return `<li><a class="dropdown-item waves-effect change_agente_call" data-id_cita="${full.id_cita}" data-id_agente="${agente.id}">${agente.name}</a></li>`;
-                                    }).join('')
-                                    + `</ul>` : `
-                                <span class="badge bg-label-dark">${full.agente_callcenter}</span>
-                                `}
-                            </div>`;
 
+                    }
+                },
+                {
+                    targets: 8, // Servicio Liquidador
+                    render: function (data, type, full, meta) {
+                        var bgColor = "#e5e5e5"; // Color de fondo del servicio por defecto
+                        if (full.color_servicio_liquidador) {
+                            bgColor = full.color_servicio_liquidador; // Color de fondo del servicio
                         }
-                    },
-                    {
-                        targets: 8, // Servicio Liquidador
-                        render: function (data, type, full, meta) {
-                            var bgColor = "#e5e5e5"; // Color de fondo del servicio por defecto
-                            if (full.color_servicio_liquidador) {
-                                bgColor = full.color_servicio_liquidador; // Color de fondo del servicio
-                            }
-                            const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
-                            // Si no tiene servicio, mostrará “Selecciona un servicio”
-                            let currentServiceName = full.nombre_servicio_liquidador
-                                ? full.nombre_servicio_liquidador
-                                : 'Sin servicio seleccionado';
-                            return `
-                            <div class="btn-group">
-                            ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter') ? `
-                                <button type="button" data-nombre_estado="${currentServiceName}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</button>
-                                <ul class="dropdown-menu">` +
-                                    servicios_liquidador.map(serv => {
-                                        return `<li><a class="dropdown-item waves-effect change_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_servicio_liquidador="${serv.id_servicio_liquidador}">${serv.nombre_servicio_liquidador}</a></li>`;
-                                    }).join('')
-                                    + `</ul>` : `
-                                <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</span>
-                                `}
-                            </div>
-                          `;
-                        }
-                    },
-                    {
-                        targets: 9,
-                        render: function (data, type, full, meta) {
-                            if (full.responsable_origen == 'Desconocido') {
-                                return `<span class="badge bg-label-dark">${full.responsable_origen}</span>`;
-                            } else if (full.responsable_origen == 'Sede') {
-                                return `<span class="badge bg-label-info">${full.responsable_origen}</span>`;
-                            } else {
-                                return `<span class="badge bg-label-primary">${full.responsable_origen}</span>`;
-                            }
-                        }
-                    },
-                    {
-                        targets: 10,
-                        render: function (data, type, full, meta) {
-                            if (full.origen == null || full.origen == 'null' || full.origen == 'Desconocido') {
-                                return `<span class="badge bg-label-secondary">${full.origen}</span> <br>
-                            <small class="text-muted">${full.creado_por}</small>`;
-                            } else if (full.origen == 'QR' || full.origen == 'qr' || full.origen == 'Qr' || full.origen == 'QRCode' || full.origen == 'qrcode') {
-                                return `<span class="badge bg-label-info">${full.origen}</span> <br>
-                            <small class="text-muted">${full.creado_por}</small>`;
-                            } else if (full.origen == 'Curso Comparendo') {
-                                return `<span class="badge bg-label-primary">${full.origen}</span> <br>
-                            <small class="text-muted">${full.creado_por}</small>`;
-                            } else {
-                                return `<span class="badge bg-label-success">${full.origen}</span> <br>
-                            <small class="text-muted">${full.creado_por}</small>`;
-                            }
-                        }
-                    },
-                    {
-                        orderable: false,
-                        targets: 11,
-                        render: function (data, type, full, meta) {
-                            return `
-                        <div class="d-flex justify-content-end">
-                            ${(rol == 'superadmin') ? `
-                            <a href="${url}/dashboard/citas/edit/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
-                                <i class="tf-icons ti ti-edit ti-md"></i>
-                            </a>
-                            <button type="button" data-id="${full.id_cita}" class="btn_delete_cita btn btn-icon btn-label-danger waves-effect">
-                                <i class="tf-icons ti ti-trash ti-md"></i>
-                            </button>` : ``}
-                            ${(rol == 'callcenter' || rol == 'lidercallcenter') ? `
-                            <a href="${url}/dashboard/citas/edit/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
-                                <i class="tf-icons ti ti-edit ti-md"></i>
-                            </a>` : ``}
-                            ${(rol == 'gestorsede') ? `
-                            <a href="${url}/dashboard/citas/view/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
-                                <i class="tf-icons ti ti-search ti-md"></i>
-                            </a>` : ``}
-                        </div>`	;
+                        const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
+                        // Si no tiene servicio, mostrará “Selecciona un servicio”
+                        let currentServiceName = full.nombre_servicio_liquidador
+                            ? full.nombre_servicio_liquidador
+                            : 'Sin servicio seleccionado';
+                        return `
+                        <div class="btn-group">
+                        ${(canEditServiciosLiquidador) ? `
+                            <button type="button" data-nombre_estado="${currentServiceName}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</button>
+                            <ul class="dropdown-menu">` +
+                                servicios_liquidador.map(serv => {
+                                    return `<li><a class="dropdown-item waves-effect change_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_servicio_liquidador="${serv.id_servicio_liquidador}">${serv.nombre_servicio_liquidador}</a></li>`;
+                                }).join('')
+                                + `</ul>` : `
+                            <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</span>
+                            `}
+                        </div>
+                      `;
+                    }
+                },
+                {
+                    targets: 9,
+                    render: function (data, type, full, meta) {
+                        if (full.responsable_origen == 'Desconocido') {
+                            return `<span class="badge bg-label-dark">${full.responsable_origen}</span>`;
+                        } else if (full.responsable_origen == 'Sede') {
+                            return `<span class="badge bg-label-info">${full.responsable_origen}</span>`;
+                        } else {
+                            return `<span class="badge bg-label-primary">${full.responsable_origen}</span>`;
                         }
                     }
-                ],
-                pagingType: "simple"
-            });
-        } else {
-            table_citas = $('.datatables-citas').DataTable({
-                ordering: true,
-                processing: true,
-                serverSide: true,
-                searching: false,
-                info: true,
-                pageLength: 50, // Cambiar la paginación a 50 entradas
-                language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
-                    info: "Mostrando _START_ a _END_ de _MAX_ registros",
-                    infoEmpty: "No hay datos disponibles",
-                    infoFiltered: "(filtrados de un total de _MAX_ registros)"
                 },
-                dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
-                ajax: {
-                    url: url + '/dashboard/citas/get_citas',
-                    type: "POST",
-                    data: function (d) {
-                        d.filtro_dia = filtroDia;
-                        d.filtro_dia_end = filtroDiaEnd;
-                        d.filtro_sede = filtroSede;
-                        d.filtro_estado = filtroEstado;
-                        d.filtro_estado_verificado = filtroEstadoVerificado;
-                        d.filtro_responsable = filtroResponsable;
-                        d.filtro_origen = filtroOrigen;
-                        d.filtro_search = filtroSearch;
-                        d.tipo_cita = tipoCita;
-                        // Parámetros necesarios para ordenamiento
-                        d.order = d.order;
-                        d.columns = d.columns;
-                        d.search = d.search;
-                    },
-                },
-                columns: [
-                    { data: 'nombre_cliente' },                 // Columna 0
-                    { data: null },                             // Columna 1
-                    { data: 'reserva_cita' },                   // Columna 2
-                    { data: 'fecha_create' },                   // Columna 3
-                    { data: 'estado_actual_nombre' },           // Columna 4
-                    { data: 'estado_verificado_nombre' },       // Columna 5
-                    { data: 'nombre_servicio_liquidador' },     // Columna 6
-                    { data: null }                              // Columna 7 (botones)
-                ],
-                columnDefs: [
-                    {
-                        targets: 0,
-                        render: function (data, type, full, meta) {
-                            if (full.id_vehiculo) {
-                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small><br><span class="badge bg-label-dark">' + full.placa_vehiculo + '</span><small class="text-muted ml-2">' + full.tipo_vehiculo + ' - ' + full.modelo_vehiculo + '</small>';
-
-                                // texto = '<h6 class="m-0">' + full.nombre_cliente + $full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + ' - Tipo: ' + full.tipo_vehiculo + ' - Modelo: ' + full.modelo_vehiculo + '</small>';
-                            } else {
-                                texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + full.doc_cliente + ' - Telf: <a href="tel:' + full.telefono_cliente + '">' + full.telefono_cliente + '</a></small>';
-                            }
-                            return texto;
-                        }
-                    },
-                    {
-                        targets: 1, // Comentario Liquidador
-                        orderable: false,
-                        render: function (data, type, full, meta) {
-                            // data = full.comentario_liquidador
-                            let hasComment = (full.comentario_liquidador && full.comentario_liquidador.trim() !== '');
-                            let iconColor = hasComment ? 'text-success' : 'text-muted';
-                            let iconNotify = hasComment ? `<i class="ti ti-circle-filled text-danger" style="font-size:10px; position:absolute; right:0; top:0;"></i>` : '';
-
-                            // Si existen anotaciones, mostramos también la cantidad en un badge
-                            let badgeAnotaciones = '';
-                            iconColorAnotaciones = 'text-muted';
-                            if (full.total_anotaciones && parseInt(full.total_anotaciones) > 0) {
-                                badgeAnotaciones = `<span class="badge rounded-pill text-bg-danger badge-notifications px-1">${full.total_anotaciones}</span>`;
-                                iconColorAnotaciones = 'text-success';
-                            }
-
-                            return `
-                            <div style="position:relative; display:inline-block;">
-                                <!-- Botón para ver el seguimiento -->
-                                <button type="button"
-                                    class="btn btn-sm btn-light btn-open-seguimiento-modal ${iconColorAnotaciones}"
-                                    data-id-cita="${full.id_cita}"
-                                    title="Ver seguimiento">
-                                    <i class="ti ti-eye"></i>
-                                </button>
-                                ${badgeAnotaciones}
-                            </div>
-                          `;
-                        }
-                    },
-                    {
-                        targets: 2,
-                        render: function (data, type, full, meta) {
-                            let html = '';
-                            if (full.codigos_comparendo) {
-                                let tags = [];
-                                try {
-                                    tags = JSON.parse(full.codigos_comparendo);
-                                } catch (e) {
-                                    tags = full.codigos_comparendo;
-                                }
-                                if (Array.isArray(tags) && tags.length > 0) {
-                                    // Iteramos para imprimir en grupos de 3
-                                    tags.forEach((tag, index) => {
-                                        html += `<span class="badge bg-label-primary me-1 mb-1">${tag.value}</span>`;
-                                        // Insertar salto de línea después de cada 3 badges,
-                                        // pero si no es el último badge
-                                        if ((index + 1) % 3 === 0 && index !== tags.length - 1) {
-                                            html += '<br>';
-                                        }
-                                    });
-                                }
-                            }
-
-                            return html;
-                        }
-                    },
-                    {
-                        targets: 3,
-                        render: function (data, type, full, meta) {
-                            let fecha = full.reserva_cita.split(" ")[0];
-                            return `<h6 class="m-0">${fecha} ${full.rango_horario}</h6>`;
-                        }
-                    },
-                    {
-                        targets: 4,
-                        render: function (data, type, full, meta) {
-                            return `<h6 class="m-0">${full.fecha_create}</h6>`;
-                        }
-                    },
-                    {
-                        targets: 5,
-                        render: function (data, type, full, meta) {
-                            const bgColor = full.estado_actual_color; // Color de fondo del estado
-                            const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
-                            return `
-                        <div class="btn-group">
-                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'gestorsede' || rol == 'lidercallcenter') ? `
-                            <button type="button" data-nombre_estado="${full.estado_actual_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</button>
-                            <ul class="dropdown-menu" style="">` +
-                                    estados.map(estado => {
-                                        return `<li><a class="dropdown-item waves-effect change_estado_cita" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
-                                    }).join('')
-                                    + `</ul>` : `
-                            <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_actual_nombre}</span>
-                            `}
-                        </div>`;
-                        }
-                    },
-                    {
-                        targets: 6,
-                        render: function (data, type, full, meta) {
-                            const bgColor = full.estado_verificado_color; // Color de fondo del estado
-                            const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
-                            return `
-                        <div class="btn-group">
-                        ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter' || rol == 'lidercallcenter') ? `
-                            <button type="button" data-nombre_estado="${full.estado_verificado_nombre}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</button>
-                            <ul class="dropdown-menu" style="">` +
-                                    estados.map(estado => {
-                                        return `<li><a class="dropdown-item waves-effect change_estado_cita_verificado" data-id_cita="${full.id_cita}" data-id_estado="${estado.id_estado}">${estado.nombre_estado}</a></li>`;
-                                    }).join('')
-                                    + `</ul>` : `
-                            <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${full.estado_verificado_nombre}</span>
-                            `}
-                        </div>`;
-                        }
-                    },
-                    {
-                        targets: 7,
-                        render: function (data, type, full, meta) {
-                            var bgColor = "#e5e5e5"; // Color de fondo del servicio por defecto
-                            if (full.color_servicio_liquidador) {
-                                bgColor = full.color_servicio_liquidador; // Color de fondo del servicio
-                            }
-                            const textColor = getContrastingTextColor(bgColor); // Color de texto calculado
-                            // Si no tiene servicio, mostrará “Selecciona un servicio”
-                            let currentServiceName = full.nombre_servicio_liquidador
-                                ? full.nombre_servicio_liquidador
-                                : 'Sin servicio seleccionado';
-                            return `
-                            <div class="btn-group">
-                            ${(rol == 'superadmin' || rol == 'admin' || rol == 'callcenter') ? `
-                                <button type="button" data-nombre_estado="${currentServiceName}" class="btn btn-label-primary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</button>
-                                <ul class="dropdown-menu">` +
-                                    servicios_liquidador.map(serv => {
-                                        return `<li><a class="dropdown-item waves-effect change_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_servicio_liquidador="${serv.id_servicio_liquidador}">${serv.nombre_servicio_liquidador}</a></li>`;
-                                    }).join('')
-                                    + `</ul>` : `
-                                <span class="badge" style="background-color:${bgColor} !important; color: ${textColor}!important;">${currentServiceName}</span>
-                                `}
-                            </div>
-                          `;
-                        }
-                    },
-                    {
-                        orderable: false,
-                        targets: 8,
-                        render: function (data, type, full, meta) {
-                            return `
-                        <div class="d-flex justify-content-end">
-                            ${(rol == 'superadmin') ? `
-                            <a href="${url}/dashboard/citas/edit/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
-                                <i class="tf-icons ti ti-edit ti-md"></i>
-                            </a>
-                            <button type="button" data-id="${full.id_cita}" class="btn_delete_cita btn btn-icon btn-label-danger waves-effect">
-                                <i class="tf-icons ti ti-trash ti-md"></i>
-                            </button>` : ``}
-                            ${(rol == 'callcenter' || rol == 'lidercallcenter') ? `
-                            <a href="${url}/dashboard/citas/edit/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
-                                <i class="tf-icons ti ti-edit ti-md"></i>
-                            </a>` : ``}
-                            ${(rol == 'gestorsede') ? `
-                            <a href="${url}/dashboard/citas/view/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
-                                <i class="tf-icons ti ti-search ti-md"></i>
-                            </a>` : ``}
-                        </div>`	;
+                {
+                    targets: 10,
+                    render: function (data, type, full, meta) {
+                        if (full.origen == null || full.origen == 'null' || full.origen == 'Desconocido') {
+                            return `<span class="badge bg-label-secondary">${full.origen}</span> <br>
+                        <small class="text-muted">${full.creado_por}</small>`;
+                        } else if (full.origen == 'QR' || full.origen == 'qr' || full.origen == 'Qr' || full.origen == 'QRCode' || full.origen == 'qrcode') {
+                            return `<span class="badge bg-label-info">${full.origen}</span> <br>
+                        <small class="text-muted">${full.creado_por}</small>`;
+                        } else if (full.origen == 'Curso Comparendo') {
+                            return `<span class="badge bg-label-primary">${full.origen}</span> <br>
+                        <small class="text-muted">${full.creado_por}</small>`;
+                        } else {
+                            return `<span class="badge bg-label-success">${full.origen}</span> <br>
+                        <small class="text-muted">${full.creado_por}</small>`;
                         }
                     }
-                ],
-                pagingType: "simple"
-            });
-        }
+                },
+                {
+                    orderable: false,
+                    targets: 11,
+                    render: function (data, type, full, meta) {
+                        return `
+                    <div class="d-flex justify-content-end">
+                        ${(canEditCitas) ? `
+                        <a href="${url}/dashboard/citas/edit/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                            <i class="tf-icons ti ti-edit ti-md"></i>
+                        </a>` :
+                                `<a href="${url}/dashboard/citas/view/${full.id_cita}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                    <i class="tf-icons ti ti-search ti-md"></i>
+                                </a>`}
+
+                        ${(canDeleteCitas) ? `
+                        <button type="button" data-id="${full.id_cita}" class="btn_delete_cita btn btn-icon btn-label-danger waves-effect">
+                            <i class="tf-icons ti ti-trash ti-md"></i>
+                        </button>` : ''}
+
+                    </div>`	;
+                    }
+                }
+            ],
+            pagingType: "simple"
+        });
+
         // Eventos para los filtros
         $('#filtro-ayer').on('click', function () {
             const ayer = new Date();
@@ -1856,17 +1648,14 @@ $(function () {
                     render: function (data, type, full, meta) {
                         return `
                         <div class="d-flex justify-content-end">
-                            ${(rol == 'superadmin') ? `
-                            <a href="#" data-id="${full.id}" class="btn_edit_usuario btn btn-icon btn-label-primary waves-effect me-2">
-                                <i class="tf-icons ti ti-edit ti-md"></i>
-                            </a>
-                            <button type="button" data-id="${full.id}" class="btn_delete_usuario btn btn-icon btn-label-danger waves-effect">
-                                <i class="tf-icons ti ti-trash ti-md"></i>
-                            </button>` : ``}
-                            ${(rol == 'lidercallcenter') ? `
-                            <a href="#" data-id="${full.id}" class="btn_edit_usuario btn btn-icon btn-label-primary waves-effect me-2">
-                                <i class="tf-icons ti ti-edit ti-md"></i>
-                            </a>` : ``}
+                            ${(canEditUsuarios) ? `
+                                <a href="#" data-id="${full.id}" class="btn_edit_usuario btn btn-icon btn-label-primary waves-effect me-2">
+                                    <i class="tf-icons ti ti-edit ti-md"></i>
+                                </a>` : ``}
+                            ${(canDeleteUsuarios) ? `
+                                <a href="#" data-id="${full.id}" class="btn_edit_usuario btn btn-icon btn-label-primary waves-effect me-2">
+                                    <i class="tf-icons ti ti-edit ti-md"></i>
+                                </a>` : ``}
                         </div>`	;
                     }
                 },
@@ -2645,7 +2434,7 @@ $(function () {
                     orderable: false,
                     render: function (data, type, full, meta) {
                         // Solo superadmin ve el checkbox
-                        if (rol == 'superadmin') {
+                        if (canViewPagoMasivo) {
                             return `<input type="checkbox" class="check-cita form-check-input"
                                         data-id-cita="${full.id_cita}"
                                         data-id-liquidador="${full.id_liquidador}"
@@ -2709,7 +2498,7 @@ $(function () {
                             : 'Sin servicio seleccionado';
 
                         if (currentEstadoServiceName == "Confirmado") {
-                            if (rol == 'liquidador' || rol == 'superadmin') {
+                            if (canEditValidacionOpConfirmado) {
                                 return `
                                 <div class="btn-group">
                                     <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-success dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
@@ -2720,8 +2509,7 @@ $(function () {
                                     <li><a class="dropdown-item waves-effect change_estado_servicio_liquidador" data-id_cita="${full.id_cita}" data-id_liquidador="${full.id_liquidador}" data-estado_liquidador="Errado">Errado</a></li>
                                     </ul>
                                 </div>`;
-                            }
-                            else {
+                            } else {
                                 return `
                                 <div class="btn-group">
                                     <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-success dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
@@ -2733,7 +2521,7 @@ $(function () {
                                 </div>`;
                             }
                         } else if (currentEstadoServiceName == "Pendiente" || currentEstadoServiceName == "pendiente") {
-                            if (rol == 'liquidador' || rol == 'superadmin') {
+                            if (canEditValidacionOpConfirmado) {
                                 return `
                                 <div class="btn-group">
                                     <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-warning dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
@@ -2756,7 +2544,7 @@ $(function () {
                                 </div>`;
                             }
                         } else if (currentEstadoServiceName == "Errado") {
-                            if (rol == 'liquidador' || rol == 'superadmin') {
+                            if (canEditValidacionOpConfirmado) {
                                 return `
                             <div class="btn-group">
                                 <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-danger dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
@@ -2779,7 +2567,7 @@ $(function () {
                             </div>`;
                             }
                         } else if (currentEstadoServiceName == "En validación") {
-                            if (rol == 'liquidador' || rol == 'superadmin') {
+                            if (canEditValidacionOpConfirmado) {
                                 return `
                             <div class="btn-group">
                                 <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-info dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
@@ -2802,7 +2590,7 @@ $(function () {
                                 </div>`;
                             }
                         } else {
-                            if (rol == 'liquidador' || rol == 'superadmin') {
+                            if (canEditValidacionOpConfirmado) {
                                 return `
                             <div class="btn-group">
                                 <button type="button" data-nombre_estado="${currentEstadoServiceName}" class="btn btn-label-secondary dropdown-toggle waves-effect" data-bs-toggle="dropdown" aria-expanded="false"  >${currentEstadoServiceName}</button>
@@ -3090,13 +2878,14 @@ $(function () {
                     render: function (data, type, full, meta) {
                         return `
                         <div class="d-flex justify-content-end">
-                            ${(rol == 'superadmin') ? `
-														<a href="${url}/dashboard/liquidador/edit_servicio_liquidador/${full.id_servicio_liquidador}" class="btn btn-icon btn-label-primary waves-effect me-2">
-                                <i class="tf-icons ti ti-edit ti-md"></i>
-                            </a>
-                            <button type="button" data-id="${full.id_servicio_liquidador}" class="btn_delete_estado btn btn-icon btn-label-danger waves-effect">
-                                <i class="tf-icons ti ti-trash ti-md"></i>
-                            </button>` : ``}
+                            ${(canEditServiciosLiquidador) ? `
+                                <a href="${url}/dashboard/liquidador/edit_servicio_liquidador/${full.id_servicio_liquidador}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                    <i class="tf-icons ti ti-edit ti-md"></i>
+                                </a>` : ``}
+                            ${(canDeleteServiciosLiquidador) ? `
+                                <button type="button" data-id="${full.id_servicio_liquidador}" class="btn_delete_estado btn btn-icon btn-label-danger waves-effect">
+                                    <i class="tf-icons ti ti-trash ti-md"></i>
+                                </button>` : ``}
                         </div>`	;
                     }
                 },
@@ -3253,14 +3042,14 @@ $(function () {
         // Mostrar o esconder el div y botón según la cantidad de elementos seleccionados
         if (contador > 0) {
             // solo se muestra el botón de cambio de pago si el rol es superadmin
-            if (rol == 'superadmin') {
+            if (canViewPagoMasivo) {
                 // Mostrar el botón de cambio de pago
                 $('#checkbox-selected-div-contador-pago').show();
                 $('#btnChangePago').show();
             }
         } else {
             // solo se muestra el botón de cambio de pago si el rol es superadmin
-            if (rol == 'superadmin') {
+            if (canViewPagoMasivo) {
                 // Mostrar el botón de cambio de pago
                 $('#checkbox-selected-div-contador-pago').hide();
                 $('#btnChangePago').hide();

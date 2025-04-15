@@ -12,6 +12,7 @@ use App\Models\VehiculoModel;
 use App\Models\CitasModel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class AdminHelper
 {
@@ -111,14 +112,11 @@ class AdminHelper
     public static function get_vehiculo_by_id($id)
     {
         try {
-            $checkIntent = optional(VehiculoModel::where('id_vehiculo', $id)->first())->toArray();
-            if (is_array($checkIntent) && !empty($checkIntent)) {
-                return $checkIntent;
-            }
-            return false;
+            $vehiculo = VehiculoModel::where('id_vehiculo', $id)->first();
+            return $vehiculo ? $vehiculo->toArray() : null;
         } catch (\Exception $e) {
             Log::error('get_vehiculo_by_id error: ' . $e->getMessage());
-            return false;
+            return null;
         }
     }
 
@@ -182,12 +180,13 @@ class AdminHelper
     public static function get_count_alert($rol, $id_sede)
     {
         try {
+            $user = Auth::user();
             //Verificamos si existe en cache el conteo de alertas
             $cache = cache()->get('count_alert');
             if ($cache) {
                 return $cache;
             }
-            if ($rol == 'gestorsede') {
+            if ($user->can('global.Solo ver sede asignada.v')) {
                 $sql = "SELECT id FROM tb_alert WHERE state LIKE 'show' AND id_sede = $id_sede";
             } else {
                 $sql = "SELECT id FROM tb_alert WHERE state LIKE 'show'";
@@ -205,7 +204,8 @@ class AdminHelper
     public static function change_status_alert($rol, $id_sede)
     {
         try {
-            if ($rol == 'gestorsede') {
+            $user = Auth::user();
+            if ($user->can('global.Solo ver sede asignada.v')) {
                 $sql = "UPDATE tb_alert SET state = 'hide' WHERE state LIKE 'show' AND id_sede = $id_sede";
             } else {
                 $sql = "UPDATE tb_alert SET state = 'hide' WHERE state LIKE 'show'";

@@ -161,16 +161,10 @@ class LoadController extends Controller
                     }
                 }
                 //  OBTENER EL LISTADO DE AGENTES CALLCENTER HABILITADOS
-                $agentes = User::role('callcenter')
+                $agentes = User::permission('global.Asignar citas call.v')
                     ->where('callcenter_habilitado', 1)
                     ->orderBy('id', 'asc')
                     ->get();
-                // log::info($agentes);
-                $lideragentes = User::role('lidercallcenter')
-                    ->where('callcenter_habilitado', 1)
-                    ->orderBy('id', 'asc')
-                    ->get();
-                $agentes = $agentes->merge($lideragentes);
 
                 //  LEER EL PUNTERO ACTUAL DESDE tb_config
                 $config = DB::table('tb_config')

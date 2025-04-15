@@ -38,198 +38,45 @@ class CitasController extends Controller
             AdminHelper::change_status_alert($data['rol'], $user->id_sede);
         }
         //Sedes
-        if ($data['rol'] == 'gestorsede') {
-            $sql = "SELECT * FROM tb_sede WHERE id_sede = " . $user->id_sede;
+        if ($user->can('global.Solo ver sede asignada.v')) {
+            $data['sedes'] = DB::table('tb_sede')
+                ->where('id_sede', $user->id_sede)
+                ->get();
         } else {
-            $sql = "SELECT * FROM tb_sede";
+            $data['sedes'] = DB::table('tb_sede')->get();
         }
-        $data['sedes'] = DB::select($sql);;
         //Estados
-        $sql = "SELECT * FROM tb_estado";
-        $data['estados'] = DB::select($sql);
+        $data['estados'] = DB::table('tb_estado')->get();
 
-        $agentes = User::role('callcenter')
+        $agentes = User::permission('global.Asignar citas call.v')
             ->where('callcenter_habilitado', 1)
             ->orderBy('id', 'asc')
             ->get();
-        // log::info($agentes);
-        $lideragentes = User::role('lidercallcenter')
-            ->where('callcenter_habilitado', 1)
-            ->orderBy('id', 'asc')
-            ->get();
-
-        $agentes = $agentes->merge($lideragentes);
         $data['agentes'] = $agentes->toArray();
 
-        // Si quieres loguearlo en formato colección:
-        // log::info(collect($data['agentes']));
-
-        $agentes2 = User::role('callcenter')
-            ->orderBy('id', 'asc')
-            ->get();
-        // log::info($agentes);
-        $lideragentes2 = User::role('lidercallcenter')
+        $agentes2 = User::permission('global.Asignar citas call.v')
             ->orderBy('id', 'asc')
             ->get();
 
-        $agentes2 = $agentes2->merge($lideragentes2);
         $data['listado_agentes'] = $agentes2->toArray();
 
-        $sql = "SELECT * FROM tb_servicio_liquidador";
-        $data['servicios_liquidador'] = DB::select($sql);
+        $data['servicios_liquidador'] = DB::table('tb_servicio_liquidador')->get();
         //Origenes
-        $sql = "SELECT DISTINCT origen FROM tb_cita WHERE origen IS NOT NULL ORDER BY origen ASC;";
-        $data['origenes'] = DB::select($sql);
+        $data['origenes'] = DB::table('tb_cita')
+            ->select('origen')
+            ->whereNotNull('origen')
+            ->distinct()
+            ->orderBy('origen', 'asc')
+            ->get();
+
         $data['tipoSede'] = "";
+
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
         echo view('dashboard.citas.index', $data);
         echo view('layouts.footer', $data);
     }
-    public function indexCDA()
-    {
-        $user = Auth::user();
-        $data = [
-            'page' => 'Citas',
-            'subpage' => 'ListadoCDA',
-            'rol' => $user->getRoleNames()->first(),
-            'user' => $user
-        ];
-        $data['alert'] = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
-        //Verificamos si las alertas tiene mas de 0 para cambiar el estado de la alerta
-        if ($data['alert'] > 0) {
-            AdminHelper::change_status_alert($data['rol'], $user->id_sede);
-        }
-        //Sedes
-        if ($data['rol'] == 'gestorsede') {
-            $sql = "SELECT * FROM tb_sede WHERE id_sede = " . $user->id_sede;
-        } else {
-            $sql = "SELECT * FROM tb_sede";
-        }
-        $data['sedes'] = DB::select($sql);;
-        //Estados
-        $sql = "SELECT * FROM tb_estado";
-        $data['estados'] = DB::select($sql);
-        //Servicios Liquidador
-        $sql = "SELECT * FROM tb_servicio_liquidador";
-        $data['servicios_liquidador'] = DB::select($sql);
-        //Origenes
-        $sql = "SELECT DISTINCT origen FROM tb_cita WHERE origen IS NOT NULL ORDER BY origen ASC;";
-        $data['origenes'] = DB::select($sql);
-        $data['tipoSede'] = "CDA";
-        echo view('layouts.header', $data);
-        echo view('layouts.nav', $data);
-        echo view('dashboard.citas.index', $data);
-        echo view('layouts.footer', $data);
-    }
-    public function indexCIA()
-    {
-        $user = Auth::user();
-        $data = [
-            'page' => 'Citas',
-            'subpage' => 'ListadoCIA',
-            'rol' => $user->getRoleNames()->first(),
-            'user' => $user
-        ];
-        $data['alert'] = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
-        //Verificamos si las alertas tiene mas de 0 para cambiar el estado de la alerta
-        if ($data['alert'] > 0) {
-            AdminHelper::change_status_alert($data['rol'], $user->id_sede);
-        }
-        //Sedes
-        if ($data['rol'] == 'gestorsede') {
-            $sql = "SELECT * FROM tb_sede WHERE id_sede = " . $user->id_sede;
-        } else {
-            $sql = "SELECT * FROM tb_sede";
-        }
-        $data['sedes'] = DB::select($sql);;
-        //Estados
-        $sql = "SELECT * FROM tb_estado";
-        $data['estados'] = DB::select($sql);
-        //Servicios Liquidador
-        $sql = "SELECT * FROM tb_servicio_liquidador";
-        $data['servicios_liquidador'] = DB::select($sql);
-        //Origenes
-        $sql = "SELECT DISTINCT origen FROM tb_cita WHERE origen IS NOT NULL ORDER BY origen ASC;";
-        $data['origenes'] = DB::select($sql);
-        $data['tipoSede'] = "CIA";
-        echo view('layouts.header', $data);
-        echo view('layouts.nav', $data);
-        echo view('dashboard.citas.index', $data);
-        echo view('layouts.footer', $data);
-    }
-    public function indexCRC()
-    {
-        $user = Auth::user();
-        $data = [
-            'page' => 'Citas',
-            'subpage' => 'ListadoCRC',
-            'rol' => $user->getRoleNames()->first(),
-            'user' => $user
-        ];
-        $data['alert'] = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
-        //Verificamos si las alertas tiene mas de 0 para cambiar el estado de la alerta
-        if ($data['alert'] > 0) {
-            AdminHelper::change_status_alert($data['rol'], $user->id_sede);
-        }
-        //Sedes
-        if ($data['rol'] == 'gestorsede') {
-            $sql = "SELECT * FROM tb_sede WHERE id_sede = " . $user->id_sede;
-        } else {
-            $sql = "SELECT * FROM tb_sede";
-        }
-        $data['sedes'] = DB::select($sql);;
-        //Estados
-        $sql = "SELECT * FROM tb_estado";
-        $data['estados'] = DB::select($sql);
-        //Servicios Liquidador
-        $sql = "SELECT * FROM tb_servicio_liquidador";
-        $data['servicios_liquidador'] = DB::select($sql);
-        //Origenes
-        $sql = "SELECT DISTINCT origen FROM tb_cita WHERE origen IS NOT NULL ORDER BY origen ASC;";
-        $data['origenes'] = DB::select($sql);
-        $data['tipoSede'] = "CRC";
-        echo view('layouts.header', $data);
-        echo view('layouts.nav', $data);
-        echo view('dashboard.citas.index', $data);
-        echo view('layouts.footer', $data);
-    }
-    public function indexCEA()
-    {
-        $user = Auth::user();
-        $data = [
-            'page' => 'Citas',
-            'subpage' => 'ListadoCEA',
-            'rol' => $user->getRoleNames()->first(),
-            'user' => $user
-        ];
-        $data['alert'] = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
-        //Verificamos si las alertas tiene mas de 0 para cambiar el estado de la alerta
-        if ($data['alert'] > 0) {
-            AdminHelper::change_status_alert($data['rol'], $user->id_sede);
-        }
-        //Sedes
-        if ($data['rol'] == 'gestorsede') {
-            $sql = "SELECT * FROM tb_sede WHERE id_sede = " . $user->id_sede;
-        } else {
-            $sql = "SELECT * FROM tb_sede";
-        }
-        $data['sedes'] = DB::select($sql);;
-        //Estados
-        $sql = "SELECT * FROM tb_estado";
-        $data['estados'] = DB::select($sql);
-        //Servicios Liquidador
-        $sql = "SELECT * FROM tb_servicio_liquidador";
-        $data['servicios_liquidador'] = DB::select($sql);
-        //Origenes
-        $sql = "SELECT DISTINCT origen FROM tb_cita WHERE origen IS NOT NULL ORDER BY origen ASC;";
-        $data['origenes'] = DB::select($sql);
-        $data['tipoSede'] = "CEA";
-        echo view('layouts.header', $data);
-        echo view('layouts.nav', $data);
-        echo view('dashboard.citas.index', $data);
-        echo view('layouts.footer', $data);
-    }
+
     //Obtener las citas de la base de datos
     public function get_citas(Request $request)
     {
@@ -238,7 +85,6 @@ class CitasController extends Controller
 
             try {
                 $user = Auth::user();
-                $rol = $user->getRoleNames()->first();
 
                 // Obtener los parámetros del request
                 $length = $request->input('length');
@@ -303,10 +149,10 @@ class CitasController extends Controller
                     ->where('t1.id_cita', '>', 0);
 
                 // Aplicar filtros por rol
-                if ($rol == 'gestorsede') {
+                if ($user->can('global.Solo ver sede asignada.v')) {
                     $query->where('t5.id_sede', $user->id_sede);
                 }
-                if ($rol == 'callcenter') {
+                if ($user->can('global.Solo ver citas asignadas.v')) {
                     $query->where('t1.id_agente_callcenter', $user->id);
                 }
 
@@ -455,18 +301,19 @@ class CitasController extends Controller
         $alert = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
         $data['alert'] = $alert;
         //Sedes
-        if ($data['rol'] == 'gestorsede') {
-            $sql = "SELECT * FROM tb_sede WHERE id_sede = " . $user->id_sede;
+        if ($user->can('global.Solo ver sede asignada.v')) {
+            $data['sedes'] = DB::table('tb_sede')
+                ->where('id_sede', $user->id_sede)
+                ->get();
         } else {
-            $sql = "SELECT * FROM tb_sede";
+            $data['sedes'] = DB::table('tb_sede')->get();
         }
-        $data['sedes'] = DB::select($sql);;
-        //Estados
-        $sql = "SELECT * FROM tb_estado";
-        $data['estados'] = DB::select($sql);
-        //Servicios Liquidador
-        $sql = "SELECT * FROM tb_servicio_liquidador";
-        $data['servicios_liquidador'] = DB::select($sql);
+        // Estados: se obtienen todos los estados.
+        $data['estados'] = DB::table('tb_estado')->get();
+
+        // Servicios Liquidador: se obtienen todos los servicios.
+        $data['servicios_liquidador'] = DB::table('tb_servicio_liquidador')->get();
+
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
         echo view('dashboard.citas.add', $data);
@@ -481,13 +328,16 @@ class CitasController extends Controller
                 'text' => 'Error al obtener los datos',
             ];
             try {
-                $id = $request->request->get('id');
-                $sql = "SELECT * FROM tb_sede_horario as t1 INNER JOIN tb_horario as t2 ON t1.id_horario = t2.id_horario  WHERE t1.id_sede = $id";
-                $horarios = DB::select($sql);
-                if (is_array($horarios) && !empty($horarios)) {
+                $id = $request->input('id');
+                $horarios = DB::table('tb_sede_horario as t1')
+                    ->join('tb_horario as t2', 't1.id_horario', '=', 't2.id_horario')
+                    ->where('t1.id_sede', $id)
+                    ->get();
+
+                if ($horarios->isNotEmpty()) {
                     $objLoad = [
                         'validate' => true,
-                        'horarios' => $horarios,
+                        'horarios' => $horarios
                     ];
                 }
             } catch (\Throwable $e) {
@@ -568,20 +418,13 @@ class CitasController extends Controller
                     }
                 }
 
-                if ($rol == "callcenter" || $rol == "lidercallcenter") {
+                if ($user->can('global.Asignar citas call.v')) {
                     $idAgenteCallcenter = $user->id;
                 } else {
-                    $agentes = User::role('callcenter')
+                    $agentes = User::permission('global.Asignar citas call.v')
                         ->where('callcenter_habilitado', 1)
                         ->orderBy('id', 'asc')
                         ->get();
-                    // log::info($agentes);
-                    $lideragentes = User::role('lidercallcenter')
-                        ->where('callcenter_habilitado', 1)
-                        ->orderBy('id', 'asc')
-                        ->get();
-
-                    $agentes = $agentes->merge($lideragentes);
                     // log::info($agentes);
                     //  LEER EL PUNTERO ACTUAL DESDE tb_config
                     $config = DB::table('tb_config')
@@ -704,26 +547,32 @@ class CitasController extends Controller
             'rol' => $user->getRoleNames()->first(),
             'user' => $user
         ];
-        $alert = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
-        $data['alert'] = $alert;
+
+        // Obtener alertas
+        $data['alert'] = AdminHelper::get_count_alert($data['rol'], $user->id_sede);
+
+
+        // Obtener la cita (se asume que AdminHelper::get_cita_by_id retorna un arreglo)
         $data['cita'] = AdminHelper::get_cita_by_id($id);
         if (!is_array($data['cita']) || empty($data['cita'])) {
             return redirect()->route('citas');
         }
         $data['cita'] = $data['cita'][0];
-        $sql = "SELECT * FROM tb_sede";
-        $data['sedes'] = DB::select($sql);;
-        $sql = "SELECT * FROM tb_estado";
-        $data['estados'] = DB::select($sql);
-        //Servicios Liquidador
-        $sql = "SELECT * FROM tb_servicio_liquidador";
-        $data['servicios_liquidador'] = DB::select($sql);
-        $sql = "SELECT * FROM tb_seguimiento WHERE id_cita = $id";
-        $data['anotaciones'] = DB::select($sql);
-        //Recorremos las anotaciones para ingresar el nombre del usuario
-        foreach ($data['anotaciones'] as $key => $value) {
-            $user = User::find($value->id_user);
-            $data['anotaciones'][$key]->nombre_user = $user->name;
+
+        // Obtener sedes, estados y servicios liquidador con Query Builder
+        $data['sedes'] = DB::table('tb_sede')->get();
+        $data['estados'] = DB::table('tb_estado')->get();
+        $data['servicios_liquidador'] = DB::table('tb_servicio_liquidador')->get();
+
+        // Anotaciones (seguimientos) de la cita
+        $data['anotaciones'] = DB::table('tb_seguimiento')
+            ->where('id_cita', $id)
+            ->get();
+
+        // Recorrer las anotaciones para añadir el nombre del usuario que las ingresó
+        foreach ($data['anotaciones'] as $anotacion) {
+            $usuario = User::find($anotacion->id_user);
+            $anotacion->nombre_user = $usuario ? $usuario->name : null;
         }
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
@@ -735,42 +584,41 @@ class CitasController extends Controller
     {
         $user = Auth::user();
         $data = [
-            'page' => 'Citas',
+            'page'    => 'Citas',
             'subpage' => 'Listado',
-            'rol' => $user->getRoleNames()->first(),
-            'user' => $user
+            'rol'     => $user->getRoleNames()->first(),
+            'user'    => $user,
         ];
-        $alert = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
-        $data['alert'] = $alert;
+
+        $data['alert'] = AdminHelper::get_count_alert($data['rol'], $user->id_sede);
         $data['cita'] = AdminHelper::get_cita_by_id($id);
         if (!is_array($data['cita']) || empty($data['cita'])) {
             return redirect()->route('citas');
         }
         $data['cita'] = $data['cita'][0];
-        $sql = "SELECT * FROM tb_sede";
-        $data['sedes'] = DB::select($sql);;
-        $sql = "SELECT * FROM tb_estado";
-        $data['estados'] = DB::select($sql);
-        //Servicios Liquidador
-        $sql = "SELECT * FROM tb_servicio_liquidador";
-        $data['servicios_liquidador'] = DB::select($sql);
-        $sql = "SELECT * FROM tb_seguimiento WHERE id_cita = $id";
-        $data['anotaciones'] = DB::select($sql);
-        $sql = "SELECT * FROM tb_vehiculo WHERE id_cliente = $id";
-        $data['vehiculos'] = DB::select($sql);
-        $agentes = User::role('callcenter')
+
+        $data['sedes'] = DB::table('tb_sede')->get();
+        $data['estados'] = DB::table('tb_estado')->get();
+        $data['servicios_liquidador'] = DB::table('tb_servicio_liquidador')->get();
+        $data['anotaciones'] = DB::table('tb_seguimiento')->where('id_cita', $id)->get();
+
+        // Obtener vehículos asociados al cliente
+        $data['vehiculos'] = DB::table('tb_vehiculo')
+            ->where('id_cliente', $id)
+            ->get();
+
+        // Obtener agentes callcenter que tengan el permiso y estén habilitados
+        $data['agentes_callcenter'] = User::permission('global.Asignar citas call.v')
+            ->where('callcenter_habilitado', 1)
             ->orderBy('id', 'asc')
             ->get();
-        $lideragentes = User::role('lidercallcenter')
-            ->orderBy('id', 'asc')
-            ->get();
-        $agentes = $agentes->merge($lideragentes);
-        $data['agentes_callcenter'] = $agentes;
-        //Recorremos las anotaciones para ingresar el nombre del usuario
-        foreach ($data['anotaciones'] as $key => $value) {
-            $user = User::find($value->id_user);
-            $data['anotaciones'][$key]->nombre_user = $user->name;
+
+        // Recorrer anotaciones para asignar el nombre del usuario
+        foreach ($data['anotaciones'] as $anotacion) {
+            $usuario = User::find($anotacion->id_user);
+            $anotacion->nombre_user = $usuario ? $usuario->name : null;
         }
+
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
         echo view('dashboard.citas.edit', $data);
@@ -891,21 +739,21 @@ class CitasController extends Controller
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
-                'text' => 'Error al borrar la sede'
+                'text'     => 'Error al borrar la sede'
             ];
-            //Ejecución de la funcion
             try {
-                $id = $request->request->get('id');
-                $sql = "DELETE FROM tb_cita WHERE id_cita = $id";
-                DB::delete($sql);
+                $id = $request->input('id');
+                DB::table('tb_cita')
+                    ->where('id_cita', $id)
+                    ->delete();
+
                 $objLoad = [
                     'validate' => true,
-                    'text' => 'Cita borrada correctamente'
+                    'text'     => 'Cita borrada correctamente'
                 ];
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
-            //retornar respuesta
             return response()->json($objLoad);
         }
     }
@@ -914,21 +762,21 @@ class CitasController extends Controller
     {
         if ($request->ajax()) {
             $objLoad = ['validate' => false];
-            //Ejecución de la funcion
             try {
+                $id_estado = $request->input('id_estado');
+                $id_cita   = $request->input('id_cita');
 
-                $id_estado = $request->request->get('id_estado');
-                $id_cita = $request->request->get('id_cita');
-                $sql = "UPDATE tb_cita SET id_estado = $id_estado WHERE id_cita = $id_cita";
-                DB::update($sql);
+                DB::table('tb_cita')
+                    ->where('id_cita', $id_cita)
+                    ->update(['id_estado' => $id_estado]);
+
                 $objLoad = [
                     'validate' => true,
-                    'text' => 'Cita borrada correctamente'
+                    'text'     => 'Cita actualizada correctamente'
                 ];
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
-            //retornar respuesta
             return response()->json($objLoad);
         }
     }
@@ -1167,7 +1015,6 @@ class CitasController extends Controller
             ];
             try {
                 $user = Auth::user();
-                $rol = $user->getRoleNames()->first();
                 $start = $request->input('start'); // Se recibe desde ajax
                 $length = 100;
 
@@ -1209,7 +1056,7 @@ class CitasController extends Controller
                 ";
 
                 // Filtro para el rol 'gestorsede'
-                if ($rol == 'gestorsede') {
+                if ($user->can('global.Solo ver sede asignada.v')) {
                     $sqlBase .= " AND t5.id_sede = " . $user->id_sede;
                 }
 
@@ -1425,7 +1272,6 @@ class CitasController extends Controller
         if ($request->ajax()) {
             try {
                 $user = Auth::user();
-                $rol = $user->getRoleNames()->first();
 
                 $last_execution = cache()->get('last_cron_execution', now());
                 if (!$last_execution instanceof \Carbon\Carbon) {
@@ -1437,7 +1283,7 @@ class CitasController extends Controller
                 $nuevos_registros = 0;
                 $sede = "todas las sedes";
 
-                if ($rol === 'gestorsede') {
+                if ($user->can('global.Solo ver sede asignada.v')) {
                     $id_sede = $user->id_sede;
                     $nuevos_registros = DB::table('tb_cita')
                         ->where('id_sede', $id_sede)
@@ -1483,12 +1329,13 @@ class CitasController extends Controller
             AdminHelper::change_status_alert($data['rol'], $user->id_sede);
         }
         //Sedes
-        if ($data['rol'] == 'gestorsede') {
-            $sql = "SELECT * FROM tb_sede WHERE id_sede = " . $user->id_sede;
+        if ($user->can('global.Solo ver sede asignada.v')) {
+            $data['sedes'] = DB::table('tb_sede')
+                ->where('id_sede', $user->id_sede)
+                ->get();
         } else {
-            $sql = "SELECT * FROM tb_sede";
+            $data['sedes'] = DB::table('tb_sede')->get();
         }
-        $data['sedes'] = DB::select($sql);;
         //Estados
         $sql = "SELECT * FROM tb_estado";
         $data['estados'] = DB::select($sql);
@@ -1520,10 +1367,12 @@ class CitasController extends Controller
             AdminHelper::change_status_alert($data['rol'], $user->id_sede);
         }
         //Sedes
-        if ($data['rol'] == 'gestorsede') {
-            $sql = "SELECT * FROM tb_sede WHERE id_sede = " . $user->id_sede;
+        if ($user->can('global.Solo ver sede asignada.v')) {
+            $data['sedes'] = DB::table('tb_sede')
+                ->where('id_sede', $user->id_sede)
+                ->get();
         } else {
-            $sql = "SELECT * FROM tb_sede";
+            $data['sedes'] = DB::table('tb_sede')->get();
         }
         $data['sedes'] = DB::select($sql);;
         //Estados
@@ -1556,10 +1405,12 @@ class CitasController extends Controller
             AdminHelper::change_status_alert($data['rol'], $user->id_sede);
         }
         //Sedes
-        if ($data['rol'] == 'gestorsede') {
-            $sql = "SELECT * FROM tb_sede WHERE id_sede = " . $user->id_sede;
+        if ($user->can('global.Solo ver sede asignada.v')) {
+            $data['sedes'] = DB::table('tb_sede')
+                ->where('id_sede', $user->id_sede)
+                ->get();
         } else {
-            $sql = "SELECT * FROM tb_sede";
+            $data['sedes'] = DB::table('tb_sede')->get();
         }
         $data['sedes'] = DB::select($sql);;
         //Estados
@@ -1592,10 +1443,12 @@ class CitasController extends Controller
             AdminHelper::change_status_alert($data['rol'], $user->id_sede);
         }
         //Sedes
-        if ($data['rol'] == 'gestorsede') {
-            $sql = "SELECT * FROM tb_sede WHERE id_sede = " . $user->id_sede;
+        if ($user->can('global.Solo ver sede asignada.v')) {
+            $data['sedes'] = DB::table('tb_sede')
+                ->where('id_sede', $user->id_sede)
+                ->get();
         } else {
-            $sql = "SELECT * FROM tb_sede";
+            $data['sedes'] = DB::table('tb_sede')->get();
         }
         $data['sedes'] = DB::select($sql);;
         //Estados
@@ -1628,10 +1481,12 @@ class CitasController extends Controller
             AdminHelper::change_status_alert($data['rol'], $user->id_sede);
         }
         //Sedes
-        if ($data['rol'] == 'gestorsede') {
-            $sql = "SELECT * FROM tb_sede WHERE id_sede = " . $user->id_sede;
+        if ($user->can('global.Solo ver sede asignada.v')) {
+            $data['sedes'] = DB::table('tb_sede')
+                ->where('id_sede', $user->id_sede)
+                ->get();
         } else {
-            $sql = "SELECT * FROM tb_sede";
+            $data['sedes'] = DB::table('tb_sede')->get();
         }
         $data['sedes'] = DB::select($sql);;
         //Estados
@@ -1735,7 +1590,7 @@ class CitasController extends Controller
                             ";
 
                 // Filtro si el rol es 'gestorsede'
-                if ($rol == 'gestorsede') {
+                if ($user->can('global.Solo ver sede asignada.v')) {
                     $sqlBase .= " AND t5.id_sede = " . $user->id_sede;
                 }
 
@@ -2398,7 +2253,6 @@ class CitasController extends Controller
             ];
             try {
                 $user = Auth::user();
-                $rol =  $user->getRoleNames()->first();
                 $start = $request->request->get('start');
                 $length = 100;
 
@@ -2444,7 +2298,7 @@ class CitasController extends Controller
                             ";
 
                 // Filtro si el rol es 'gestorsede'
-                if ($rol == 'gestorsede') {
+                if ($user->can('global.Solo ver sede asignada.v')) {
                     $sqlBase .= " AND t5.id_sede = " . $user->id_sede;
                 }
 

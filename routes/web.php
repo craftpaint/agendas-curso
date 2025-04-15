@@ -3,186 +3,369 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LoadController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Dashboard\SedesController;
 use App\Http\Controllers\Dashboard\ClientesController;
 use App\Http\Controllers\Dashboard\CitasController;
 use App\Http\Controllers\Dashboard\UsersController;
 use App\Http\Controllers\Cron\AlertController;
 use App\Http\Controllers\Dashboard\EstadisticasController;
+use App\Http\Controllers\Dashboard\RolesController;
+use App\Http\Controllers\Dashboard\PermissionsController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
+| Aquí se registran las rutas de la aplicación. Se utiliza el middleware
+| "permission:" con la nomenclatura definida en tus permisos. Asegúrate de que
+| en la base estén creados dichos permisos.
 |
 */
 
+// Redirecciona la raíz al login
 Route::get('/', function () {
     return redirect('/login');
 });
+
+// Rutas de perfil
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+// Dashboard: Se redirige usando el permiso para listar citas ("cita.listado.v")
 Route::get('/dashboard', function () {
-    $rol = Auth::user()->getRoleNames()->first();
-    if ($rol == 'superadmin' || $rol == 'admin') {
-        return redirect('/dashboard/citas');
-    } else if ($rol == 'liquidador') {
-        return redirect('/dashboard/liquidador');
+    if (Auth::user()) {
+        if (Auth::user()->can('cita.listado.v')) {
+            return redirect('/dashboard/citas');
+        } else if (Auth::user()->can('liquidador.Listado.v')) {
+            return redirect('/dashboard/liquidador');
+        }
     } else {
-        return redirect('/dashboard/citas');
+        return redirect('/login');
     }
 })->name('dashboard');
 
-//Load
+// Load
 Route::controller(LoadController::class)->group(function () {
     Route::get('load', 'index');
     Route::get('create-cita/{id}', 'createcita');
     Route::post('get-horarios', 'gethorarios');
     Route::post('savecita', 'savecita');
-    route::post('get-servicio-by-id-sede', 'get_servicio_by_id_sede');
+    Route::post('get-servicio-by-id-sede', 'get_servicio_by_id_sede');
 })->name('load');
 
-//estadisticas
+// Estadísticas (se utiliza "estadisticas.panel1.v" como permiso de visualización global)
 Route::controller(EstadisticasController::class)->group(function () {
-    Route::get('dashboard/estadisticas/citas', 'getCitasData')->middleware(['auth', 'verified', 'role:superadmin|admin|lidercallcenter']);
-    Route::get('dashboard/estadisticas/creaciones', 'getCreacionesData')->middleware(['auth', 'verified', 'role:superadmin|admin|lidercallcenter']);
-    route::get('dashboard/estadisticas', 'index')->middleware(['auth', 'verified', 'role:superadmin|admin|lidercallcenter']);
-    route::get('dashboard/estadisticas/sedes', 'viewSedes')->middleware(['auth', 'verified', 'role:superadmin|admin|lidercallcenter']);
-})->name('Estadisticas');
+    Route::get('dashboard/estadisticas/citas', 'getCitasData')
+        ->middleware(['auth', 'verified', 'permission:estadisticas.panel1.v']);
+    Route::get('dashboard/estadisticas/creaciones', 'getCreacionesData')
+        ->middleware(['auth', 'verified', 'permission:estadisticas.panel1.v']);
+    Route::get('dashboard/estadisticas', 'index')
+        ->middleware(['auth', 'verified', 'permission:estadisticas.panel1.v']);
+    Route::get('dashboard/estadisticas/sedes', 'viewSedes')
+        ->middleware(['auth', 'verified', 'permission:estadisticas.panel1.v']);
+})->name('estadisticas');
 
-//SEDES
+// Sedes
 Route::controller(SedesController::class)->group(function () {
-    Route::get('dashboard/sedes', 'index')->middleware(['auth', 'verified', 'role:admin|superadmin|lidercallcenter']);
-    Route::post('dashboard/sedes/get_sedes', 'get_sedes')->middleware(['auth', 'verified', 'role:admin|superadmin|lidercallcenter']);
-    Route::get('dashboard/sedes/add', 'add')->middleware(['auth', 'verified', 'role:admin|superadmin|lidercallcenter']);
-    Route::post('dashboard/sedes/save', 'save')->middleware(['auth', 'verified', 'role:admin|superadmin|lidercallcenter']);
-    Route::get('dashboard/sedes/edit/{id}', 'edit')->middleware(['auth', 'verified', 'role:superadmin|lidercallcenter']);
-    Route::post('dashboard/sedes/update', 'update')->middleware(['auth', 'verified', 'role:superadmin|lidercallcenter']);
-    Route::post('dashboard/sedes/delete_sede', 'delete_sede')->middleware(['auth', 'verified', 'role:superadmin|lidercallcenter']);
-    Route::get('dashboard/sedes/configuracion', 'configuracion')->middleware(['auth', 'verified', 'role:admin|superadmin|lidercallcenter']);
-    Route::post('dashboard/sedes/get_horarios', 'get_horarios')->middleware(['auth', 'verified', 'role:admin|superadmin|lidercallcenter']);
-    Route::post('dashboard/sedes/add_horarios', 'add_horarios')->middleware(['auth', 'verified', 'role:admin|superadmin|lidercallcenter']);
-    Route::post('dashboard/sedes/delete_horario', 'delete_horario')->middleware(['auth', 'verified', 'role:superadmin|lidercallcenter']);
-    Route::post('dashboard/sedes/get_festivos', 'get_festivos')->middleware(['auth', 'verified', 'role:admin|superadmin|lidercallcenter']);
-    Route::post('dashboard/sedes/add_festivos', 'add_festivos')->middleware(['auth', 'verified', 'role:admin|superadmin|lidercallcenter']);
-    Route::post('dashboard/sedes/delete_festivos', 'delete_festivos')->middleware(['auth', 'verified', 'role:superadmin|lidercallcenter']);
-    Route::post('dashboard/sedes/get_servicio', 'get_servicio')->middleware(['auth', 'verified', 'role:admin|superadmin|lidercallcenter']);
-    Route::post('dashboard/sedes/get_servicio_by_id_sede', 'get_servicio_by_id_sede')->middleware(['auth', 'verified', 'role:admin|superadmin|callcenter|gestorsede|lidercallcenter']);
-    Route::post('dashboard/sedes/add_servicio', 'add_servicio')->middleware(['auth', 'verified', 'role:admin|superadmin|lidercallcenter']);
-    Route::post('dashboard/sedes/delete_servicio', 'delete_servicio')->middleware(['auth', 'verified', 'role:superadmin|lidercallcenter']);
+    // Listado de sedes: "sede.listado.v"
+    Route::get('dashboard/sedes', 'index')
+        ->middleware(['auth', 'verified', 'permission:sede.listado.v'])
+        ->name('sedes.index');
+    Route::post('dashboard/sedes/get_sedes', 'get_sedes')
+        ->middleware(['auth', 'verified', 'permission:sede.listado.v|cita.Ver sede.v']);
+    // Agregar sede: "sede.sede.a"
+    Route::get('dashboard/sedes/add', 'add')
+        ->middleware(['auth', 'verified', 'permission:sede.sede.a'])
+        ->name('sedes.add');
+    Route::post('dashboard/sedes/save', 'save')
+        ->middleware(['auth', 'verified', 'permission:sede.sede.a']);
+    // Editar sede: "sede.sede.e"
+    Route::get('dashboard/sedes/edit/{id}', 'edit')
+        ->middleware(['auth', 'verified', 'permission:sede.sede.e'])
+        ->name('sedes.edit');
+    Route::post('dashboard/sedes/update', 'update')
+        ->middleware(['auth', 'verified', 'permission:sede.sede.e']);
+    // Eliminar sede: "sede.sede.d"
+    Route::post('dashboard/sedes/delete_sede', 'delete_sede')
+        ->middleware(['auth', 'verified', 'permission:sede.sede.d']);
+    // Configuración: "sede.configuracion.v"
+    Route::get('dashboard/sedes/configuracion', 'configuracion')
+        ->middleware(['auth', 'verified', 'permission:sede.configuracion.v']);
+    // Horarios
+    Route::post('dashboard/sedes/get_horarios', 'get_horarios')
+        ->middleware(['auth', 'verified', 'permission:sede.horarios.v']);
+    Route::post('dashboard/sedes/add_horarios', 'add_horarios')
+        ->middleware(['auth', 'verified', 'permission:sede.horarios.a']);
+    Route::post('dashboard/sedes/delete_horario', 'delete_horario')
+        ->middleware(['auth', 'verified', 'permission:sede.horarios.d']);
+    // Días festivos
+    Route::post('dashboard/sedes/get_festivos', 'get_festivos')
+        ->middleware(['auth', 'verified', 'permission:sede.dias_festivos.v']);
+    Route::post('dashboard/sedes/add_festivos', 'add_festivos')
+        ->middleware(['auth', 'verified', 'permission:sede.dias_festivos.a']);
+    Route::post('dashboard/sedes/delete_festivos', 'delete_festivos')
+        ->middleware(['auth', 'verified', 'permission:sede.dias_festivos.d']);
+    // Servicios
+    Route::post('dashboard/sedes/get_servicio', 'get_servicio')
+        ->middleware(['auth', 'verified', 'permission:sede.servicios.v']);
+    Route::post('dashboard/sedes/add_servicio', 'add_servicio')
+        ->middleware(['auth', 'verified', 'permission:sede.servicios.a']);
+    Route::post('dashboard/sedes/delete_servicio', 'delete_servicio')
+        ->middleware(['auth', 'verified', 'permission:sede.servicios.d']);
+    Route::post('dashboard/sedes/get_servicio_by_id_sede', 'get_servicio_by_id_sede');
 })->name('sedes');
-// CLIENTES
+
+// Clientes
 Route::controller(ClientesController::class)->group(function () {
-    Route::get('dashboard/clientes', 'index')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::post('dashboard/clientes/get_clientes', 'get_clientes')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::get('dashboard/clientes/add', 'add')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::post('dashboard/clientes/save', 'save')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::get('dashboard/clientes/view/{id}', 'view')->middleware(['auth', 'verified', 'role:gestorsede|lidercallcenter']);
-    Route::get('dashboard/clientes/edit/{id}', 'edit')->middleware(['auth', 'verified', 'role:superadmin|callcenter|lidercallcenter']);
-    Route::post('dashboard/clientes/update', 'update')->middleware(['auth', 'verified', 'role:superadmin|callcenter|lidercallcenter']);
-    Route::post('dashboard/clientes/delete_cliente', 'delete_cliente')->middleware(['auth', 'verified', 'role:superadmin|lidercallcenter']);
-    Route::get('dashboard/clientes/vehiculos', 'vehiculos')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::post('dashboard/clientes/get_vehiculos', 'get_vehiculos')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::get('dashboard/clientes/add_vehiculos', 'add_vehiculos')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::post('dashboard/clientes/save_vehiculo', 'save_vehiculo')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::get('dashboard/clientes/get_clientes_in_vehicle', 'get_clientes_in_vehicle')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::post('dashboard/clientes/get_vehiculos_by_id_cliente', 'get_vehiculos_by_id_cliente')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::get('dashboard/clientes/view_vehiculos/{id}', 'view_vehiculos')->middleware(['auth', 'verified', 'role:gestorsede|lidercallcenter']);
-    Route::get('dashboard/clientes/edit_vehiculos/{id}', 'edit_vehiculos')->middleware(['auth', 'verified', 'role:superadmin|callcenter|lidercallcenter']);
-    Route::post('dashboard/clientes/update_vehiculo', 'update_vehiculo')->middleware(['auth', 'verified', 'role:superadmin|callcenter|lidercallcenter']);
-    Route::post('dashboard/clientes/delete_vehiculo', 'delete_vehiculo')->middleware(['auth', 'verified', 'role:superadmin|lidercallcenter']);
-    Route::post('dashboard/clientes/dowload', 'dowload')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
+    // Listado de clientes: "cliente.listado.v"
+    Route::get('dashboard/clientes', 'index')
+        ->middleware(['auth', 'verified', 'permission:cliente.listado.v'])
+        ->name('clientes.index');
+    Route::post('dashboard/clientes/get_clientes', 'get_clientes')
+        ->middleware(['auth', 'verified', 'permission:cliente.listado.v']);
+    // Agregar cliente: "cliente.Cliente.a"
+    Route::get('dashboard/clientes/add', 'add')
+        ->middleware(['auth', 'verified', 'permission:cliente.Cliente.a'])
+        ->name('clientes.add');
+    Route::post('dashboard/clientes/save', 'save')
+        ->middleware(['auth', 'verified', 'permission:cliente.Cliente.a']);
+    // Ver cliente: "cliente.Cliente.v"
+    Route::get('dashboard/clientes/view/{id}', 'view')
+        ->middleware(['auth', 'verified', 'permission:cliente.Cliente.v'])
+        ->name('clientes.view');
+    // Editar cliente: "cliente.Cliente.e"
+    Route::get('dashboard/clientes/edit/{id}', 'edit')
+        ->middleware(['auth', 'verified', 'permission:cliente.Cliente.e'])
+        ->name('clientes.edit');
+    Route::post('dashboard/clientes/update', 'update')
+        ->middleware(['auth', 'verified', 'permission:cliente.Cliente.e']);
+    // Eliminar cliente: "cliente.Cliente.d"
+    Route::post('dashboard/clientes/delete_cliente', 'delete_cliente')
+        ->middleware(['auth', 'verified', 'permission:cliente.Cliente.d']);
+    // Vehículos (Listado de vehículos: "vehiculo.listado.v")
+    Route::get('dashboard/clientes/vehiculos', 'vehiculos')
+        ->middleware(['auth', 'verified', 'permission:vehiculo.listado.v'])
+        ->name('clientes.vehiculos');
+    Route::post('dashboard/clientes/get_vehiculos', 'get_vehiculos')
+        ->middleware(['auth', 'verified', 'permission:vehiculo.listado.v']);
+    // ver vehículo: "vehiculo.Vehiculo.v"
+    Route::get('dashboard/clientes/get_vehiculo/{id}', 'view_vehiculos')
+        ->middleware(['auth', 'verified', 'permission:vehiculo.Vehiculo.v']);
+    // Agregar vehículo: "vehiculo.Vehiculo.a"
+    Route::get('dashboard/clientes/add_vehiculos', 'add_vehiculos')
+        ->middleware(['auth', 'verified', 'permission:vehiculo.Vehiculo.a'])
+        ->name('clientes.add_vehiculos');
+    Route::post('dashboard/clientes/save_vehiculo', 'save_vehiculo')
+        ->middleware(['auth', 'verified', 'permission:vehiculo.Vehiculo.a']);
+    // Editar vehículo: "vehiculo.Vehiculo.e"
+    Route::get('dashboard/clientes/edit_vehiculos/{id}', 'edit_vehiculos')
+        ->middleware(['auth', 'verified', 'permission:vehiculo.Vehiculo.e'])
+        ->name('clientes.edit_vehiculos');
+    Route::post('dashboard/clientes/update_vehiculo', 'update_vehiculo')
+        ->middleware(['auth', 'verified', 'permission:vehiculo.Vehiculo.e']);
+    // Eliminar vehículo: "vehiculo.Vehiculo.d"
+    Route::post('dashboard/clientes/delete_vehiculo', 'delete_vehiculo')
+        ->middleware(['auth', 'verified', 'permission:vehiculo.Vehiculo.d']);
+    // Descargar clientes: "cliente.descargar.v"
+    Route::post('dashboard/clientes/dowload', 'dowload')
+        ->middleware(['auth', 'verified', 'permission:cliente.descargar.v']);
+
+    Route::get('dashboard/clientes/get_clientes_in_vehicle', 'get_clientes_in_vehicle');
+    Route::post('dashboard/clientes/get_vehiculos_by_id_cliente', 'get_vehiculos_by_id_cliente');
 })->name('clientes');
+
 // CITAS
 Route::controller(CitasController::class)->group(function () {
-    Route::get('dashboard/citas', 'index')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador|lidercallcenter']);
-    Route::get('dashboard/citas/cda', 'indexCDA')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador|lidercallcenter']);
-    Route::get('dashboard/citas/cea', 'indexCEA')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador|lidercallcenter']);
-    Route::get('dashboard/citas/cia', 'indexCIA')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador|lidercallcenter']);
-    Route::get('dashboard/citas/crc', 'indexCRC')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador|lidercallcenter']);
-    Route::post('dashboard/citas/get_citas', 'get_citas')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador|lidercallcenter']);
-    Route::get('dashboard/citas/add', 'add')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::post('dashboard/citas/save', 'save')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::post('dashboard/citas/get_horarios', 'get_horarios')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::get('dashboard/citas/edit/{id}', 'edit')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|lidercallcenter']);
-    Route::get('dashboard/citas/view/{id}', 'view')->middleware(['auth', 'verified', 'role:superadmin|admin|gestorsede|liquidador|lidercallcenter']);
-    Route::post('dashboard/citas/update', 'update')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|lidercallcenter']);
-    Route::post('dashboard/citas/delete', 'delete')->middleware(['auth', 'verified', 'role:superadmin']);
-    Route::get('dashboard/citas/configuracion', 'configuracion')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|lidercallcenter']);
-    Route::post('dashboard/citas/get_estados', 'get_estados')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::post('dashboard/citas/add_estados', 'add_estados')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|lidercallcenter']);
-    Route::get('dashboard/citas/edit_estados/{id}', 'edit_estados')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|lidercallcenter']);
-    Route::post('dashboard/citas/update_estados', 'update_estados')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|lidercallcenter']);
-    Route::post('dashboard/citas/delete_estados', 'delete_estados')->middleware(['auth', 'verified', 'role:superadmin']);
-    Route::post('dashboard/citas/change_estado', 'change_estado')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
-    Route::post('dashboard/citas/change_estado_verificado', 'change_estado_verificado')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|lidercallcenter']);
-    Route::post('dashboard/citas/change_agente_call', 'change_agente_call')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|lidercallcenter']);
-    Route::post('dashboard/citas/dowload', 'dowload')->middleware(['auth', 'verified', 'role:superadmin|admin|gestorsede|lidercallcenter']);
-
-    Route::post('dashboard/citas/get_seguimiento_cita', 'get_seguimiento_cita')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador|lidercallcenter']);
-    Route::post('dashboard/citas/get_seguimiento_cita_con_actualizacion', 'get_seguimiento_cita_con_actualizacion')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador|lidercallcenter']);
-    Route::post('dashboard/citas/save_seguimiento', 'save_seguimiento')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|liquidador|lidercallcenter']);
-
-    Route::get('dashboard/citas/get_new_records', 'get_new_records')->middleware(['auth', 'verified', 'role:superadmin|admin|callcenter|gestorsede|lidercallcenter']);
+    // Listado de citas: "cita.listado.v"
+    Route::get('dashboard/citas', 'index')
+        ->middleware(['auth', 'verified', 'permission:cita.listado.v'])
+        ->name('citas.index');
+    Route::post('dashboard/citas/get_citas', 'get_citas')
+        ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
+    // Agregar cita: "cita.Cita.a"
+    Route::get('dashboard/citas/add', 'add')
+        ->middleware(['auth', 'verified', 'permission:cita.Cita.a'])
+        ->name('citas.add');
+    Route::post('dashboard/citas/save', 'save')
+        ->middleware(['auth', 'verified', 'permission:cita.Cita.a']);
+    // Horarios: se usa "cita.listado.v" para obtenerlos
+    Route::post('dashboard/citas/get_horarios', 'get_horarios');
+    // Editar cita: "cita.Cita.e"
+    Route::get('dashboard/citas/edit/{id}', 'edit')
+        ->middleware(['auth', 'verified', 'permission:cita.Cita.e'])
+        ->name('citas.edit');
+    // Ver cita: "cita.Cita.v"
+    Route::get('dashboard/citas/view/{id}', 'view')
+        ->middleware(['auth', 'verified', 'permission:cita.Cita.v'])
+        ->name('citas.view');
+    // Actualizar cita: "cita.Cita.e"
+    Route::post('dashboard/citas/update', 'update')
+        ->middleware(['auth', 'verified', 'permission:cita.Cita.e']);
+    // Eliminar cita: "cita.Cita.d"
+    Route::post('dashboard/citas/delete', 'delete')
+        ->middleware(['auth', 'verified', 'permission:cita.Cita.d']);
+    // Configuración de citas: "cita.Configuracion.v"
+    Route::get('dashboard/citas/configuracion', 'configuracion')
+        ->middleware(['auth', 'verified', 'permission:cita.Configuracion.v'])
+        ->name('citas.configuracion');
+    // Estados para cita (usar "cita.Estado Cita.*")
+    Route::post('dashboard/citas/get_estados', 'get_estados')
+        ->middleware(['auth', 'verified', 'permission:cita.Estado Cita.v']);
+    Route::post('dashboard/citas/add_estados', 'add_estados')
+        ->middleware(['auth', 'verified', 'permission:cita.Estado Cita.a']);
+    Route::get('dashboard/citas/edit_estados/{id}', 'edit_estados')
+        ->middleware(['auth', 'verified', 'permission:cita.Estado Cita.e']);
+    Route::post('dashboard/citas/update_estados', 'update_estados')
+        ->middleware(['auth', 'verified', 'permission:cita.Estado Cita.e']);
+    Route::post('dashboard/citas/delete_estados', 'delete_estados')
+        ->middleware(['auth', 'verified', 'permission:cita.Estado Cita.d']);
+    // Cambiar estado: "cita.estado.e" para cambios de estado
+    Route::post('dashboard/citas/change_estado', 'change_estado')
+        ->middleware(['auth', 'verified', 'permission:cita.estado.e']);
+    // Cambiar estado verificado: "cita.Estado Verificado.e"
+    Route::post('dashboard/citas/change_estado_verificado', 'change_estado_verificado')
+        ->middleware(['auth', 'verified', 'permission:cita.Estado Verificado.e']);
+    // Cambiar agente call center: "cita.Agente Call Center.e"
+    Route::post('dashboard/citas/change_agente_call', 'change_agente_call')
+        ->middleware(['auth', 'verified', 'permission:cita.Agente Call Center.e']);
+    // Descargar citas: reutilizamos "cita.listado.v"
+    Route::post('dashboard/citas/dowload', 'dowload')
+        ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
+    // Otros endpoints para seguimiento, etc.
+    Route::post('dashboard/citas/get_seguimiento_cita', 'get_seguimiento_cita')
+        ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
+    Route::post('dashboard/citas/get_seguimiento_cita_con_actualizacion', 'get_seguimiento_cita_con_actualizacion')
+        ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
+    Route::post('dashboard/citas/save_seguimiento', 'save_seguimiento')
+        ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
+    Route::get('dashboard/citas/get_new_records', 'get_new_records')
+        ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
 })->name('citas');
-//Usuarios
+
+// Usuarios
 Route::controller(UsersController::class)->group(function () {
-    Route::get('dashboard/usuarios', 'index')->middleware(['auth', 'verified', 'role:superadmin|admin|lidercallcenter']);
-    Route::post('dashboard/usuarios/get', 'get')->middleware(['auth', 'verified', 'role:superadmin|admin|lidercallcenter']);
-    Route::post('dashboard/usuarios/save', 'save')->middleware(['auth', 'verified', 'role:superadmin|admin|lidercallcenter']);
-    Route::post('dashboard/usuarios/update', 'update')->middleware(['auth', 'verified', 'role:superadmin|admin|lidercallcenter']);
-    Route::post('dashboard/usuarios/delete', 'delete')->middleware(['auth', 'verified', 'role:superadmin']);
-    Route::post('dashboard/usuarios/get_user', 'get_user')->middleware(['auth', 'verified', 'role:superadmin|admin|lidercallcenter']);
+    // Listado de usuarios: "usuario.Usuario.v"
+    Route::get('dashboard/usuarios', 'index')
+        ->middleware(['auth', 'verified', 'permission:usuario.Usuario.v'])
+        ->name('usuarios.index');
+    Route::post('dashboard/usuarios/get', 'get')
+        ->middleware(['auth', 'verified', 'permission:usuario.Usuario.v']);
+    // Agregar usuario: "usuario.usuario.a"
+    Route::post('dashboard/usuarios/save', 'save')
+        ->middleware(['auth', 'verified', 'permission:usuario.Usuario.a']);
+    // Editar usuario: "usuario.Usuario.e"
+    Route::post('dashboard/usuarios/update', 'update')
+        ->middleware(['auth', 'verified', 'permission:usuario.Usuario.e']);
+    // Eliminar usuario: "usuario.Usuario.d"
+    Route::post('dashboard/usuarios/delete', 'delete')
+        ->middleware(['auth', 'verified', 'permission:usuario.Usuario.d']);
+    Route::post('dashboard/usuarios/get_user', 'get_user')
+        ->middleware(['auth', 'verified', 'permission:usuario.Usuario.v']);
     Route::get('dashboard/usuarios/logout', 'logout');
 })->name('usuarios');
-//CRON
+
+// CRON
 Route::controller(AlertController::class)->group(function () {
     Route::get('sincronizaralert', 'index');
 })->name('sincronizaralert');
 
-//LIQUIDADOR
+// LIQUIDADOR
 Route::controller(CitasController::class)->group(function () {
-    Route::get('dashboard/liquidador', 'indexLiquidador')->middleware(['auth', 'verified', 'role:superadmin|admin|liquidador|lidercallcenter']);
-    Route::get('dashboard/liquidador/cda', 'indexLiquidadorCDA')->middleware(['auth', 'verified', 'role:superadmin|admin|liquidador|lidercallcenter']);
-    Route::get('dashboard/liquidador/cea', 'indexLiquidadorCEA')->middleware(['auth', 'verified', 'role:superadmin|admin|liquidador|lidercallcenter']);
-    Route::get('dashboard/liquidador/cia', 'indexLiquidadorCIA')->middleware(['auth', 'verified', 'role:superadmin|admin|liquidador|lidercallcenter']);
-    Route::get('dashboard/liquidador/crc', 'indexLiquidadorCRC')->middleware(['auth', 'verified', 'role:superadmin|admin|liquidador|lidercallcenter']);
-    Route::post('dashboard/liquidador/get_citas', 'get_citas_liquidador')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::post('dashboard/liquidador/save', 'save')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::post('dashboard/liquidador/get_horarios', 'get_horarios')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::get('dashboard/liquidador/edit/{id}', 'edit')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::get('dashboard/liquidador/view/{id}', 'view')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::post('dashboard/liquidador/update', 'update')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::post('dashboard/liquidador/delete', 'delete')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::post('dashboard/liquidador/get_servicio_liquidador', 'get_servicio_liquidador')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::post('dashboard/liquidador/add_servicio_liquidador', 'add_servicio_liquidador')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::get('dashboard/liquidador/edit_servicio_liquidador/{id}', 'edit_servicio_liquidador')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::post('dashboard/liquidador/update_servicio_liquidador', 'update_servicio_liquidador')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::post('dashboard/liquidador/change_servicio_liquidador', 'change_servicio_liquidador')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::post('dashboard/liquidador/change_estado_servicio_liquidador', 'change_estado_servicio_liquidador')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::post('dashboard/liquidador/updateComentario', 'updateComentario')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::post('dashboard/liquidador/updatePagoMasivo', 'updatePagoMasivo')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
-    Route::post('dashboard/liquidador/dowloadLiquidador', 'dowloadLiquidador')->middleware(['auth', 'verified', 'role:superadmin|liquidador|lidercallcenter']);
+    // Para el listado de liquidador, podemos usar "liquidador.Listado.v" (o definir uno específico para liquidador)
+    Route::get('dashboard/liquidador', 'indexLiquidador')
+        ->middleware(['auth', 'verified', 'permission:liquidador.Listado.v'])
+        ->name('liquidador.index');
+    Route::get('dashboard/liquidador/cda', 'indexLiquidadorCDA')
+        ->middleware(['auth', 'verified', 'permission:liquidador.Listado.v']);
+    Route::get('dashboard/liquidador/cea', 'indexLiquidadorCEA')
+        ->middleware(['auth', 'verified', 'permission:liquidador.Listado.v']);
+    Route::get('dashboard/liquidador/cia', 'indexLiquidadorCIA')
+        ->middleware(['auth', 'verified', 'permission:liquidador.Listado.v']);
+    Route::get('dashboard/liquidador/crc', 'indexLiquidadorCRC')
+        ->middleware(['auth', 'verified', 'permission:liquidador.Listado.v']);
+    Route::post('dashboard/liquidador/get_citas', 'get_citas_liquidador')
+        ->middleware(['auth', 'verified', 'permission:liquidador.Listado.v']);
+    // Para guardar (crear) cita en liquidador, se puede usar "cita.Cita.a" o asignar uno específico, aquí usamos "cita.Cita.a"
+    Route::post('dashboard/liquidador/save', 'save')
+        ->middleware(['auth', 'verified', 'permission:cita.Cita.a']);
+    Route::post('dashboard/liquidador/get_horarios', 'get_horarios')
+        ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
+    Route::get('dashboard/liquidador/edit/{id}', 'edit')
+        ->middleware(['auth', 'verified', 'permission:cita.Cita.e']);
+    Route::get('dashboard/liquidador/view/{id}', 'view')
+        ->middleware(['auth', 'verified', 'permission:cita.Cita.v']);
+    Route::post('dashboard/liquidador/update', 'update')
+        ->middleware(['auth', 'verified', 'permission:cita.Cita.e']);
+    Route::post('dashboard/liquidador/delete', 'delete')
+        ->middleware(['auth', 'verified', 'permission:cita.Cita.d']);
+    Route::post('dashboard/liquidador/get_servicio_liquidador', 'get_servicio_liquidador')
+        ->middleware(['auth', 'verified', 'permission:cita.Servicio Liquidador.v']);
+    Route::post('dashboard/liquidador/add_servicio_liquidador', 'add_servicio_liquidador')
+        ->middleware(['auth', 'verified', 'permission:cita.Servicio Liquidador.a']);
+    Route::get('dashboard/liquidador/edit_servicio_liquidador/{id}', 'edit_servicio_liquidador')
+        ->middleware(['auth', 'verified', 'permission:cita.Servicio Liquidador.e']);
+    Route::post('dashboard/liquidador/update_servicio_liquidador', 'update_servicio_liquidador')
+        ->middleware(['auth', 'verified', 'permission:cita.Servicio Liquidador.e']);
+    Route::post('dashboard/liquidador/change_servicio_liquidador', 'change_servicio_liquidador')
+        ->middleware(['auth', 'verified', 'permission:cita.Servicio Liquidador.e']);
+    Route::post('dashboard/liquidador/change_estado_servicio_liquidador', 'change_estado_servicio_liquidador')
+        ->middleware(['auth', 'verified', 'permission:cita.Servicio Liquidador.e']);
+    Route::post('dashboard/liquidador/updateComentario', 'updateComentario')
+        ->middleware(['auth', 'verified', 'permission:cita.Anotaciones.e']);
+    Route::post('dashboard/liquidador/updatePagoMasivo', 'updatePagoMasivo')
+        ->middleware(['auth', 'verified', 'permission:liquidador.Pago Realizado.e']);
+    Route::post('dashboard/liquidador/dowloadLiquidador', 'dowloadLiquidador')
+        ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
 })->name('liquidador');
 
+// Roles (Gestión de Roles)
+Route::middleware(['auth', 'verified', 'permission:roles.Roles.v'])->group(function () {
+    Route::controller(RolesController::class)->group(function () {
+        Route::get('dashboard/roles', 'index')
+            ->name('roles.index');
+        Route::get('dashboard/roles/create', 'create')
+            ->middleware('permission:roles.Roles.a')
+            ->name('roles.create');
+        Route::post('dashboard/roles/store', 'store')
+            ->middleware('permission:roles.Roles.a')
+            ->name('roles.store');
+        Route::get('dashboard/roles/edit/{role}', 'edit')
+            ->middleware('permission:roles.Roles.e')
+            ->name('roles.edit');
+        Route::post('dashboard/roles/update/{role}', 'update')
+            ->middleware('permission:roles.Roles.e')
+            ->name('roles.update');
+        Route::delete('dashboard/roles/destroy/{role}', 'destroy')
+            ->middleware('permission:roles.Roles.d')
+            ->name('roles.destroy');
+    });
+});
 
-/*
-Route::get('/sedes', function () {
-    return 'sedes';
-    //return view('dashboard');
-})->middleware(['auth', 'verified', 'role:admin'])->name('sedes');
-$user = User::find(1);  // Encuentra al usuario con ID 1
-$user->assignRole('admin');
-use Spatie\Permission\Models\Role;
-Role::create(['name' => 'admin', 'guard_name' => 'web']);
-*/
-
-
+// Permisos (Gestión de Permisos)
+Route::middleware(['auth', 'verified', 'permission:permissions.administrar.v'])->group(function () {
+    Route::controller(PermissionsController::class)->group(function () {
+        Route::get('dashboard/configuracion/permissions', 'index')->name('permissions.index');
+        Route::get('dashboard/configuracion/permissions/create', 'create')
+            ->middleware('permission:permissions.administrar.a')
+            ->name('permissions.create');
+        Route::post('dashboard/configuracion/permissions/store', 'store')
+            ->middleware('permission:permissions.administrar.a')
+            ->name('permissions.store');
+        Route::get('dashboard/configuracion/permissions/edit/{permission}', 'edit')
+            ->middleware('permission:permissions.administrar.e')
+            ->name('permissions.edit');
+        Route::post('dashboard/configuracion/permissions/update/{permission}', 'update')
+            ->middleware('permission:permissions.administrar.e')
+            ->name('permissions.update');
+        Route::delete('dashboard/configuracion/permissions/destroy/{permission}', 'destroy')
+            ->middleware('permission:permissions.administrar.d')
+            ->name('permissions.destroy');
+    });
+});
 
 require __DIR__ . '/auth.php';

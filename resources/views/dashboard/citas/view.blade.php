@@ -20,7 +20,7 @@
                                 <select disabled id="selectSede" class="select2 form-select" required name="id_sede">
                                     <option value="">Seleccionar sede</option>
                                     <?php
-                                    if (is_array($sedes) && !empty($sedes)) {
+                                    if ($sedes->isNotEmpty()) {
                                         foreach ($sedes as $key => $sede) {
                                             $a_festivos = @unserialize($sede->festivos_sede);
                                             $a_festivos = $a_festivos !== false ? $a_festivos : array();
@@ -35,7 +35,7 @@
                                 <select disabled id="selectSede" class="form-select" required name="id_estado">
                                     <option value="">Seleccionar estado</option>
                                     <?php
-                                    if (is_array($estados) && !empty($estados)) {
+                                    if ($estados->isNotEmpty()) {
                                         foreach ($estados as $key => $estado) {
                                             echo '<option ' . (($cita->id_estado == $estado->id_estado) ? 'selected' : '') . ' value="' . $estado->id_estado . '">' . $estado->nombre_estado . '</option>';
                                         }
@@ -48,7 +48,7 @@
                                 <select disabled id="selectSede" class="form-select" required name="id_estado_verificado">
                                     <option value="">Seleccionar estado</option>
                                     <?php
-                                    if (is_array($estados) && !empty($estados)) {
+                                    if ($estados->isNotEmpty()) {
                                         foreach ($estados as $key => $estado) {
                                             echo '<option ' . (($cita->id_estado_verificado == $estado->id_estado) ? 'selected' : '') . ' value="' . $estado->id_estado . '">' . $estado->nombre_estado . '</option>';
                                         }
@@ -71,7 +71,7 @@
                                 <select id="SelectServicioLiquidador" class="form-select" required name="id_servicio_liquidador" disabled>
                                     <option value="">Seleccionar servicio</option>
                                     <?php
-                                    if (is_array($servicios_liquidador) && !empty($servicios_liquidador)) {
+                                    if ($servicios_liquidador->isNotEmpty()) {
                                         foreach ($servicios_liquidador as $key => $servicio) {
                                             echo '<option ' . (($cita->id_servicio_liquidador == $servicio->id_servicio_liquidador) ? 'selected' : '') . ' value="' . $servicio->id_servicio_liquidador . '">' . $servicio->nombre_servicio_liquidador . '</option>';
                                         }

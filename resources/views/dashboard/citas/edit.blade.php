@@ -14,7 +14,7 @@
                             <?= isset($cita->origen) ? '<small class="mb-2">Origen: <strong>' . $cita->origen . '</strong></small><br>' : '' ?>
                             <?= isset($cita->creado_por) ? '<small class="mb-2">Creado por: <strong>' . $cita->creado_por . '</strong></small><br>' : '' ?>
                         </div>
-                        <?php if ($rol === 'superadmin' || $rol == 'admin' || $rol == 'lidercallcenter') { ?>
+                        <?php if ($user->can('cita.Agente Call Center.e')) { ?>
                             <div class="mb-4 col-12 col-md-6">
                                 <label class="form-label">Agente Callcenter asginado: <span class="required_flied">*</span></label>
                                 <select class="select_search_agente_callcenter select2 form-select" name="id_agente_callcenter" required>
@@ -49,7 +49,7 @@
                                 <select id="selectSede" class="select2 form-select" required name="id_sede">
                                     <option value="">Seleccionar sede</option>
                                     <?php
-                                    if (is_array($sedes) && !empty($sedes)) {
+                                    if ($sedes->isNotEmpty()) {
                                         foreach ($sedes as $key => $sede) {
                                             $a_festivos = @unserialize($sede->festivos_sede);
                                             $a_festivos = $a_festivos !== false ? $a_festivos : array();
@@ -64,7 +64,7 @@
                                 <select id="selectEstado" class="form-select" required name="id_estado">
                                     <option value="">Seleccionar estado</option>
                                     <?php
-                                    if (is_array($estados) && !empty($estados)) {
+                                    if ($estados->isNotEmpty()) {
                                         foreach ($estados as $key => $estado) {
                                             echo '<option ' . (($cita->id_estado == $estado->id_estado) ? 'selected' : '') . ' value="' . $estado->id_estado . '">' . $estado->nombre_estado . '</option>';
                                         }
@@ -77,7 +77,7 @@
                                 <select id="selectEstadoVerificado" class="form-select" required name="id_estado_verificado">
                                     <option value="">Seleccionar estado</option>
                                     <?php
-                                    if (is_array($estados) && !empty($estados)) {
+                                    if ($estados->isNotEmpty()) {
                                         foreach ($estados as $key => $estado) {
                                             echo '<option ' . (($cita->id_estado_verificado == $estado->id_estado) ? 'selected' : '') . ' value="' . $estado->id_estado . '">' . $estado->nombre_estado . '</option>';
                                         }
@@ -101,7 +101,7 @@
                                 <select id="SelectServicioLiquidador" class="form-select" required name="id_servicio_liquidador">
                                     <option value="">Seleccionar servicio</option>
                                     <?php
-                                    if (is_array($servicios_liquidador) && !empty($servicios_liquidador)) {
+                                    if ($servicios_liquidador->isNotEmpty()) {
                                         foreach ($servicios_liquidador as $key => $servicio) {
                                             echo '<option ' . (($cita->id_servicio_liquidador == $servicio->id_servicio_liquidador) ? 'selected' : '') . ' value="' . $servicio->id_servicio_liquidador . '">' . $servicio->nombre_servicio_liquidador . '</option>';
                                         }
@@ -136,7 +136,7 @@
                                 <select id="selectVehiculo" class="select2 form-select" name="id_vehiculo">
                                     <option value="">Seleccionar vehículo</option>
                                     <?php
-                                    if (is_array($vehiculos) && !empty($vehiculos)) {
+                                    if ($vehiculos->isNotEmpty()) {
                                         foreach ($vehiculos as $key => $vehiculo) {
                                             echo '<option ' . (($cita->id_vehiculo == $vehiculo->id_vehiculo) ? 'selected' : '') . ' value="' . $vehiculo->id_vehiculo . '">' . $vehiculo->placa_vehiculo . ' - ' . $vehiculo->tipo_vehiculo . '</option>';
                                         }

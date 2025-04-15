@@ -8,7 +8,9 @@
             <div class="card">
                 <div class="p-4 d-flex align-items-center justify-content-between">
                     <h5 class="m-0">Liquidador</h5>
-                    <a href="#" data-action="{{ url('dashboard/liquidador/dowloadLiquidador') }}" class="btn_descagar_cita btn btn-dark">Descargar</a>
+                    <?php if ($user->can('liquidador.descargar.v')) { ?>
+                        <a href="#" data-action="{{ url('dashboard/liquidador/dowloadLiquidador') }}" class="btn_descagar_cita btn btn-dark">Descargar</a>
+                    <?php } ?>
                 </div>
                 <div>
                     <!-- Filtros -->
@@ -103,7 +105,7 @@
                     </div>
                 </div>
                 <?php
-                if ($rol == 'superadmin' || $rol == 'liquidador' || $rol == 'admin') {
+                if ($user->can('liquidador.Valores Totales.v')) {
                 ?>
                     <div class="col-4 card">
                         <div class="my-auto">
@@ -173,7 +175,7 @@
                             <tr>
                                 <th>
                                     <?php
-                                    if ($rol == 'superadmin') {
+                                    if ($user->can('liquidador.Pago Masivo Realizado.v')) {
                                     ?>
                                         <label for="checkAll">todos</label>
                                         <input class="form-check-input" type="checkbox" id="checkAll">

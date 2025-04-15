@@ -27,10 +27,12 @@ class EstadisticasController extends Controller
             AdminHelper::change_status_alert($data['rol'], $user->id_sede);
         }
         //Sedes
-        if ($data['rol'] == 'gestorsede') {
-            $sql = "SELECT * FROM tb_sede WHERE id_sede = " . $user->id_sede;
+        if ($user->can('global.Solo ver sede asignada.v')) {
+            $data['sedes'] = DB::table('tb_sede')
+                ->where('id_sede', $user->id_sede)
+                ->get();
         } else {
-            $sql = "SELECT * FROM tb_sede";
+            $data['sedes'] = DB::table('tb_sede')->get();
         }
         $data['sedes'] = DB::select($sql);;
         //Estados
@@ -57,10 +59,12 @@ class EstadisticasController extends Controller
             AdminHelper::change_status_alert($data['rol'], $user->id_sede);
         }
         //Sedes
-        if ($data['rol'] == 'gestorsede') {
-            $sql = "SELECT * FROM tb_sede WHERE id_sede = " . $user->id_sede;
+        if ($user->can('global.Solo ver sede asignada.v')) {
+            $data['sedes'] = DB::table('tb_sede')
+                ->where('id_sede', $user->id_sede)
+                ->get();
         } else {
-            $sql = "SELECT * FROM tb_sede";
+            $data['sedes'] = DB::table('tb_sede')->get();
         }
         $data['sedes'] = DB::select($sql);;
         //Estados

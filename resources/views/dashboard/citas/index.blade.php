@@ -9,8 +9,12 @@
                 <input type="hidden" name="tipo_cita" id="tipo_cita" value="<?= isset($tipoSede) ? $tipoSede : '' ?>">
                 <div class="p-4 d-flex align-items-center justify-content-between">
                     <h5 class="m-0">Citas</h5>
-                    <a href="{{ url('dashboard/citas/add') }}" class="btn btn-primary" style="margin-left: auto;margin-right: 10px;">Crear cita</a>
-                    <a href="#" data-action="{{ url('dashboard/citas/dowload') }}" class="btn_descagar_cita btn btn-dark">Descargar</a>
+                    <?php if ($user->can('cita.Cita.a')) { ?>
+                        <a href="{{ url('dashboard/citas/add') }}" class="btn btn-primary" style="margin-left: auto;margin-right: 10px;">Crear cita</a>
+                    <?php }
+                    if ($user->can('cita.descargar.v')) { ?>
+                        <a href="#" data-action="{{ url('dashboard/citas/dowload') }}" class="btn_descagar_cita btn btn-dark">Descargar</a>
+                    <?php } ?>
                 </div>
                 <div>
                     <!-- Filtros -->
@@ -30,12 +34,13 @@
                                 <div class="form-group form-group-grow">
                                     <input type="date" class="form-control" id="filtro-fecha-end" name="filtro-fecha-end">
                                 </div>
-                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
+                                <?php if ($user->can('cita.Ver sede.v') || $user->can('sede.listado.v')) {
+                                ?>
                                     <div class="form-group form-group-grow">
                                         <select id="filtro-sede" class="select2 form-select" multiple="multiple" placeholder="Seleccionar sede">
                                             <option value="">Todas las sedes</option>
                                             <?php
-                                            if (is_array($sedes) && !empty($sedes)) {
+                                            if ($sedes->isNotEmpty()) {
                                                 foreach ($sedes as $key => $sede) {
                                                     $a_festivos = @unserialize($sede->festivos_sede);
                                                     $a_festivos = $a_festivos !== false ? $a_festivos : array();
@@ -51,7 +56,7 @@
                                     <select id="filtro-estado" class="select2 form-select" multiple="multiple" placeholder="Seleccionar estado">
                                         <option value="">Todos los estados</option>
                                         <?php
-                                        if (is_array($estados) && !empty($estados)) {
+                                        if ($estados->isNotEmpty()) {
                                             foreach ($estados as $key => $estado) {
                                                 echo '<option value="' . $estado->id_estado . '">' . $estado->nombre_estado . '</option>';
                                             }
@@ -63,7 +68,7 @@
                                     <select id="filtro-estado-verificado" class="select2 form-select" multiple="multiple" placeholder="Seleccionar estado Verificado">
                                         <option value="">Todos los estados</option>
                                         <?php
-                                        if (is_array($estados) && !empty($estados)) {
+                                        if ($estados->isNotEmpty()) {
                                             foreach ($estados as $key => $estado) {
                                                 echo '<option value="' . $estado->id_estado . '">' . $estado->nombre_estado . '</option>';
                                             }
@@ -71,23 +76,23 @@
                                         ?>
                                     </select>
                                 </div>
-                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
+                                <?php if ($user->can('cita.Ver Origen.v')) { ?>
                                     <div class="form-group form-group-grow">
                                         <select id="filtro-responsable" class="select2 form-select" multiple="multiple" placeholder="Seleccionar origen">
                                             <option value="">Todos </option>
                                             <option value="Desconocido">Desconocido</option>
                                             <option value="Sede">Sede</option>
                                             <option value="Cliente">Cliente</option>
-                                            <option value="Club del conductor">Club del conductor</option>
+                                            <option value="Curso Comparendo">Curso Comparendo</option>
                                         </select>
                                     </div>
                                 <?php } ?>
-                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
+                                <?php if ($user->can('cita.Ver Tag.v')) { ?>
                                     <div class="form-group form-group-grow">
                                         <select id="filtro-origen" class="select2 form-select" multiple="multiple" placeholder="Seleccionar Tag">
                                             <option value="">Todos los Tags</option>
                                             <?php
-                                            if (is_array($origenes) && !empty($origenes)) {
+                                            if ($origenes->isNotEmpty()) {
                                                 foreach ($origenes as $key => $origen) {
                                                     echo '<option value="' . $origen->origen . '">' . $origen->origen . '</option>';
                                                 }
@@ -97,7 +102,7 @@
                                         </select>
                                     </div>
                                 <?php } ?>
-                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'lidercallcenter') { ?>
+                                <?php if ($user->can('cita.Agente Call Center.v')) { ?>
                                     <div class="form-group form-group-grow">
                                         <select id="filtro-agente" class="select2 form-select" multiple="multiple" placeholder="Seleccionar agente">
                                             <option value="">Todas los agentes</option>
@@ -133,30 +138,18 @@
                     <table class="datatables-citas table">
                         <thead>
                             <tr>
-                                <?php if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'callcenter' || $rol == 'liquidador' || $rol == 'lidercallcenter') { ?>
-                                    <th>Cliente</th>
-                                    <th></th>
-                                    <th>Sede - comparendo</th>
-                                    <th>Fecha Cita</th>
-                                    <th>Fecha Creación</th>
-                                    <th>Estado</th>
-                                    <th>Estado Verificado</th>
-                                    <th>Servicio</th>
-                                    <th>Agente Callcenter</th>
-                                    <th>Origen</th>
-                                    <th>Tag</th>
-                                    <th></th>
-                                <?php } else { ?>
-                                    <th>Cliente</th>
-                                    <th></th>
-                                    <th>Comparendo</th>
-                                    <th>Fecha Cita</th>
-                                    <th>Fecha Creación</th>
-                                    <th>Estado</th>
-                                    <th>Estado Verificado</th>
-                                    <th>Servicio</th>
-                                    <th></th>
-                                <?php } ?>
+                                <th>Cliente</th>
+                                <th></th>
+                                <th>Sede - comparendo</th>
+                                <th>Fecha Cita</th>
+                                <th>Fecha Creación</th>
+                                <th>Estado</th>
+                                <th>Estado Verificado</th>
+                                <th>Agente Callcenter</th>
+                                <th>Servicio</th>
+                                <th>Origen</th>
+                                <th>Tag</th>
+                                <th></th>
                             </tr>
                         </thead>
                     </table>
