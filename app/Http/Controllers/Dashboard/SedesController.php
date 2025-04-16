@@ -20,6 +20,8 @@ class SedesController extends Controller
             'rol' => $user->getRoleNames()->first(),
             'user' => $user
         ];
+        $empresas = DB::table('tb_empresa')->orderBy('id_empresa', 'asc')->get();
+        $data['empresas'] = $empresas;
         $alert = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
         $data['alert'] = $alert;
         $alert = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
@@ -36,26 +38,53 @@ class SedesController extends Controller
             $objLoad = ['validate' => false];
             //Ejecución de la funcion
             try {
-                $length = $request->request->get('length');
-                $start = $request->request->get('start');
-                $draw = $request->request->get('draw');
-                //Verificamos si existe un filtro de busqueda
-                $search = $_POST['search']['value'];
-                $sql = "SELECT * FROM tb_sede LIMIT " . $start . ", " . $length . "";
-                if ($search) {
-                    $sql = "SELECT * FROM tb_sede WHERE tel_sede LIKE '%" . $search . "%' OR idrun_sede LIKE '%" . $search . "%' OR nombre_sede LIKE '%" . $search . "%' LIMIT " . $start . ", " . $length . "";
+
+                $user = Auth::user();
+
+                $length = $request->input('length', 10);
+                $start = $request->input('start', 0);
+                $draw = $request->input('draw');
+                $search = $request->input('search.value');
+
+                // Base query
+                $query = DB::table('tb_sede');
+
+                // Si hay búsqueda
+                if (!empty($search)) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('tel_sede', 'like', "%{$search}%")
+                            ->orWhere('idrun_sede', 'like', "%{$search}%")
+                            ->orWhere('nombre_sede', 'like', "%{$search}%");
+                    });
                 }
-                //Ejecutamos la query
-                $data = DB::select($sql);;
-                $total_response = 999999;
-                //Retornamos la respuesta
-                $objLoad = array(
-                    "draw" => $draw,
-                    "recordsTotal" => $total_response,
-                    "recordsFiltered" => $total_response,
-                    "data" => $data,
-                    "validate" => true
-                );
+                if ($user->can('global.Pertenece a empresa aliada.v')) {
+                    // Se asume que la tabla de sedes tiene la columna 'empresa_id'
+                    $sede_usuario = DB::table('tb_sede')->where('id_sede', $user->id_sede)->first();
+                    if ($sede_usuario && isset($sede_usuario->id_empresa)) {
+                        $query->where('id_empresa', $sede_usuario->id_empresa);
+                        $totalRecords = DB::table('tb_sede')->where('id_empresa', $sede_usuario->id_empresa)->count();
+                    }
+                } else {
+                    // Si el usuario no tiene el permiso, se pueden mostrar todas las sedes
+                    $totalRecords = DB::table('tb_sede')->count();
+                }
+
+                $totalFiltered = $query->count();
+
+                // Obtener los datos paginados
+                $data = $query
+                    ->offset($start)
+                    ->limit($length)
+                    ->get();
+
+
+                $objLoad = [
+                    'draw' => intval($draw),
+                    'recordsTotal' => $totalRecords,
+                    'recordsFiltered' => $totalFiltered,
+                    'data' => $data,
+                    'validate' => true
+                ];
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
                 $objLoad['text'] = 'Error al obtener los datos';
@@ -74,6 +103,8 @@ class SedesController extends Controller
             'rol' => $user->getRoleNames()->first(),
             'user' => $user
         ];
+        $empresas = DB::table('tb_empresa')->orderBy('id_empresa', 'asc')->get();
+        $data['empresas'] = $empresas;
         $alert = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
         $data['alert'] = $alert;
         $data['servicios'] = AdminHelper::get_servicios();
@@ -101,8 +132,9 @@ class SedesController extends Controller
                 $id_servicio = $request->request->get('id_servicio');
                 $direccion_sede = $request->request->get('direccion_sede');
                 $festivos_sede = $request->input('festivos_sede');
+                $id_empresa = $request->request->get('id_empresa');
                 //Guardamo la sede
-                $sql = "INSERT INTO tb_sede (idrun_sede, nombre_sede, direccion_sede, tel_sede, estado_sede, id_servicio, festivos_sede) VALUES ('" . $idrun_sede . "', '" . $nombre_sede . "', '" . $direccion_sede . "', '" . $tel_sede . "', '" . $estado_sede . "', '" . $id_servicio . "', '" . serialize($festivos_sede) . "')";
+                $sql = "INSERT INTO tb_sede (idrun_sede, nombre_sede, direccion_sede, tel_sede, estado_sede, id_servicio, festivos_sede, id_empresa) VALUES ('" . $idrun_sede . "', '" . $nombre_sede . "', '" . $direccion_sede . "', '" . $tel_sede . "', '" . $estado_sede . "', '" . $id_servicio . "', '" . serialize($festivos_sede) . "', '" . $id_empresa . "')";
                 $save = DB::insert($sql);
                 if ($save) {
                     $id_sede = DB::getPdo()->lastInsertId();
@@ -154,6 +186,8 @@ class SedesController extends Controller
             'rol' => $user->getRoleNames()->first(),
             'user' => $user
         ];
+        $empresas = DB::table('tb_empresa')->orderBy('id_empresa', 'asc')->get();
+        $data['empresas'] = $empresas;
         $alert = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
         $data['alert'] = $alert;
         $data['sede'] = AdminHelper::get_sede_by_id($id);
@@ -183,9 +217,10 @@ class SedesController extends Controller
                 $id_servicio = $request->request->get('id_servicio');
                 $direccion_sede = $request->request->get('direccion_sede');
                 $festivos_sede = $request->input('festivos_sede');
+                $id_empresa = $request->request->get('id_empresa');
                 //Verificamos si viene full
                 $semanaFull = $request->request->get('semanaFull');
-                $sql = "UPDATE tb_sede SET idrun_sede = '" . $idrun_sede . "', nombre_sede = '" . $nombre_sede . "', direccion_sede = '" . $direccion_sede . "', tel_sede = '" . $tel_sede . "', estado_sede = '" . $estado_sede . "', id_servicio = '" . $id_servicio . "', festivos_sede = '" . serialize($festivos_sede) . "' WHERE id_sede = " . $id_sede . "";
+                $sql = "UPDATE tb_sede SET idrun_sede = '" . $idrun_sede . "', nombre_sede = '" . $nombre_sede . "', direccion_sede = '" . $direccion_sede . "', tel_sede = '" . $tel_sede . "', estado_sede = '" . $estado_sede . "', id_servicio = '" . $id_servicio . "', id_empresa = '" . $id_empresa . "', festivos_sede = '" . serialize($festivos_sede) . "' WHERE id_sede = " . $id_sede . "";
                 DB::update($sql);
                 $sql = "DELETE FROM tb_sede_horario WHERE id_sede = " . $id_sede . "";
                 DB::delete($sql);

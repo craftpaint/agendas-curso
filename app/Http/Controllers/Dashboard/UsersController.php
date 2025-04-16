@@ -21,6 +21,8 @@ class UsersController extends Controller
             'rol' => $user->getRoleNames()->first(),
             'user' => $user
         ];
+        $roles = DB::table('roles')->orderBy('id', 'desc')->get();
+        $data['roles'] = $roles;
         $alert = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
         $data['alert'] = $alert;
         $sql = "SELECT * FROM tb_sede";
@@ -37,34 +39,71 @@ class UsersController extends Controller
             $objLoad = ['validate' => false];
             //Ejecución de la funcion
             try {
+
+                $user = Auth::user();
+
                 $length = $request->request->get('length');
                 $start = $request->request->get('start');
                 $draw = $request->request->get('draw');
-                //Verificamos si existe un filtro de busqueda
-                $search = $_POST['search']['value'];
-                $sql = "SELECT * FROM users LEFT JOIN tb_sede ON users.id_sede = tb_sede.id_sede LIMIT " . $start . ", " . $length . "";
-                if ($search) {
-                    $sql = "SELECT * users LEFT JOIN tb_sede ON users.id_sede = tb_sede.id_sede WHERE email LIKE '%" . $search . "%' LIMIT " . $start . ", " . $length . "";
-                }
-                //Ejecutamos la query
-                $data = DB::select($sql);;
-                $total_response = 999999;
+                $search = $request->input('search.value', '');
 
-                //Recorremos los datos para insertar el rol
-                foreach ($data as $key => $value) {
-                    $user = User::find($value->id);
-                    $data[$key]->role = $user->getRoleNames()[0];
+                $query = DB::table('users')
+                    ->leftJoin('tb_sede', 'users.id_sede', '=', 'tb_sede.id_sede')
+                    ->select('users.*', 'tb_sede.nombre_sede', 'tb_sede.tel_sede', 'tb_sede.id_empresa');
+
+                // Agregar filtro de búsqueda si existe
+                if (!empty($search)) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('users.email', 'like', '%' . $search . '%')
+                            ->orWhere('users.name', 'like', '%' . $search . '%')
+                            ->orWhere('tb_sede.nombre_sede', 'like', '%' . $search . '%');
+                    });
+                }
+
+                // Filtro por permiso de empresa aliada
+                if ($user->can('global.Pertenece a empresa aliada.v')) {
+                    $sedeUsuario = DB::table('tb_sede')->where('id_sede', $user->id_sede)->first();
+
+                    if ($sedeUsuario && isset($sedeUsuario->id_empresa)) {
+                        $query->where('tb_sede.id_empresa', $sedeUsuario->id_empresa);
+                    } else {
+                        // Si no tiene sede o empresa, no debe ver ningún dato
+                        $query->whereRaw('1 = 0');
+                    }
+                }
+
+                if (!empty($search)) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('users.email', 'like', '%' . $search . '%')
+                            ->orWhere('users.name', 'like', '%' . $search . '%')
+                            ->orWhere('tb_sede.nombre_sede', 'like', '%' . $search . '%');
+                    });
+                }
+
+
+                // Obtener el total filtrado antes del paginado
+                $totalFiltered = $query->count();
+
+                // Aplicar paginación
+                $users = $query
+                    ->offset($start)
+                    ->limit($length)
+                    ->get();
+
+                foreach ($users as $user) {
+                    $userModel = User::find($user->id);
+                    $user->role = optional($userModel->getRoleNames())->first();
                 }
 
 
                 //Retornamos la respuesta
-                $objLoad = array(
-                    "draw" => $draw,
-                    "recordsTotal" => $total_response,
-                    "recordsFiltered" => $total_response,
-                    "data" => $data,
-                    "validate" => true
-                );
+                $objLoad = [
+                    'draw' => $draw,
+                    'recordsTotal' => $totalFiltered, // O puedes usar User::count() si quieres el total sin filtro
+                    'recordsFiltered' => $totalFiltered,
+                    'data' => $users,
+                    'validate' => true
+                ];
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
                 $objLoad['text'] = 'Error al obtener los datos';

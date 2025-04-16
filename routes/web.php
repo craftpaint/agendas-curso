@@ -12,6 +12,7 @@ use App\Http\Controllers\Cron\AlertController;
 use App\Http\Controllers\Dashboard\EstadisticasController;
 use App\Http\Controllers\Dashboard\RolesController;
 use App\Http\Controllers\Dashboard\PermissionsController;
+use App\Http\Controllers\Dashboard\EmpresasController;
 
 /*
 |--------------------------------------------------------------------------
@@ -367,5 +368,29 @@ Route::middleware(['auth', 'verified', 'permission:permissions.administrar.v'])-
             ->name('permissions.destroy');
     });
 });
+
+// Grupo de rutas para Empresas
+Route::middleware(['auth', 'verified', 'permission:empresa.listado.v'])->group(function () {
+    // Listado de empresas: se requiere el permiso para ver listado de empresas
+    Route::get('dashboard/empresas', [EmpresasController::class, 'index'])->name('empresas.index');
+});
+
+// Otras operaciones que requieren permisos distintos:
+Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.a'])->group(function () {
+    Route::get('dashboard/empresas/create', [EmpresasController::class, 'create'])->name('empresas.create');
+    Route::post('dashboard/empresas/store', [EmpresasController::class, 'store'])->name('empresas.store');
+});
+
+Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.e'])->group(function () {
+    Route::get('dashboard/empresas/edit/{id}', [EmpresasController::class, 'edit'])->name('empresas.edit');
+    Route::post('dashboard/empresas/update/{id}', [EmpresasController::class, 'update'])->name('empresas.update');
+});
+
+Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.d'])->group(function () {
+    Route::delete('dashboard/empresas/destroy/{id}', [EmpresasController::class, 'destroy'])->name('empresas.destroy');
+});
+
+Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.a'])
+    ->post('dashboard/empresas/upload-logo', [EmpresasController::class, 'uploadLogo'])->name('empresas.uploadLogo');
 
 require __DIR__ . '/auth.php';

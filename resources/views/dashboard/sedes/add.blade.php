@@ -30,7 +30,7 @@
                                     <option value="Inactivo">Inactivo</option>
                                 </select>
                             </div>
-                            <div class="mb-4 col-md-12">
+                            <div class="mb-4 col-md-6">
                                 <label class="form-label">Servicios <span class="required_flied">*</span></label>
                                 <select class="select2 form-select" required name="id_servicio">
                                     <option value="">Seleccionar servicio</option>
@@ -43,6 +43,23 @@
                                     ?>
                                 </select>
                             </div>
+                            <?php
+                            if ($user->can('sede.empresa.v')) {
+                            ?>
+                                <div class="mb-4 col-md-6">
+                                    <label class="form-label">Empresa <span class="required_flied">*</span></label>
+                                    <select class="select2 form-select" required name="id_empresa">
+                                        <option value="">Seleccionar empresa</option>
+                                        <?php
+                                        if ($empresas->isNotEmpty()) {
+                                            foreach ($empresas as $key => $value) {
+                                                echo '<option value="' . $value->id_empresa . '">' . $value->Nombre . '</option>';
+                                            }
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                            <?php } ?>
                             <div class="mb-4 col-md-12">
                                 <label class="form-label">DIRECCIÓN DE LA SEDE <span class="required_flied">*</span></label>
                                 <textarea class="form-control" rows="3" name="direccion_sede" required></textarea>
@@ -81,24 +98,24 @@
                                         } else if ($i == 7) {
                                             $title = 'Domingo';
                                         }
-                                        ?>
+                                    ?>
                                         <div class="card accordion-item">
                                             <h1 class="accordion-header d-flex align-items-center">
-                                                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionWithIcon-<?=$i?>" aria-expanded="false"><?=$title?></button>
+                                                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionWithIcon-<?= $i ?>" aria-expanded="false"><?= $title ?></button>
                                                 <?php
-                                                    if($i === 1){
-                                                        ?>
-                                                        <div class="contet_full_semana_repeat">
-                                                            <input type="checkbox" id="semanaFull" name="semanaFull" value="1">
-                                                            <label class="form-label" for="semanaFull">Repetir de Lunes a Viernes</label>
-                                                        </div>
-                                                        <?php
-                                                    }
+                                                if ($i === 1) {
+                                                ?>
+                                                    <div class="contet_full_semana_repeat">
+                                                        <input type="checkbox" id="semanaFull" name="semanaFull" value="1">
+                                                        <label class="form-label" for="semanaFull">Repetir de Lunes a Viernes</label>
+                                                    </div>
+                                                <?php
+                                                }
                                                 ?>
                                             </h1>
-                                            <div id="accordionWithIcon-<?=$i?>" class="repeat_<?=$i?> accordion-collapse collapse" style="">
+                                            <div id="accordionWithIcon-<?= $i ?>" class="repeat_<?= $i ?> accordion-collapse collapse" style="">
                                                 <div class="accordion-body">
-                                                    <div data-repeater-list="horario_<?=$i?>">
+                                                    <div data-repeater-list="horario_<?= $i ?>">
                                                         <div data-repeater-item>
                                                             <div class="content_form_horarios mb-4">
                                                                 <div class="content_form_horarios_item">
@@ -129,7 +146,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <?php
+                                    <?php
                                     }
                                     ?>
                                 </div>

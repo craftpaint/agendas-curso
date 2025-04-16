@@ -148,6 +148,16 @@ class CitasController extends Controller
                     ->leftJoin('tb_vehiculo as v', 't1.id_vehiculo', '=', 'v.id_vehiculo')
                     ->where('t1.id_cita', '>', 0);
 
+                // Si el usuario tiene el permiso 'global.Pertenece a empresa aliada.v',
+                // entonces filtrar por la empresa asociada a la sede del usuario.
+                if ($user->can('global.Pertenece a empresa aliada.v')) {
+                    // Se asume que la tabla de sedes tiene la columna 'empresa_id'
+                    $sede_usuario = DB::table('tb_sede')->where('id_sede', $user->id_sede)->first();
+                    if ($sede_usuario && isset($sede_usuario->id_empresa)) {
+                        $query->where('t5.id_empresa', $sede_usuario->id_empresa);
+                    }
+                }
+
                 // Aplicar filtros por rol
                 if ($user->can('global.Solo ver sede asignada.v')) {
                     $query->where('t5.id_sede', $user->id_sede);
@@ -453,7 +463,7 @@ class CitasController extends Controller
                     }
                 }
                 // Insertar cita
-                $now = Carbon::now()->subHours(5);
+                $now = Carbon::now();
                 $citaData = [
                     'id_cliente' => $id_cliente,
                     'id_sede' => $id_sede,
@@ -693,7 +703,7 @@ class CitasController extends Controller
                     'reserva_cita'           => $reserva_cita,
                     'rango_horario'          => $rango_horario,
                     'desc_cita'              => $desc_cita,
-                    'updated_at'             => Carbon::now()->subHours(5)
+                    'updated_at'             => Carbon::now()
                 ];
 
                 // Agregar id_vehiculo si se proporciona
@@ -715,8 +725,8 @@ class CitasController extends Controller
                         'nota_seguimiento'   => $nota_seguimiento,
                         'id_cita'            => $id_cita,
                         'id_user'            => Auth::user()->id,
-                        'created_at'         => Carbon::now()->subHours(5),
-                        'updated_at'         => Carbon::now()->subHours(5)
+                        'created_at'         => Carbon::now(),
+                        'updated_at'         => Carbon::now()
                     ]);
                 }
 
@@ -785,16 +795,18 @@ class CitasController extends Controller
     {
         if ($request->ajax()) {
             $objLoad = ['validate' => false];
-            //Ejecución de la funcion
-            try {
 
-                $id_estado_verificado = $request->request->get('id_estado');
-                $id_cita = $request->request->get('id_cita');
-                $sql = "UPDATE tb_cita SET id_estado_verificado = '$id_estado_verificado' WHERE id_cita = '$id_cita'";
-                DB::update($sql);
+            try {
+                $id_estado_verificado = $request->input('id_estado');
+                $id_cita = $request->input('id_cita');
+
+                DB::table('tb_cita')
+                    ->where('id_cita', $id_cita)
+                    ->update(['id_estado_verificado' => $id_estado_verificado]);
+
                 $objLoad = [
                     'validate' => true,
-                    'text' => 'Cita borrada correctamente'
+                    'text' => 'Estado verificado actualizado correctamente'
                 ];
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
@@ -803,6 +815,7 @@ class CitasController extends Controller
             return response()->json($objLoad);
         }
     }
+
     public function change_agente_call(Request $request)
     {
         if ($request->ajax()) {
@@ -1510,238 +1523,209 @@ class CitasController extends Controller
     {
         if ($request->ajax()) {
             $objLoad = ['validate' => false];
-            //Ejecución de la funcion
+
             try {
                 $user = Auth::user();
                 $rol  = $user->getRoleNames()->first();
 
-                // Parámetros DataTables
-                $length = $request->input('length');
-                $start  = $request->input('start');
-                $draw   = $request->input('draw');
-                $tipo_cita = $request->request->get('tipo_cita');
+                // Parámetros de DataTables y filtros
+                $length      = $request->input('length', 10);
+                $start       = $request->input('start', 0);
+                $draw        = $request->input('draw');
+                $tipo_cita   = $request->input('tipo_cita');
 
-                // Filtros personalizados
-                $filtro_dia      = $request->input('filtro_dia');
-                $filtro_dia_end  = $request->input('filtro_dia_end');
-                $filtro_sede     = $request->input('filtro_sede');
-                $filtro_search   = $request->input('filtro_search');
-                $filtro_servicio_liquidador = $request->input('filtro_servicio_liquidador');
+                $filtro_dia                  = $request->input('filtro_dia');
+                $filtro_dia_end              = $request->input('filtro_dia_end');
+                $filtro_sede                 = $request->input('filtro_sede');
+                $filtro_search               = $request->input('search.value', '');
+                $filtro_servicio_liquidador  = $request->input('filtro_servicio_liquidador');
                 $filtro_estado_validacion_liquidador = $request->input('filtro_estado_validacion_liquidador');
-                $filtro_estado_pago_liquidador = $request->input('filtro_estado_pago_liquidador');
-                // Omitimos $filtro_estado_verificado porque forzaremos "Asistió"
+                $filtro_estado_pago_liquidador      = $request->input('filtro_estado_pago_liquidador');
 
-                // Ordenamiento
-                // Definimos columnas para ordenamiento
+                // Ordenamiento: definición de columnas de referencia
                 $order_column_index = $request->input('order.0.column', 0);
-                $order_direction    = $request->input('order.0.dir', 'asc');
-
-                // Se asume que el checkbox es la primera columna (índice 0)
+                $order_direction = strtoupper($request->input('order.0.dir', 'asc'));
                 $columnsConsulta = [
-                    0 => '', // columna para el checkbox (no ordenable)
+                    0 => null, // columna para checkbox, no ordenable
                     1 => 't2.nombre_cliente',
                     2 => 't5.nombre_sede',
-                    3 => 't1.reserva_cita',      // Aquí se encuentra la fecha de cita
+                    3 => 't1.reserva_cita',
                     4 => 't1.created_at',
                     5 => 'l.estado_liquidador',
-                    6 => '',
+                    6 => null,
                     7 => 's.valor_servicio_liquidador',
                     8 => 'l.pago_liquidador'
                 ];
+                $order_column = (!empty($columnsConsulta[$order_column_index]))
+                    ? $columnsConsulta[$order_column_index]
+                    : 't1.reserva_cita';
 
-
-                // Si el índice recibido no existe o corresponde a la columna vacía, forzamos a usar "t1.reserva_cita"
-                if (!isset($columnsConsulta[$order_column_index]) || $columnsConsulta[$order_column_index] == '') {
-                    $order_column = 't1.reserva_cita';
-                } else {
-                    $order_column = $columnsConsulta[$order_column_index];
-                }
-
-                // Asegurarse de que la dirección sea válida
-                $order_direction = ($order_direction === 'asc') ? 'ASC' : 'DESC';
-
-                // Rango por defecto: primer y último día del mes actual
+                // Fechas: si no se definen, se usan primer y último día del mes actual
                 $startOfMonth = date('Y-m-01');
                 $endOfMonth   = date('Y-m-t');
+                $fecha_inicio = (!empty($filtro_dia) && !empty($filtro_dia_end))
+                    ? $filtro_dia
+                    : $startOfMonth;
+                $fecha_fin = (!empty($filtro_dia) && !empty($filtro_dia_end))
+                    ? $filtro_dia_end
+                    : $endOfMonth;
 
-                // --------------------------------------
-                // 1) Consulta base para contar registros
-                // --------------------------------------
-                $sqlBase = "
-                                FROM tb_cita AS t1
-                                INNER JOIN tb_cliente AS t2
-                                    ON t1.id_cliente = t2.id_cliente
-                                INNER JOIN tb_estado AS t3
-                                    ON t1.id_estado = t3.id_estado
-                                INNER JOIN tb_estado AS t4
-                                    ON t1.id_estado_verificado = t4.id_estado
-                                INNER JOIN tb_sede   AS t5
-                                    ON t1.id_sede = t5.id_sede
-                                INNER JOIN tb_servicio AS t6
-                                    ON t5.id_servicio = t6.id_servicio
-                                LEFT JOIN tb_liquidador AS l
-                                    ON t1.id_cita = l.id_cita
-                                LEFT JOIN tb_vehiculo AS v
-                                    ON t1.id_vehiculo = v.id_vehiculo
-                                LEFT JOIN tb_servicio_liquidador AS s
-                                    ON t1.id_servicio_liquidador = s.id_servicio_liquidador
-                                WHERE t1.id_cita > 0
-                                AND t4.nombre_estado = 'Asistió'
-                            ";
+                // --- Construir la consulta base ---
+                $baseQuery = DB::table('tb_cita as t1')
+                    ->join('tb_cliente as t2', 't1.id_cliente', '=', 't2.id_cliente')
+                    ->join('tb_estado as t3', 't1.id_estado', '=', 't3.id_estado')
+                    ->join('tb_estado as t4', 't1.id_estado_verificado', '=', 't4.id_estado')
+                    ->join('tb_sede as t5', 't1.id_sede', '=', 't5.id_sede')
+                    ->join('tb_servicio as t6', 't5.id_servicio', '=', 't6.id_servicio')
+                    ->leftJoin('tb_liquidador as l', 't1.id_cita', '=', 'l.id_cita')
+                    ->leftJoin('tb_vehiculo as v', 't1.id_vehiculo', '=', 'v.id_vehiculo')
+                    ->leftJoin('tb_servicio_liquidador as s', 't1.id_servicio_liquidador', '=', 's.id_servicio_liquidador')
+                    ->select([
+                        't1.*',
+                        DB::raw('t1.created_at as fecha_create'),
+                        't2.nombre_cliente',
+                        't2.apellido_cliente',
+                        't2.doc_cliente',
+                        't2.tipo_doc_cliente',
+                        't2.telefono_cliente',
+                        't3.id_estado as estado_actual_id',
+                        't3.nombre_estado as estado_actual_nombre',
+                        't3.color_estado as estado_actual_color',
+                        't4.id_estado as estado_verificado_id',
+                        't4.nombre_estado as estado_verificado_nombre',
+                        't4.color_estado as estado_verificado_color',
+                        't5.nombre_sede',
+                        't5.id_servicio',
+                        't6.tipo_servicio',
+                        'l.id_liquidador',
+                        'l.estado_liquidador',
+                        'l.comentario_liquidador',
+                        'l.pago_liquidador',
+                        'v.id_vehiculo',
+                        'v.placa_vehiculo',
+                        'v.tipo_vehiculo',
+                        'v.modelo_vehiculo',
+                        's.id_servicio_liquidador',
+                        's.nombre_servicio_liquidador',
+                        's.valor_servicio_liquidador',
+                        's.color_servicio_liquidador'
+                    ])
+                    ->where('t1.id_cita', '>', 0)
+                    ->where('t4.nombre_estado', 'Asistió')
+                    ->whereBetween('t1.reserva_cita', [$fecha_inicio, $fecha_fin]);
 
-                // Filtro si el rol es 'gestorsede'
+                // --- Filtros por sede y empresa ---
                 if ($user->can('global.Solo ver sede asignada.v')) {
-                    $sqlBase .= " AND t5.id_sede = " . $user->id_sede;
+                    $baseQuery->where('t5.id_sede', $user->id_sede);
                 }
-
-                // Filtro de fechas
-                if (!empty($filtro_dia) && !empty($filtro_dia_end)) {
-                    $sqlBase .= " AND t1.reserva_cita BETWEEN '$filtro_dia' AND '$filtro_dia_end'";
-                    $fecha_inicio = $filtro_dia;
-                    $fecha_fin = $filtro_dia_end;
-                } else {
-                    // Por defecto, primer y último día del mes
-                    $fecha_inicio = $startOfMonth;
-                    $fecha_fin = $endOfMonth;
-                    $sqlBase .= " AND t1.reserva_cita BETWEEN '$startOfMonth' AND '$endOfMonth'";
-                }
-
-                // Filtro de sede
-                if (!empty($filtro_sede)) {
-                    $sqlBase .= " AND t5.id_sede = $filtro_sede";
-                }
-
-                // Filtro de servicio liquidador
-                if (!empty($filtro_servicio_liquidador)) {
-                    $sqlBase .= " AND t1.id_servicio_liquidador = $filtro_servicio_liquidador";
-                }
-
-                // Filtro de estado validacion liquidador
-                if (!empty($filtro_estado_validacion_liquidador)) {
-                    $sqlBase .= " AND l.estado_liquidador = '$filtro_estado_validacion_liquidador'";
-                }
-
-                // Filtro de estado pago liquidador
-                if (!empty($filtro_estado_pago_liquidador)) {
-                    $sqlBase .= " AND l.pago_liquidador = '$filtro_estado_pago_liquidador'";
-                }
-
-                // Filtro de búsqueda
-                if (!empty($filtro_search)) {
-                    // Eliminar espacios extra y dividir la búsqueda por espacios
-                    $palabras = preg_split('/\s+/', trim($filtro_search));
-
-                    foreach ($palabras as $palabra) {
-                        // Verificamos que la palabra no este vacía
-                        if (!empty($palabra)) {
-                            $sqlBase .= " AND (
-                                t2.nombre_cliente LIKE '%" . addslashes($palabra) . "%'
-                                OR t2.apellido_cliente LIKE '%" . addslashes($palabra) . "%'
-                                OR t2.doc_cliente LIKE '%" . addslashes($palabra) . "%'
-                                OR t2.telefono_cliente LIKE '%" . addslashes($palabra) . "%'
-                            )";
-                        }
+                if ($user->can('global.Pertenece a empresa aliada.v')) {
+                    $sede_usuario = DB::table('tb_sede')
+                        ->where('id_sede', $user->id_sede)
+                        ->first();
+                    if ($sede_usuario && isset($sede_usuario->id_empresa)) {
+                        $baseQuery->where('t5.id_empresa', $sede_usuario->id_empresa);
                     }
                 }
 
+                // --- Filtros personalizados adicionales ---
+                if (!empty($filtro_sede)) {
+                    $baseQuery->where('t5.id_sede', $filtro_sede);
+                }
+                if (!empty($filtro_servicio_liquidador)) {
+                    $baseQuery->where('t1.id_servicio_liquidador', $filtro_servicio_liquidador);
+                }
+                if (!empty($filtro_estado_validacion_liquidador)) {
+                    $baseQuery->where('l.estado_liquidador', $filtro_estado_validacion_liquidador);
+                }
+                if (!empty($filtro_estado_pago_liquidador)) {
+                    $baseQuery->where('l.pago_liquidador', $filtro_estado_pago_liquidador);
+                }
+                if (!empty($filtro_search)) {
+                    $palabras = preg_split('/\\s+/', trim($filtro_search));
+                    $baseQuery->where(function ($q) use ($palabras) {
+                        foreach ($palabras as $palabra) {
+                            if (!empty($palabra)) {
+                                $q->where(function ($sub) use ($palabra) {
+                                    $sub->where('t2.nombre_cliente', 'like', "%{$palabra}%")
+                                        ->orWhere('t2.apellido_cliente', 'like', "%{$palabra}%")
+                                        ->orWhere('t2.doc_cliente', 'like', "%{$palabra}%")
+                                        ->orWhere('t2.telefono_cliente', 'like', "%{$palabra}%");
+                                });
+                            }
+                        }
+                    });
+                }
                 if ($tipo_cita) {
-                    $sqlBase .= " AND t6.tipo_servicio = '$tipo_cita'";
+                    $baseQuery->where('t6.tipo_servicio', $tipo_cita);
                 }
 
-                // --------------------------------------
-                // 2) Consulta para contar total registros
-                // --------------------------------------
-                $sqlCount = "SELECT COUNT(*) as total " . $sqlBase;
-                $recordsTotal = DB::selectOne($sqlCount)->total;
+                // --- Obtener total filtrado ---
+                $recordsTotal = $baseQuery->count();
 
-                // --------------------------------------
-                // 3) Consulta para paginación
-                // --------------------------------------
-                $sqlData = "SELECT t1.*,
-                                t1.created_at AS fecha_create,
+                // Clonar la consulta base para obtener la data paginada
+                $pagedQuery = clone $baseQuery;
+                $dataResults = $pagedQuery
+                    ->orderByRaw("$order_column, t1.rango_horario, t1.id_sede $order_direction")
+                    ->offset($start)
+                    ->limit($length)
+                    ->get();
 
-                                t2.nombre_cliente,
-                                t2.apellido_cliente,
-                                t2.doc_cliente,
-                                t2.tipo_doc_cliente,
-                                t2.telefono_cliente,
 
-                                t3.id_estado        AS estado_actual_id,
-                                t3.nombre_estado    AS estado_actual_nombre,
-                                t3.color_estado     AS estado_actual_color,
+                // --- Consulta de totales/estadísticas ---
+                // Recontruimos la query para totales sin los SELECTs previos que causan conflicto con los agregados.
+                $totalsQuery = DB::table('tb_cita as t1')
+                    ->join('tb_sede as t5', 't1.id_sede', '=', 't5.id_sede')
+                    ->join('tb_estado as t4', 't1.id_estado_verificado', '=', 't4.id_estado')
+                    ->leftJoin('tb_liquidador as l', 't1.id_cita', '=', 'l.id_cita')
+                    ->leftJoin('tb_servicio_liquidador as s', 't1.id_servicio_liquidador', '=', 's.id_servicio_liquidador')
+                    ->where('t1.id_cita', '>', 0)
+                    ->where('t4.nombre_estado', 'Asistió')
+                    ->whereBetween('t1.reserva_cita', [$fecha_inicio, $fecha_fin]);
 
-                                t4.id_estado        AS estado_verificado_id,
-                                t4.nombre_estado    AS estado_verificado_nombre,
-                                t4.color_estado     AS estado_verificado_color,
+                // Aplicar los mismos filtros de sede y empresa
+                if ($user->can('global.Solo ver sede asignada.v')) {
+                    $totalsQuery->where('t1.id_sede', $user->id_sede);
+                }
+                if ($user->can('global.Pertenece a empresa aliada.v')) {
+                    if (isset($sede_usuario) && isset($sede_usuario->id_empresa)) {
+                        $totalsQuery->join('tb_sede as ts', 't1.id_sede', '=', 'ts.id_sede')
+                            ->where('ts.id_empresa', $sede_usuario->id_empresa);
+                    }
+                }
+                if (!empty($filtro_servicio_liquidador)) {
+                    $totalsQuery->where('t1.id_servicio_liquidador', $filtro_servicio_liquidador);
+                }
+                if (!empty($filtro_estado_validacion_liquidador)) {
+                    $totalsQuery->where('l.estado_liquidador', $filtro_estado_validacion_liquidador);
+                }
+                if (!empty($filtro_estado_pago_liquidador)) {
+                    $totalsQuery->where('l.pago_liquidador', $filtro_estado_pago_liquidador);
+                }
+                if ($tipo_cita) {
+                    $totalsQuery->join('tb_servicio as t6', 't5.id_servicio', '=', 't6.id_servicio')
+                        ->where('t6.tipo_servicio', $tipo_cita);
+                }
 
-                                t5.nombre_sede,
-                                t5.id_servicio,
+                $totals = $totalsQuery->selectRaw("
+                COALESCE(SUM(s.valor_servicio_liquidador), 0) as total_valor_a_liquidar,
+                COALESCE(SUM(CASE WHEN l.estado_liquidador = 'confirmado' THEN s.valor_servicio_liquidador ELSE 0 END), 0) as total_valor_liquidado,
+                SUM(CASE WHEN l.estado_liquidador = 'confirmado' THEN 1 ELSE 0 END) as total_confirmados,
+                SUM(CASE WHEN l.estado_liquidador = 'errado' THEN 1 ELSE 0 END) as total_errados,
+                SUM(CASE WHEN l.estado_liquidador = 'pendiente' THEN 1 ELSE 0 END) as total_pendientes,
+                SUM(CASE WHEN l.estado_liquidador = 'en validación' THEN 1 ELSE 0 END) as total_validacion,
+                SUM(CASE WHEN l.pago_liquidador = 'pendiente' THEN 1 ELSE 0 END) as total_pago_pendiente,
+                SUM(CASE WHEN l.pago_liquidador = 'pagado' THEN 1 ELSE 0 END) as total_pago_pagado
+            ")->first();
 
-                                t6.tipo_servicio,
-
-                                l.id_liquidador,
-                                l.estado_liquidador,
-                                l.comentario_liquidador,
-                                l.pago_liquidador,
-
-                                v.id_vehiculo,
-                                v.placa_vehiculo,
-                                v.tipo_vehiculo,
-                                v.modelo_vehiculo,
-
-                                s.id_servicio_liquidador,
-                                s.nombre_servicio_liquidador,
-                                s.valor_servicio_liquidador,
-                                s.color_servicio_liquidador,
-
-                                (SELECT COUNT(*)
-                                    FROM tb_seguimiento AS ts
-                                    WHERE ts.id_cita = t1.id_cita) AS total_anotaciones
-                            " . $sqlBase . "
-                            ORDER BY $order_column, t1.rango_horario, t1.id_sede $order_direction
-                            LIMIT " . (int)$start . ", " . (int)$length;
-
-                log::info($sqlData);
-                $data = DB::select($sqlData);
-
-                // --------------------------------------
-                // 4) Consulta de totales/estadísticas
-                //    (sin limit/offset)
-                // --------------------------------------
-                $sqlTotals = "
-                                SELECT
-                                    COALESCE(SUM(s.valor_servicio_liquidador), 0) AS total_valor_a_liquidar,
-                                    COALESCE(SUM(
-                                        CASE WHEN l.estado_liquidador = 'confirmado'
-                                            THEN s.valor_servicio_liquidador
-                                            ELSE 0 END
-                                    ), 0) AS total_valor_liquidado,
-
-                                    -- conteo de estado_liquidador
-                                    SUM(CASE WHEN l.estado_liquidador = 'confirmado' THEN 1 ELSE 0 END) AS total_confirmados,
-                                    SUM(CASE WHEN l.estado_liquidador = 'errado'     THEN 1 ELSE 0 END) AS total_errados,
-                                    SUM(CASE WHEN l.estado_liquidador = 'pendiente'  THEN 1 ELSE 0 END) AS total_pendientes,
-                                    SUM(CASE WHEN l.estado_liquidador = 'en validación'  THEN 1 ELSE 0 END) AS total_validacion,
-
-                                    -- conteo de pago_liquidador
-                                    SUM(CASE WHEN l.pago_liquidador = 'pendiente' THEN 1 ELSE 0 END) AS total_pago_pendiente,
-                                    SUM(CASE WHEN l.pago_liquidador = 'pagado'    THEN 1 ELSE 0 END) AS total_pago_pagado
-                            " . $sqlBase;
-
-                $totals = DB::selectOne($sqlTotals);
-
-                // --------------------------------------
-                // 5) Estructura de respuesta final
-                // --------------------------------------
                 $objLoad = [
-                    "draw"            => $draw,
-                    "recordsTotal"    => $recordsTotal,
+                    "draw" => intval($draw),
+                    "recordsTotal" => $recordsTotal,
                     "recordsFiltered" => $recordsTotal,
-                    "data"            => $data,
-                    "validate"        => true,
-                    "extra"           => [
-                        "fecha_inicio"           => $fecha_inicio,
-                        "fecha_fin"              => $fecha_fin,
+                    "data" => $dataResults,
+                    "validate" => true,
+                    "extra" => [
+                        "fecha_inicio" => $fecha_inicio,
+                        "fecha_fin" => $fecha_fin,
                         "total_valor_a_liquidar" => $totals->total_valor_a_liquidar,
                         "total_valor_liquidado"  => $totals->total_valor_liquidado,
                         "total_confirmados"      => $totals->total_confirmados,
@@ -1756,10 +1740,12 @@ class CitasController extends Controller
                 Log::error($e->getMessage());
                 $objLoad['text'] = 'Error al obtener los datos';
             }
-            //retornar respuesta
+
             return response()->json($objLoad);
         }
     }
+
+
 
     //Cambiamos estado
     public function change_servicio_liquidador(Request $request)
@@ -1950,8 +1936,7 @@ class CitasController extends Controller
                     throw new \Exception('Todos los campos son requeridos');
                 }
 
-                // Obtener la hora actual y restar 5 horas para ajustar a la hora UTC de Bogotá
-                $now = Carbon::now()->subHours(5);
+                $now = Carbon::now();
 
                 // Insertar la nueva anotación en la base de datos
                 DB::table('tb_seguimiento')->insert([

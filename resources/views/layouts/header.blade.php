@@ -33,8 +33,13 @@
     <link rel="stylesheet" href="{{url('assets/vendor/libs/flatpickr/flatpickr.css')}}" />
     <link rel="stylesheet" href="{{url('assets/vendor/libs/apex-charts/apex-charts.css')}}" />
     <link rel="stylesheet" href="{{url('assets/vendor/libs/tagify/tagify.css')}}" />
+    <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet">
     <link rel="stylesheet" href="{{url('assets/css/style.css')}}" />
+    <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet">
+    <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+
     <script src="{{url('assets/vendor/js/helpers.js')}}"></script>
+    <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
     <script src="{{url('assets/js/config.js')}}"></script>
     <script>
         url = '<?= url('') ?>'

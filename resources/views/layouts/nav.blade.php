@@ -183,6 +183,14 @@
                             </a>
                         </li>
                     <?php } ?>
+                    <?php if ($user->can('empresa.listado.v')) { ?>
+                        <li class="menu-item <?= ($page == 'Configuracion' && $subpage == 'Empresa') ? 'active' : '' ?>">
+                            <a href="{{ url('dashboard/empresas') }}" class="menu-link">
+                                <div>Empresas</div>
+                            </a>
+                        </li>
+                    <?php } ?>
+
                 </ul>
             </li>
         <?php

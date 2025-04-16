@@ -89,7 +89,7 @@
                 </div>
                 <div class="mb-4 col-6">
                     <label class="form-label">Número de documento <span class="required_flied">*</span></label>
-                    <input type="text" class="form-control" name="doc_cliente" required>
+                    <input type="text" class="form-control" name="doc_cliente" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                 </div>
                 <div class="mb-4 col-12 col-md-6">
                     <label class="form-label">Numero de Comparendo <span class="required_flied">*</span></label>

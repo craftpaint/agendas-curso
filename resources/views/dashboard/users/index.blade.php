@@ -44,14 +44,18 @@
                                 <label class="form-label">Rol <span class="required_flied">*</span></label>
                                 <select class="form-select" id="rol-user" required name="role">
                                     <option value="">Seleccionar rol</option>
-                                    <?php if ($rol == 'superadmin') { ?>
-                                        <option value="superadmin">Super administrador</option>
-                                        <option value="admin">Administrador</option>
-                                    <?php } ?>
-                                    <option value="lidercallcenter">Lider Call Center</option>
-                                    <option value="gestorsede">Gestor sede</option>
-                                    <option value="callcenter">Call center</option>
-                                    <option value="liquidador">Liquidador</option>
+                                    <?php if ($roles->isNotEmpty()) { ?>
+                                        <?php foreach ($roles as $role) {
+                                            if ($role->name == 'superadmin' || $role->name == 'admin') {
+                                                if ($user->can('permissions.administrar.e')) { ?>
+                                                    <option value="<?= $role->name ?>"><?= $role->name ?></option>
+                                                <?php }
+                                            } else { ?>
+                                                <option value="<?= $role->name ?>"><?= $role->name ?></option>
+
+                                    <?php }
+                                        }
+                                    } ?>
                                 </select>
                             </div>
                             <div class="col-3 mb-4" id="contenedor-habilitar-call" style="display:none">
@@ -102,14 +106,18 @@
                                 <label class="form-label">Rol <span class="required_flied">*</span></label>
                                 <select class="form-select" id="rol-user-edit" required name="role">
                                     <option value="">Seleccionar rol</option>
-                                    <?php if ($rol == 'superadmin') { ?>
-                                        <option value="superadmin">Super administrador</option>
-                                        <option value="admin">Administrador</option>
-                                    <?php } ?>
-                                    <option value="lidercallcenter">Lider Call Center</option>
-                                    <option value="gestorsede">Gestor sede</option>
-                                    <option value="callcenter">Call center</option>
-                                    <option value="liquidador">Liquidador</option>
+                                    <?php if ($roles->isNotEmpty()) {
+                                        foreach ($roles as $role) {
+                                            if ($role->name == 'superadmin' || $role->name == 'admin') {
+                                                if ($user->can('permissions.administrar.e')) { ?>
+                                                    <option <?= ($rol == $role->name) ? 'selected' : '' ?> value="<?= $role->name ?>"><?= $role->name ?></option>
+                                                <?php }
+                                            } else { ?>
+                                                <option <?= ($rol == $role->name) ? 'selected' : '' ?> value="<?= $role->name ?>"><?= $role->name ?></option>
+
+                                    <?php }
+                                        }
+                                    } ?>
                                 </select>
                             </div>
                             <div class="col-3 mb-4" id="contenedor-habilitar-call-edit" style="display:none">
