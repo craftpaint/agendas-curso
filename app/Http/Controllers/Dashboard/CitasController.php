@@ -2256,204 +2256,117 @@ class CitasController extends Controller
                 'validate' => false,
                 'text' => 'Error al borrar el estado'
             ];
+            
             try {
                 $user = Auth::user();
-                $start = $request->request->get('start');
-                $length = 100;
+                $filtros = $request->input();
 
-                // Filtros personalizados
-                $filtro_dia      = $request->input('filtro_dia');
-                $filtro_dia_end  = $request->input('filtro_dia_end');
-                $filtro_sede     = $request->input('filtro_sede');
-                $filtro_search   = $request->input('filtro_search');
-                $filtro_servicio_liquidador = $request->input('filtro_servicios_liquidador');
-                $filtro_estado_validacion_liquidador = $request->input('filtro_estado_validacion_liquidador');
-                $filtro_estado_pago_liquidador = $request->input('filtro_estado_pago_liquidador');
-                $tipo_cita = $request->input('tipo_cita');
                 $fecha_actual = date('Y-m-d');
                 // Rango por defecto: primer y último día del mes actual
                 $startOfMonth = date('Y-m-01');
                 $endOfMonth   = date('Y-m-t');
                 // Construcción de la consulta
 
-                // Log::info($request);
-                // --------------------------------------
-                // 1) Consulta base para contar registros
-                // --------------------------------------
-                $sqlBase = "
-                                FROM tb_cita AS t1
-                                INNER JOIN tb_cliente AS t2
-                                    ON t1.id_cliente = t2.id_cliente
-                                INNER JOIN tb_estado AS t3
-                                    ON t1.id_estado = t3.id_estado
-                                INNER JOIN tb_estado AS t4
-                                    ON t1.id_estado_verificado = t4.id_estado
-                                INNER JOIN tb_sede   AS t5
-                                    ON t1.id_sede = t5.id_sede
-                                INNER JOIN tb_servicio AS t6
-                                    ON t5.id_servicio = t6.id_servicio
-                                LEFT JOIN tb_liquidador AS l
-                                    ON t1.id_cita = l.id_cita
-                                LEFT JOIN tb_vehiculo AS v
-                                    ON t1.id_vehiculo = v.id_vehiculo
-                                LEFT JOIN tb_servicio_liquidador AS s
-                                    ON t1.id_servicio_liquidador = s.id_servicio_liquidador
-                                WHERE t1.id_cita > 0
-                                AND t4.nombre_estado = 'Asistió'
-                            ";
+                //Construcción de la consulta
+                $query = $this->liquidadorconsultaBD((int)$filtros['start']);
 
                 // Filtro si el rol es 'gestorsede'
                 if ($user->can('global.Solo ver sede asignada.v')) {
-                    $sqlBase .= " AND t5.id_sede = " . $user->id_sede;
+                    $query->where('t5.id_sede', $user->id_sede);
                 }
 
                 // Filtro de fechas
-                if (!empty($filtro_dia) && !empty($filtro_dia_end)) {
-                    $sqlBase .= " AND t1.reserva_cita BETWEEN '$filtro_dia' AND '$filtro_dia_end'";
-                    $dateNomArchivo = $filtro_dia . "-" . $filtro_dia_end;
+                if (!empty($filtros['filtro_dia']) && !empty($filtros['filtro_dia_end'])) {
+                    $query->whereBetween('t1.reserva_cita', [$filtros['filtro_dia'], $filtros['filtro_dia_end']]);
+                    $dateNomArchivo = $filtros['filtro_dia'] . "-" . $filtros['filtro_dia_end'];
                 } else {
                     // Por defecto, primer y último día del mes
-                    $sqlBase .= " AND t1.reserva_cita BETWEEN '$startOfMonth' AND '$endOfMonth'";
+                    $query->whereBetween('t1.reserva_cita', [$startOfMonth, $endOfMonth]);
                     $dateNomArchivo = $startOfMonth . "-" . $endOfMonth;
                 }
 
                 // Filtro de sede
-                if (!empty($filtro_sede)) {
-                    $sqlBase .= " AND t5.id_sede = $filtro_sede";
+                if (!empty($filtros['filtro_sede'])) {
+                    $query->where('t5.id_sede', $filtro_sede);
                 }
 
                 // Filtro de servicio liquidador
-                if (!empty($filtro_servicio_liquidador)) {
-                    $sqlBase .= " AND t1.id_servicio_liquidador = $filtro_servicio_liquidador";
-                    // log::info($filtro_servicio_liquidador . " - Si pasa");
+                if (!empty($filtros['filtro_servicio_liquidador'])) {
+                    $query->where('t1.id_servicio_liquidador', $filtro_servicio_liquidador);
                 }
 
                 // Filtro de estado validacion liquidador
-                if (!empty($filtro_estado_validacion_liquidador)) {
-                    $sqlBase .= " AND l.estado_liquidador = '$filtro_estado_validacion_liquidador'";
-                    // log::info($filtro_estado_validacion_liquidador . " - Si pasa");
+                if (!empty($filtros['filtro_estado_validacion_liquidador'])) {
+                    $query->where('l.estado_liquidador', $filtros['filtro_estado_validacion_liquidador']);
                 }
 
                 // Filtro de estado pago liquidador
-                if (!empty($filtro_estado_pago_liquidador)) {
-                    $sqlBase .= " AND l.pago_liquidador = '$filtro_estado_pago_liquidador'";
-                    // log::info($filtro_estado_pago_liquidador . " - Si pasa");
+                if (!empty($filtros['filtro_estado_pago_liquidador'])) {
+                    $query->where('l.pago_liquidador', $filtros['filtro_estado_pago_liquidador']);
                 }
 
                 // Filtro de búsqueda
-                if (!empty($filtro_search)) {
-                    $sqlBase .= "
-                AND (
-                    t2.nombre_cliente   LIKE '%$filtro_search%' OR
-                    t2.apellido_cliente LIKE '%$filtro_search%' OR
-                    t2.doc_cliente      LIKE '%$filtro_search%' OR
-                    t2.telefono_cliente LIKE '%$filtro_search%'
-                )";
+                if (!empty($filtros['filtro_search'])) {
+                    $query->where(function($q) use ($filtro_search) {
+                        $searchTerm = '%' . $filtro_search . '%';
+                        $q->where('t2.nombre_cliente', 'LIKE', $searchTerm)
+                        ->orWhere('t2.apellido_cliente', 'LIKE', $searchTerm)
+                        ->orWhere('t2.doc_cliente', 'LIKE', $searchTerm)
+                        ->orWhere('t2.telefono_cliente', 'LIKE', $searchTerm);
+                    });
                 }
 
-                if ($tipo_cita) {
-                    $sqlBase .= " AND t6.tipo_servicio = '$tipo_cita'";
+                if ($filtros['tipo_cita']) {
+                    $query->where('t6.tipo_servicio', $filtros['tipo_cita']);
                 }
 
-                // --------------------------------------
-                // 3) Consulta para paginación
-                // --------------------------------------
-                $sqlData = "SELECT t1.*,
-                                t1.created_at AS fecha_create,
+                //Ejecuta la consulta
+                $records =  $query->get();
 
-                                t2.nombre_cliente,
-                                t2.apellido_cliente,
-                                t2.doc_cliente,
-                                t2.tipo_doc_cliente,
-                                t2.telefono_cliente,
-                                t2.email_cliente,
-                                t2.desc_cliente,
-
-                                t3.id_estado        AS estado_actual_id,
-                                t3.nombre_estado    AS estado_actual_nombre,
-                                t3.color_estado     AS estado_actual_color,
-
-                                t4.id_estado        AS estado_verificado_id,
-                                t4.nombre_estado    AS estado_verificado_nombre,
-                                t4.color_estado     AS estado_verificado_color,
-                                t4.desc_estado      AS estado_verificado_desc,
-
-                                t5.nombre_sede,
-                                t5.direccion_sede,
-                                t5.tel_sede,
-                                t5.estado_sede,
-
-                                t6.tipo_servicio,
-
-                                l.id_liquidador,
-                                l.estado_liquidador,
-                                l.comentario_liquidador,
-                                l.pago_liquidador,
-
-                                v.id_vehiculo,
-                                v.placa_vehiculo,
-                                v.tipo_vehiculo,
-                                v.modelo_vehiculo,
-
-                                s.id_servicio_liquidador,
-                                s.nombre_servicio_liquidador,
-                                s.valor_servicio_liquidador,
-                                s.color_servicio_liquidador
-                            " . $sqlBase . "
-                            ORDER BY t1.reserva_cita, t1.rango_horario, t1.id_sede ASC
-                            LIMIT " . (int)$start . ", " . (int)$length;
-
-                // Log::info($sqlData);
-                // Limitar registros por página
-                $records =  DB::select($sqlData);
                 if (empty($records)) {
                     return response()->json([
                         'status' => 'completed',
-                        'url' => url('data/export-liquidador-' . $dateNomArchivo . '.csv')
+                        'url' => url('data/export-liquidador-' . $dateNomArchivo . '.xlsx')
                     ]);
                 }
+
                 // Ruta y apertura del archivo CSV en la carpeta public/data
-                $filePath = 'public_html/data/export-liquidador-' . $dateNomArchivo . '.csv';
+                $filePath = 'public_html/data/export-liquidador-' . $dateNomArchivo . '.xlsx';
                 $fullPath = base_path($filePath);
+
                 // Crear la carpeta 'data' si no existe
                 if (!file_exists(base_path('public_html/data'))) {
                     mkdir(base_path('public_html/data'), 0777, true);
                 }
-                $file = fopen($fullPath, $start == 0 ? 'w' : 'a');
-                if ($start == 0) {
-                    // 1) Escribir BOM para que Excel reconozca UTF-8
-                    fwrite($file, chr(239) . chr(187) . chr(191));
-                    // 2) Forzar a Excel a usar ';' como separador de columnas
-                    fwrite($file, "sep=;\n");
-                    // Encabezados en la primera escritura
-                    fputcsv($file, [
-                        'ID Cita',
-                        'Cliente',
-                        'Estado',
-                        'Sede',
-                        'Horario',
-                        'Fecha de Reserva',
-                        'Descripción',
-                        'Fecha Creación',
-                        'Tipo Documento',
-                        'Documento Cliente',
-                        'Teléfono Cliente',
-                        'Email Cliente',
-                        'Estado Liquidador',
-                        'Tipo Servicio',
-                        'Costo',
-                        'Comentario Liquidador',
-                        'Placa Vehiculo',
-                        'tipo Vehiculo',
-                        'Modelo Vehiculo',
-                        'Creado Por',
-                        'Origen',
-                        'Url Variables',
-                        'Tipo dispositivo'
-                    ], ';');
-                }
+                    
+                $headers = [
+                    'ID Cita',
+                    'Cliente',
+                    'Estado',
+                    'Sede',
+                    'Horario',
+                    'Fecha de Reserva',
+                    'Descripción',
+                    'Fecha Creación',
+                    'Tipo Documento',
+                    'Documento Cliente',
+                    'Teléfono Cliente',
+                    'Email Cliente',
+                    'Estado Liquidador',
+                    'Tipo Servicio',
+                    'Costo',
+                    'Comentario Liquidador',
+                    'Placa Vehiculo',
+                    'tipo Vehiculo',
+                    'Modelo Vehiculo',
+                    'Creado Por',
+                    'Origen',
+                    'Url Variables',
+                    'Tipo dispositivo'
+                ];
+
                 foreach ($records as $record) {
-                    fputcsv($file, [
+                    $data =  [
                         $record->id_cita,
                         $record->nombre_cliente . ' ' . $record->apellido_cliente,
                         $record->estado_verificado_nombre,
@@ -2477,21 +2390,89 @@ class CitasController extends Controller
                         $record->origen,
                         $record->url_variables,
                         $record->tipo_dispositivo,
-                    ], ';');
+                    ];
+                    $rows_records[] = $data;
                 }
-                fclose($file);
-                if (empty($records)) {
-                    // Si ya se terminó de procesar, se puede retornar una respuesta de descarga
-                    return response()->download($fullPath, 'export-liquidador-' . $dateNomArchivo . '.csv', [
-                        'Content-Type' => 'text/csv; charset=UTF-8',
-                        'Content-Disposition' => 'attachment; filename="export-liquidador-' . $dateNomArchivo . '.csv"'
+
+                //CONVERSIÓN A COLECCIÓN
+                $convertedRecords = [];
+                foreach ($rows_records as $record) {
+                    $data = (array) $record;
+                    foreach ($data as $key => $value) {
+                        $data[$key] = is_object($value) || is_array($value) ? json_encode($value) : $value;
+                    }
+                    $convertedRecords[] = $data;
+                }
+
+                $collection = collect($convertedRecords);
+
+                if (!empty($collection)) {
+                    $excelName = 'export-liquidador-' . $dateNomArchivo . '.xlsx';
+                    $this->exportarExcel($excelName, $collection, $headers);
+
+                    return response()->json([
+                        'status' => 'completed',
+                        'url' => url('data/export-liquidador-' . $dateNomArchivo . '.xlsx')
                     ]);
                 }
-                return response()->json(['status' => 'in_progress', 'nextStart' => $start + $length]);
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
             return response()->json($objLoad);
         }
+    }
+
+    public function liquidadorconsultaBD ($start) {
+        return  DB::table('tb_cita as t1')
+    ->select([
+        't1.*',
+        't1.created_at as fecha_create',
+        't2.nombre_cliente',
+        't2.apellido_cliente',
+        't2.doc_cliente',
+        't2.tipo_doc_cliente',
+        't2.telefono_cliente',
+        't2.email_cliente',
+        't2.desc_cliente',
+        't3.id_estado as estado_actual_id',
+        't3.nombre_estado as estado_actual_nombre',
+        't3.color_estado as estado_actual_color',
+        't4.id_estado as estado_verificado_id',
+        't4.nombre_estado as estado_verificado_nombre',
+        't4.color_estado as estado_verificado_color',
+        't4.desc_estado as estado_verificado_desc',
+        't5.nombre_sede',
+        't5.direccion_sede',
+        't5.tel_sede',
+        't5.estado_sede',
+        't6.tipo_servicio',
+        'l.id_liquidador',
+        'l.estado_liquidador',
+        'l.comentario_liquidador',
+        'l.pago_liquidador',
+        'v.id_vehiculo',
+        'v.placa_vehiculo',
+        'v.tipo_vehiculo',
+        'v.modelo_vehiculo',
+        's.id_servicio_liquidador',
+        's.nombre_servicio_liquidador',
+        's.valor_servicio_liquidador',
+        's.color_servicio_liquidador'
+    ])
+    ->join('tb_cliente as t2', 't1.id_cliente', '=', 't2.id_cliente')
+    ->join('tb_estado as t3', 't1.id_estado', '=', 't3.id_estado')
+    ->join('tb_estado as t4', 't1.id_estado_verificado', '=', 't4.id_estado')
+    ->join('tb_sede as t5', 't1.id_sede', '=', 't5.id_sede')
+    ->join('tb_servicio as t6', 't5.id_servicio', '=', 't6.id_servicio')
+    ->leftJoin('tb_liquidador as l', 't1.id_cita', '=', 'l.id_cita')
+    ->leftJoin('tb_vehiculo as v', 't1.id_vehiculo', '=', 'v.id_vehiculo')
+    ->leftJoin('tb_servicio_liquidador as s', 't1.id_servicio_liquidador', '=', 's.id_servicio_liquidador')
+    ->where('t1.id_cita', '>', 0)
+    ->where('t4.nombre_estado', 'Asistió')
+    ->orderBy('t1.reserva_cita')
+    ->orderBy('t1.rango_horario')
+    ->orderBy('t1.id_sede')
+    ->skip($start)
+    ->take(100);
     }
 }
