@@ -1042,7 +1042,7 @@ class CitasController extends Controller
                 $startOfMonth = date('Y-m-01');
                 $endOfMonth   = date('Y-m-t');
 
-                $query = $this->citasconsultarBD((int)$filtros['start']);
+                $query = $this->citasconsultaDB();
 
                 // --------------------------------------
                 // 1) Construcción de la consulta base (SQL directo)
@@ -1219,7 +1219,7 @@ class CitasController extends Controller
         }
     }
 
-    public function citasconsultarBD($start) {
+    public function citasconsultaDB() {
         return DB::table('tb_cita as t1')
         ->select([
             't1.*',
@@ -1273,9 +1273,7 @@ class CitasController extends Controller
         ->where('t1.id_cita', '>', 0)
         ->orderBy('t1.reserva_cita')
         ->orderBy('t1.rango_horario')
-        ->orderBy('t1.id_sede')
-        ->skip((int)$start)
-        ->take(100);
+        ->orderBy('t1.id_sede');
     }
 
     public function exportarExcel($name, $data, $headers) {
@@ -2268,7 +2266,7 @@ class CitasController extends Controller
                 // Construcción de la consulta
 
                 //Construcción de la consulta
-                $query = $this->liquidadorconsultaBD((int)$filtros['start']);
+                $query = $this->liquidadorconsultaDB();
 
                 // Filtro si el rol es 'gestorsede'
                 if ($user->can('global.Solo ver sede asignada.v')) {
@@ -2422,57 +2420,55 @@ class CitasController extends Controller
         }
     }
 
-    public function liquidadorconsultaBD ($start) {
+    public function liquidadorconsultaBD () {
         return  DB::table('tb_cita as t1')
-    ->select([
-        't1.*',
-        't1.created_at as fecha_create',
-        't2.nombre_cliente',
-        't2.apellido_cliente',
-        't2.doc_cliente',
-        't2.tipo_doc_cliente',
-        't2.telefono_cliente',
-        't2.email_cliente',
-        't2.desc_cliente',
-        't3.id_estado as estado_actual_id',
-        't3.nombre_estado as estado_actual_nombre',
-        't3.color_estado as estado_actual_color',
-        't4.id_estado as estado_verificado_id',
-        't4.nombre_estado as estado_verificado_nombre',
-        't4.color_estado as estado_verificado_color',
-        't4.desc_estado as estado_verificado_desc',
-        't5.nombre_sede',
-        't5.direccion_sede',
-        't5.tel_sede',
-        't5.estado_sede',
-        't6.tipo_servicio',
-        'l.id_liquidador',
-        'l.estado_liquidador',
-        'l.comentario_liquidador',
-        'l.pago_liquidador',
-        'v.id_vehiculo',
-        'v.placa_vehiculo',
-        'v.tipo_vehiculo',
-        'v.modelo_vehiculo',
-        's.id_servicio_liquidador',
-        's.nombre_servicio_liquidador',
-        's.valor_servicio_liquidador',
-        's.color_servicio_liquidador'
-    ])
-    ->join('tb_cliente as t2', 't1.id_cliente', '=', 't2.id_cliente')
-    ->join('tb_estado as t3', 't1.id_estado', '=', 't3.id_estado')
-    ->join('tb_estado as t4', 't1.id_estado_verificado', '=', 't4.id_estado')
-    ->join('tb_sede as t5', 't1.id_sede', '=', 't5.id_sede')
-    ->join('tb_servicio as t6', 't5.id_servicio', '=', 't6.id_servicio')
-    ->leftJoin('tb_liquidador as l', 't1.id_cita', '=', 'l.id_cita')
-    ->leftJoin('tb_vehiculo as v', 't1.id_vehiculo', '=', 'v.id_vehiculo')
-    ->leftJoin('tb_servicio_liquidador as s', 't1.id_servicio_liquidador', '=', 's.id_servicio_liquidador')
-    ->where('t1.id_cita', '>', 0)
-    ->where('t4.nombre_estado', 'Asistió')
-    ->orderBy('t1.reserva_cita')
-    ->orderBy('t1.rango_horario')
-    ->orderBy('t1.id_sede')
-    ->skip($start)
-    ->take(100);
+            ->select([
+                't1.*',
+                't1.created_at as fecha_create',
+                't2.nombre_cliente',
+                't2.apellido_cliente',
+                't2.doc_cliente',
+                't2.tipo_doc_cliente',
+                't2.telefono_cliente',
+                't2.email_cliente',
+                't2.desc_cliente',
+                't3.id_estado as estado_actual_id',
+                't3.nombre_estado as estado_actual_nombre',
+                't3.color_estado as estado_actual_color',
+                't4.id_estado as estado_verificado_id',
+                't4.nombre_estado as estado_verificado_nombre',
+                't4.color_estado as estado_verificado_color',
+                't4.desc_estado as estado_verificado_desc',
+                't5.nombre_sede',
+                't5.direccion_sede',
+                't5.tel_sede',
+                't5.estado_sede',
+                't6.tipo_servicio',
+                'l.id_liquidador',
+                'l.estado_liquidador',
+                'l.comentario_liquidador',
+                'l.pago_liquidador',
+                'v.id_vehiculo',
+                'v.placa_vehiculo',
+                'v.tipo_vehiculo',
+                'v.modelo_vehiculo',
+                's.id_servicio_liquidador',
+                's.nombre_servicio_liquidador',
+                's.valor_servicio_liquidador',
+                's.color_servicio_liquidador'
+            ])
+            ->join('tb_cliente as t2', 't1.id_cliente', '=', 't2.id_cliente')
+            ->join('tb_estado as t3', 't1.id_estado', '=', 't3.id_estado')
+            ->join('tb_estado as t4', 't1.id_estado_verificado', '=', 't4.id_estado')
+            ->join('tb_sede as t5', 't1.id_sede', '=', 't5.id_sede')
+            ->join('tb_servicio as t6', 't5.id_servicio', '=', 't6.id_servicio')
+            ->leftJoin('tb_liquidador as l', 't1.id_cita', '=', 'l.id_cita')
+            ->leftJoin('tb_vehiculo as v', 't1.id_vehiculo', '=', 'v.id_vehiculo')
+            ->leftJoin('tb_servicio_liquidador as s', 't1.id_servicio_liquidador', '=', 's.id_servicio_liquidador')
+            ->where('t1.id_cita', '>', 0)
+            ->where('t4.nombre_estado', 'Asistió')
+            ->orderBy('t1.reserva_cita')
+            ->orderBy('t1.rango_horario')
+            ->orderBy('t1.id_sede');
     }
 }
