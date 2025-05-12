@@ -53,7 +53,7 @@
                 </div>
                 <div class="mb-6 col-12 col-md-6">
                     <label class="form-label">Franja horaria <span class="required_flied">*</span></label>
-                    <select id="citaHora" class="form-select select2" required name="id_sede_horario" disabled>
+                    <select class="form-select select2" required name="id_sede_horario" disabled>
                         <option value="">Seleccionar horario</option>
                     </select>
                 </div>
@@ -90,6 +90,8 @@
                 <div class="mb-4 col-6">
                     <label class="form-label">Número de documento <span class="required_flied">*</span></label>
                     <input type="text" class="form-control" name="doc_cliente" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                </div>
+                <div class="resultadoCitas">
                 </div>
                 <div class="mb-4 col-12 col-md-6">
                     <label class="form-label">Numero de Comparendo <span class="required_flied">*</span></label>
