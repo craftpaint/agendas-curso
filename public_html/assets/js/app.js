@@ -2387,7 +2387,7 @@ $(function () {
             const el = document.querySelector(sel);
             if (!el) return null;
             return new ApexCharts(el, {
-                chart: { type: 'area', height: 250, stacked: false },
+                chart: { type: 'line', height: 350, stacked: false },
                 series: [],
                 xaxis: { categories: [] },
                 stroke: { curve: 'smooth', width: 2 },
@@ -2408,20 +2408,51 @@ $(function () {
 
         function fetchAndRender(cfg) {
             const r = +$('#select-rango-fechas-estadisticas').val();
-            const fecha = $('#datePicker').val();
-            const days = r === 1 ? 6
-                : r === 2 ? 13
-                    : r === 3 ? moment(fecha).daysInMonth() - 1
-                        : 89;
+            const fecha = $('#datePicker').val();         // ej: "2025-05-12"
+            const m = moment(fecha, 'YYYY-MM-DD');
+
+            let startMoment, rangeDays;
+
+            switch (r) {
+                case 1: // Semana actual: lunes → domingo
+                    startMoment = m.clone().startOf('isoWeek');
+                    rangeDays = 6;
+                    break;
+
+                case 2: // Últimas 2 semanas: lunes semana anterior → domingo semana actual
+                    startMoment = m.clone().startOf('isoWeek').subtract(7, 'days');
+                    rangeDays = 13;
+                    break;
+
+                case 3: // Mes actual: 1ro mes → fin mes
+                    startMoment = m.clone().startOf('month');
+                    rangeDays = startMoment.daysInMonth() - 1;
+                    break;
+
+                case 4: // Trimestre: primer día del mes -2 meses → fin del mes actual
+                    startMoment = m.clone().startOf('month').subtract(2, 'months');
+                    // diferencia en días entre start y fin de mes actual
+                    const endOfCurrent = m.clone().endOf('month');
+                    rangeDays = endOfCurrent.diff(startMoment, 'days');
+                    break;
+
+                default:
+                    startMoment = m.clone().startOf('isoWeek');
+                    rangeDays = 6;
+            }
+
+            const start_date = startMoment.format('YYYY-MM-DD');
+            const end_date = startMoment.clone().add(rangeDays, 'days').format('YYYY-MM-DD');
             const selectedEstados = $('#filter-estados').val() || [];
 
-            let fecha_fin = moment(fecha).add(days, 'days').format('YYYY-MM-DD');
-            let rango = fecha + ' - ' + fecha_fin;
+            // para mostrar rango en el UI
+            $('#ConTextRangoFechas').text(`${start_date} — ${end_date}`);
+
             const params = {
-                start_date: fecha,
-                rangeDays: days,
+                start_date,
+                rangeDays: rangeDays,
                 date_field: cfg.dateField,
-                estados: selectedEstados,
+                estados: selectedEstados
             };
             if (cfg.agentId) params.agent_id = cfg.agentId;
 
