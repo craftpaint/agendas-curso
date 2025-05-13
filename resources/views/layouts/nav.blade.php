@@ -141,7 +141,7 @@
         <?php
         }
         // Módulo estadísticas: se muestra si el usuario tiene permiso para ver el panel de estadísticas (ej. "estadisticas.panel1.v")
-        if ($user->can('estadisticas.panel1.v')) {
+        if ($user->can('estadisticas.panel1.v') || $user->can('estadisticas.panel2.v')) {
         ?>
             <li class="menu-item <?= ($page == 'Estadisticas') ? 'active open' : '' ?>">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
@@ -150,12 +150,30 @@
                     <?= ($alert > 0) ? '<div class="badge bg-danger rounded-pill ms-auto">' . $alert . '</div>' : '' ?>
                 </a>
                 <ul class="menu-sub">
-                    <li class="menu-item <?= ($page == 'Estadisticas' && $subpage == 'Global') ? 'active' : '' ?>">
-                        <a href="{{ url('dashboard/estadisticas') }}" class="menu-link">
-                            <i class="menu-icon tf-icons ti ti-chart-histogram"></i>
-                            <div>Fechas - citas</div>
-                        </a>
-                    </li>
+                    <?php if ($user->can('estadisticas.panel1.v')) { ?>
+                        <li class="menu-item <?= ($page == 'Estadisticas' && $subpage == 'Global') ? 'active' : '' ?>">
+                            <a href="{{ url('dashboard/estadisticas') }}" class="menu-link">
+                                <i class="menu-icon tf-icons ti ti-chart-histogram"></i>
+                                <div>Fechas - citas</div>
+                            </a>
+                        </li>
+                    <?php
+                    }
+                    if ($user->can('estadisticas.panel2.v')) {
+                    ?>
+                        <li class="menu-item <?= ($page == 'Estadisticas' && $subpage == 'Agentes') ? 'active' : '' ?>">
+                            <a href="{{ url('dashboard/estadisticas/agentes') }}" class="menu-link">
+                                <i class="menu-icon tf-icons ti ti-chart-histogram"></i>
+                                <?php if ($user->can('estadisticas.Solo ver estadisticas propias.v')) { ?>
+                                    <div>Mis estadísticas</div>
+                                <?php } else { ?>
+                                    <div>Agentes</div>
+                                <?php } ?>
+                            </a>
+                        </li>
+                    <?php
+                    }
+                    ?>
                 </ul>
             </li>
         <?php

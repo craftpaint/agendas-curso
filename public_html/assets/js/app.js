@@ -1843,52 +1843,52 @@ $(function () {
 
     let timerId;
 
-    function checkNewRecords() {
-        fetch('citas/get_new_records', {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.validate) {
-                    // Mostrar notificación si hay nuevos registros
-                    if (data.nuevos_registros > 0) {
-                        const notification = new Notification(`¡Nueva Registros!`, {
-                            body: `${data.nuevos_registros} registros nuevos en los últimos 5 minutos en ${data.sede}.`,
-                            icon: '../assets/img/favicon/favicon.ico',
-                        });
+    // function checkNewRecords() {
+    //     fetch('citas/get_new_records', {
+    //         method: 'GET',
+    //         headers: {
+    //             'X-Requested-With': 'XMLHttpRequest'
+    //         }
+    //     })
+    //         .then(response => response.json())
+    //         .then(data => {
+    //             if (data.validate) {
+    //                 // Mostrar notificación si hay nuevos registros
+    //                 if (data.nuevos_registros > 0) {
+    //                     const notification = new Notification(`¡Nueva Registros!`, {
+    //                         body: `${data.nuevos_registros} registros nuevos en los últimos 5 minutos en ${data.sede}.`,
+    //                         icon: '../assets/img/favicon/favicon.ico',
+    //                     });
 
-                        notification.addEventListener('click', () => {
-                            window.open('citas', '_blank');
-                        });
-                    } else {
-                        console.log('No hay nuevos registros');
-                    }
+    //                     notification.addEventListener('click', () => {
+    //                         window.open('citas', '_blank');
+    //                     });
+    //                 } else {
+    //                     console.log('No hay nuevos registros');
+    //                 }
 
-                    console.log(`Próxima consulta en ${data.time_remaining} segundos.`);
-                    // Sincronizar temporizador con el servidor
-                    clearTimeout(timerId);
-                    timerId = setTimeout(checkNewRecords, data.time_remaining * 1000);
-                    console.log(timerId)
-                }
-            })
-            .catch(error => console.error('Error al obtener registros nuevos:', error));
-    }
+    //                 console.log(`Próxima consulta en ${data.time_remaining} segundos.`);
+    //                 // Sincronizar temporizador con el servidor
+    //                 clearTimeout(timerId);
+    //                 timerId = setTimeout(checkNewRecords, data.time_remaining * 1000);
+    //                 console.log(timerId)
+    //             }
+    //         })
+    //         .catch(error => console.error('Error al obtener registros nuevos:', error));
+    // }
 
-    if (Notification.permission !== "granted") {
-        Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-                console.log("Permiso de notificaciones concedido.");
-                checkNewRecords();
-            } else {
-                console.error("Permiso de notificaciones denegado.");
-            }
-        });
-    } else {
-        checkNewRecords();
-    }
+    // if (Notification.permission !== "granted") {
+    //     Notification.requestPermission().then(permission => {
+    //         if (permission === "granted") {
+    //             console.log("Permiso de notificaciones concedido.");
+    //             checkNewRecords();
+    //         } else {
+    //             console.error("Permiso de notificaciones denegado.");
+    //         }
+    //     });
+    // } else {
+    //     checkNewRecords();
+    // }
 
     //----------  Dashboard Estadisticas --------------------
 
@@ -2378,6 +2378,212 @@ $(function () {
 
 
     };
+
+    if ($('#estadisticas-agentes').length) {
+
+
+        // 1) Factory mejorado
+        function crearChart(sel) {
+            const el = document.querySelector(sel);
+            if (!el) return null;
+            return new ApexCharts(el, {
+                chart: { type: 'area', height: 250, stacked: false },
+                series: [],
+                xaxis: { categories: [] },
+                stroke: { curve: 'smooth', width: 2 },
+                fill: { opacity: 0.8 },
+                markers: { size: 0 },
+                dataLabels: { enabled: false },
+                tooltip: { shared: true, intersect: false }
+            });
+        }
+
+        // Declaramos la lista maestra una sola vez
+        const ESTADOS = () => {
+            const sel = $('#filter-estados').val() || [];
+            // dejamos en el mismo orden que el select. Luego añadimos 'Otros'
+            return [...sel, 'Otros'];
+        };
+
+
+        function fetchAndRender(cfg) {
+            const r = +$('#select-rango-fechas-estadisticas').val();
+            const fecha = $('#datePicker').val();
+            const days = r === 1 ? 6
+                : r === 2 ? 13
+                    : r === 3 ? moment(fecha).daysInMonth() - 1
+                        : 89;
+            const selectedEstados = $('#filter-estados').val() || [];
+
+            let fecha_fin = moment(fecha).add(days, 'days').format('YYYY-MM-DD');
+            let rango = fecha + ' - ' + fecha_fin;
+            const params = {
+                start_date: fecha,
+                rangeDays: days,
+                date_field: cfg.dateField,
+                estados: selectedEstados,
+            };
+            if (cfg.agentId) params.agent_id = cfg.agentId;
+
+            // Agregar estados seleccionados
+
+            $.getJSON('agentes/getStatsPorEstadoAgentes', params)
+                .done(resp => {
+                    const cats = Array.isArray(resp.categories) ? resp.categories : [];
+                    let series = Array.isArray(resp.series) ? resp.series : [];
+
+                    // 1) Filtramos cualquier "Total" que venga del backend
+                    series = series.filter(s => s.name !== 'Total');
+
+                    if (!cats.length || !series.length) {
+                        document.querySelector(cfg.wrapper)?.remove();
+                        return;
+                    }
+
+                    // 2) Mapear en orden y asegurar todos los estados
+                    const ordenadas = ESTADOS().map(estado => {
+                        const s = series.find(x => x.name === estado);
+                        return s
+                            ? s
+                            : { name: estado, data: Array(cats.length).fill(0), color: '#adb5bd' };
+                    });
+
+                    // 1.1) Forzar color de Otros
+                    const idxOtros = ordenadas.findIndex(s => s.name === 'Otros');
+                    if (idxOtros !== -1) {
+                        ordenadas[idxOtros].color = '#FF8F8F';      // <-- tu color fijo para Otros
+                    }
+
+                    // 3) Calcular el nuevo Total
+                    const totalData = cats.map((_, i) =>
+                        ordenadas.reduce((sum, s) => sum + (s.data[i] || 0), 0)
+                    );
+
+                    // 4) Series finales para Apex: todas las áreas + línea Total
+                    const allSeries = [
+                        ...ordenadas,
+                        { name: 'Total', data: totalData, color: '#00bbe3' }
+                    ];
+
+                    // 5) Actualizar opciones (colores, opacidades, grosores)
+                    cfg.chart.updateOptions({
+                        xaxis: { categories: cats.map(d => moment(d).format('DD MMM')) },
+                        colors: [...ordenadas.map(s => s.color), '#adb5bd'],
+                        fill: { opacity: [...Array(ordenadas.length).fill(0.6), 0.8] },
+                        stroke: { width: [...Array(ordenadas.length).fill(2), 3] }
+                    });
+
+                    // 6) Inyectar datos en la gráfica
+                    cfg.chart.updateSeries(allSeries);
+
+                    // 7) Renderizar badges usando solo las series de estados (sin Total)
+                    const bc = document.querySelector(cfg.badgeSel);
+                    if (bc) {
+                        bc.innerHTML = ordenadas.map(s => {
+                            const tot = s.data.reduce((a, v) => a + v, 0);
+                            return `<span class="badge m-1" style="background-color:${s.color};">
+                    ${s.name}: ${tot}
+                  </span>`;
+                        }).join('')
+                            // y al final el badge de Total
+                            + `<span class="badge" style="background-color:#00bbe3;">
+             Total: ${totalData.reduce((a, v) => a + v, 0)}
+           </span>`;
+                    }
+
+                    $('#ConTextRangoFechas').html(rango);
+
+                })
+                .fail(() => {
+                    document.querySelector(cfg.wrapper)?.remove();
+                });
+        }
+
+        // 4) Inicialización
+        $(function () {
+            const configs = [];
+
+            ['reserva', 'creacion'].forEach(f => {
+                configs.push({
+                    wrapper: `#Global-${f}-block`,
+                    chart: crearChart(`#ChartGlobal-${f}`),
+                    badgeSel: `#BadgesGlobal-${f}`,
+                    agentId: null,
+                    dateField: f
+                });
+            });
+
+            agentes.forEach(a => {
+                ['reserva', 'creacion'].forEach(f => {
+                    configs.push({
+                        wrapper: `#block-${a.id}`,
+                        chart: crearChart(`#ChartAgent-${a.id}-${f}`),
+                        badgeSel: `#BadgesAgent-${a.id}-${f}`,
+                        agentId: a.id,
+                        dateField: f
+                    });
+                });
+            });
+
+            configs.forEach(cfg => {
+                if (!cfg.chart) {
+                    document.querySelector(cfg.wrapper)?.remove();
+                    return;
+                }
+                cfg.chart
+                    .render()
+                    .then(() => fetchAndRender(cfg))
+                    .catch(error => {
+                        console.error('[ERROR] al renderizar chart', cfg.wrapper, error);
+                        // opcionalmente ocultar container:
+                        document.querySelector(cfg.wrapper)?.remove();
+                    });
+            });
+
+            $('#select-rango-fechas-estadisticas, #datePicker, #filter-estados').on('change', () => {
+                configs.forEach(cfg => {
+                    if (cfg.chart) {
+                        fetchAndRender(cfg);
+                    }
+                });
+            });
+        });
+
+        // Inicializar Flatpickr
+        const today = new Date();
+
+        // Función para obtener el primer día de la semana
+        function getFirstDayOfWeek(date) {
+            const day = date.getDay(); // Día de la semana (0 = domingo, 1 = lunes, ...)
+            const diff = (day === 0 ? -6 : 1) - day; // Ajuste para que el lunes sea el primer día
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate() + diff);
+        }
+
+        const firstDayOfWeek = getFirstDayOfWeek(today);
+
+        flatpickr("#datePicker", {
+            dateFormat: "Y-m-d", // Formato de fecha (Año-Mes-Día)
+            defaultDate: firstDayOfWeek, // Fecha por defectoS
+            enable: [
+                function (date) {
+                    // Permitir solo los primeros días de la semana (lunes)
+                    return date.getDay() === 1; // 1 = Lunes
+                }
+            ],
+        });
+
+        $('#filter-estados').select2({
+            data: estados,
+            placeholder: 'Selecciona estados…',
+            width: 'resolve'
+        })
+
+            .val(DEFAULT_ESTADOS)
+            .trigger('change');
+
+
+    }
+
 
     //----------------------------------------------------------------------------
     //----------------------  Dashboard Liquidador -------------------------------

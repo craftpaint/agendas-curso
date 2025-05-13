@@ -1018,7 +1018,8 @@ class CitasController extends Controller
             return response()->json($objLoad);
         }
     }
-    //Vamos a borrar la sede
+
+    //Descargar archivo
     public function dowload(Request $request)
     {
         if ($request->ajax()) {
@@ -1387,7 +1388,6 @@ class CitasController extends Controller
         } else {
             $data['sedes'] = DB::table('tb_sede')->get();
         }
-        $data['sedes'] = DB::select($sql);;
         //Estados
         $sql = "SELECT * FROM tb_estado";
         $data['estados'] = DB::select($sql);
@@ -1526,7 +1526,6 @@ class CitasController extends Controller
 
             try {
                 $user = Auth::user();
-                $rol  = $user->getRoleNames()->first();
 
                 // Parámetros de DataTables y filtros
                 $length      = $request->input('length', 10);
