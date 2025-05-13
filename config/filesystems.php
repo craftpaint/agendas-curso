@@ -50,6 +50,13 @@ return [
             'visibility' => 'public',
             'throw' => false,
         ],
+        'public_html/data' => [
+            'driver' => 'local',
+            'root' => base_path('public_html/data'),
+            'url' => env('APP_URL') . '/public_html/data',
+            'visibility' => 'public',
+            'throw' => false,
+        ],
 
         's3' => [
             'driver' => 's3',
