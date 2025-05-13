@@ -290,7 +290,6 @@ $(function () {
             data: { cc: cc},
             dataType: 'json',
             success: function (response) {
-                console.log("Response: ", response);
                 if (response) {
                     $('.resultadoCitas').html('<p class=" fw-bold text-end">  <span class="morado">' + '</span>Ya tienes una cita agendada, si deseas modificarla escríbenos aquí (<a href="https://wa.me/3054628258">3054511014</a> / <a href="https://wa.me/3054628258">3054628258</a> ).</p>');
                 }

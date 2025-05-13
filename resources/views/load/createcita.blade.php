@@ -53,7 +53,7 @@
                 </div>
                 <div class="mb-6 col-12 col-md-6">
                     <label class="form-label">Franja horaria <span class="required_flied">*</span></label>
-                    <select class="form-select select2" required name="id_sede_horario" disabled>
+                    <select id="citaHora" class="form-select select2" required name="id_sede_horario" disabled>
                         <option value="">Seleccionar horario</option>
                     </select>
                 </div>
