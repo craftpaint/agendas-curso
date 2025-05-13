@@ -336,3 +336,7 @@ table tbody tr:nth-child(even) {
 .timeline {
     height: auto !important;
 }
+
+.light-style .select2-dropdown {
+    z-index: 1500;
+}

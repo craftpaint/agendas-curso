@@ -2541,6 +2541,10 @@ $(function () {
             });
 
             $('#select-rango-fechas-estadisticas, #datePicker, #filter-estados').on('change', () => {
+                $('#iconBtnFiltro').html('<span class="badge rounded-pill bg-danger badge-dot badge-notifications"></span>');
+                $('#iconBtnFiltro').removeClass('ti-filter');
+                $('#iconBtnFiltro').addClass('ti-filter-search');
+
                 configs.forEach(cfg => {
                     if (cfg.chart) {
                         fetchAndRender(cfg);
@@ -2549,6 +2553,9 @@ $(function () {
             });
         });
 
+        $('#btnClearFilters').on('click', () => {
+            location.reload();
+        });
         // Inicializar Flatpickr
         const today = new Date();
 

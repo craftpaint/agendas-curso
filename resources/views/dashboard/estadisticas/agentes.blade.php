@@ -11,8 +11,9 @@
             <div class="card">
                 <div class="p-4 d-flex align-items-center justify-content-between">
                     <h2 class="m-0">Estadisticas por agentes</h2>
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasFilters" aria-controls="offcanvasFilters">
-                        <i class="ti ti-filter"></i>
+                    <button class="btn btn-primary text-nowrap d-inline-block" type="button" data-bs-toggle="modal" data-bs-target="#filtrosModal">
+                        <i class="ti ti-filter" id="iconBtnFiltro">
+                        </i>
                         Filtros
                     </button>
                 </div>
@@ -99,47 +100,57 @@
 
 </div>
 
-<div class="offcanvas offcanvas-top" tabindex="-1" id="offcanvasFilters" aria-labelledby="offcanvasFiltersLabel">
-    <div class="offcanvas-header">
-        <h5 id="offcanvasFiltersLabel">Filtros</h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
-    </div>
-    <div class="offcanvas-body">
-        <div class="card">
-            <div class="d-flex justify-content-center">
-                <div class="m-3">
-                    <select id="select-rango-fechas-estadisticas" class="select2 form-select selectpicker" data-size="10">
-                        <option disabled>Seleccionar rango de fechas</option>
-                        <option value="1" selected>Esta semana</option>
-                        <option value="2">2 semanas</option>
-                        <option value="3">Este mes</option>
-                        <option value="4">Este trimestre</option>
-                    </select>
-                </div>
-                <div class="m-3">
-                    @php
-                    $estadosJson = $estados->map(fn($e)=>[
-                    'text' => $e->nombre_estado,
-                    'id' => $e->nombre_estado,
-                    'color' => $e->color_estado
-                    ]);
-                    @endphp
-                    <select id="filter-estados" class="form-select" multiple="multiple" style="width:100%">
+<div class="modal fade" id="filtrosModal" tabindex="-1" aria-labelledby="filtrosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filtrosModalLabel">Filtrar estadísticas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card border-0">
+                    <div class="card-body">
+                        <div class="m-3">
+                            <select id="select-rango-fechas-estadisticas" class="select2 form-select selectpicker" data-size="10">
+                                <option disabled>Seleccionar rango de fechas</option>
+                                <option value="1" selected>Esta semana</option>
+                                <option value="2">2 semanas</option>
+                                <option value="3">Este mes</option>
+                                <option value="4">Este trimestre</option>
+                            </select>
+                        </div>
+                        <div class="m-3">
+                            @php
+                            $estadosJson = $estados->map(fn($e)=>[
+                            'text' => $e->nombre_estado,
+                            'id' => $e->nombre_estado,
+                            'color' => $e->color_estado
+                            ]);
+                            @endphp
+                            <select id="filter-estados" class="form-select" multiple="multiple" style="width:100%">
 
-                    </select>
+                            </select>
+                        </div>
+                        <div id="dateDiv" class="m-3">
+                            <input
+                                type="text"
+                                class="dateInput"
+                                id="datePicker"
+                                placeholder="Date:  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MMYYYY" />
+                        </div>
+                    </div>
                 </div>
-                <div id="dateDiv" class="m-3">
-                    <input
-                        type="text"
-                        class="dateInput"
-                        id="datePicker"
-                        placeholder="Date:  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MMYYYY" />
-                </div>
+            </div>
+            <div class="modal-footer">
+                <!-- Botón aplicar filtros -->
+                <button type="button" class="btn btn-outline-danger" id="btnClearFilters">
+                    <i class="ti ti-filter-x"></i> Limpiar filtros
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
 </div>
-
 <!-- Content wrapper -->
 </div>
 <script>
