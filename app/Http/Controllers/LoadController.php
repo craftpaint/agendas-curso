@@ -54,8 +54,7 @@ class LoadController extends Controller
         ];
         echo view('load/createcita', $data);
     }
-    public function savecita(Request $request)
-    {
+    public function savecita(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -195,6 +194,35 @@ class LoadController extends Controller
                 }
                 // log::info($idAgenteCallcenter);
                 $agenteValue   = is_null($idAgenteCallcenter) ? "NULL" : $idAgenteCallcenter;
+
+                // VERIFICA SI TIENE CITAS AGENDADAS
+                $citas_agendadas = $this->getCitasAgendadas(new \Illuminate\Http\Request(['cc' => $doc_cliente]));
+
+                if ($citas_agendadas) {
+                    $fecha_actual = now()->startOfDay();
+                    $query_estado = DB::table('tb_estado')
+                        ->select(['tb_estado.*'])
+                        ->where('tb_estado.nombre_estado', 'Duplicado');
+                    
+                    $query_citas = DB::table('tb_cita')
+                        ->join('tb_cliente', 'tb_cita.id_cliente', '=', 'tb_cliente.id_cliente')
+                        ->select(['tb_cita.*'])
+                        ->where('tb_cliente.doc_cliente', $cedula)
+                        ->where('tb_cita.reserva_cita', '>', $fecha_actual)
+                        ->orderBy('reserva_cita', 'desc');
+                    
+                    $estado_duplicado = $query_estado->first();
+                    $citas = $query_citas->get();
+
+                    DB::transaction(function () use ($citas, $estado_duplicado) {
+                        foreach ($citas as $cita) {
+                            DB::table('tb_cita')
+                                ->where('id_cita', $cita->id_cita)
+                                ->update(['id_estado' => $estado_duplicado->id_estado]
+                            );
+                        }
+                    });
+                }
 
                 //Creamos la cita
                 $save = DB::table('tb_cita')->insert([
