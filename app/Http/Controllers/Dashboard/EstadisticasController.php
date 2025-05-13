@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use App\Helpers\AdminHelper;
@@ -49,6 +50,57 @@ class EstadisticasController extends Controller
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
         echo view('dashboard.estadisticas.index', $data);
+        echo view('layouts.footer', $data);
+    }
+
+    public function estadisticasAgentes()
+    {
+        $user = Auth::user();
+        $data = [
+            'page' => 'Estadisticas',
+            'subpage' => 'Agentes',
+            'rol' => $user->getRoleNames()->first(),
+            'user' => $user
+        ];
+        $data['alert'] = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
+        //Verificamos si las alertas tiene mas de 0 para cambiar el estado de la alerta
+        if ($data['alert'] > 0) {
+            AdminHelper::change_status_alert($data['rol'], $user->id_sede);
+        }
+
+        if ($user->can('global.Pertenece a empresa aliada.v')) {
+            $sedeUsuario = DB::table('tb_sede')->where('id_sede', $user->id_sede)->first();
+            if ($sedeUsuario && isset($sedeUsuario->id_empresa)) {
+                $data['sedes'] = DB::table('tb_sede')
+                    ->where('id_empresa', $sedeUsuario->id_empresa)
+                    ->get();
+            } else {
+                $data['sedes'] = collect([]);
+            }
+        } elseif ($user->can('global.Solo ver sede asignada.v')) {
+            $data['sedes'] = DB::table('tb_sede')
+                ->where('id_sede', $user->id_sede)
+                ->get();
+        } else {
+            $data['sedes'] = DB::table('tb_sede')->get();
+        }
+
+        $agentes = User::permission('global.Asignar citas call.v')
+            ->orderBy('id', 'asc')
+            ->get();
+        $data['listado_agentes'] = $agentes->toArray();
+
+
+        $data['estados'] = DB::table('tb_estado')->get();
+
+        $data['soloPropias'] = Auth::user()->can('estadisticas.Solo ver estadísticas propias');
+
+        $data['miUsuarioId'] = Auth::id();
+
+
+        echo view('layouts.header', $data);
+        echo view('layouts.nav', $data);
+        echo view('dashboard.estadisticas.agentes', $data);
         echo view('layouts.footer', $data);
     }
 
@@ -216,5 +268,72 @@ class EstadisticasController extends Controller
             'TotalDatesHistoricoEnd'   => $historicoEnd->format('d-m-Y'),
             'peiodoSelecionado'     => $periodoSeleccionado,
         ];
+    }
+
+    public function getStatsPorEstadoAgentes(Request $r)
+    {
+        $start      = Carbon::parse($r->start_date)->startOfDay();
+        $rangeDays  = $r->rangeDays ?? 6;
+        $end        = $start->copy()->addDays($rangeDays)->endOfDay();
+        $agentId    = $r->agent_id ?? null;
+        $dateField  = $r->date_field === 'creacion' ? 'c.created_at' : 'c.reserva_cita';
+
+        $estPrincipales = $r->input('estados', []);
+        // si no llega ninguno, se toma todos:
+        if (empty($estPrincipales)) {
+            $estPrincipales = DB::table('tb_estado')->pluck('nombre_estado')->toArray();
+        }
+
+        $query = DB::table('tb_cita as c')
+            ->join('tb_estado as e', 'c.id_estado', '=', 'e.id_estado')
+            ->selectRaw("
+          DATE($dateField) as fecha,
+          CASE WHEN e.nombre_estado IN (" . implode(',', array_map(fn($s) => "'$s'", $estPrincipales)) . ")
+            THEN e.nombre_estado ELSE 'Otros' END as estado,
+          e.color_estado as color,
+          COUNT(*) as total
+        ")
+            ->whereBetween($dateField, [$start, $end]);
+
+        if ($agentId) {
+            $query->where('c.id_agente_callcenter', $agentId);
+        }
+
+        $raw = $query->groupBy('fecha', 'estado', 'color')
+            ->orderBy('fecha')
+            ->get();
+
+        // siempre construyo full fechas
+        $fechas = [];
+        for ($i = 0; $i <= $rangeDays; $i++) {
+            $fechas[] = $start->copy()->addDays($i)->toDateString();
+        }
+
+        // armo series
+        $series = [];
+        foreach (array_merge($estPrincipales, ['Otros']) as $est) {
+            $data = [];
+            $color = null;
+            foreach ($fechas as $f) {
+                $row = $raw->first(fn($r) => $r->fecha == $f && $r->estado == $est);
+                $data[] = $row?->total ?? 0;
+                if ($row && !$color) $color = $row->color;
+            }
+            $series[] = ['name' => $est, 'data' => $data, 'color' => $color ?: '#adb5bd'];
+        }
+
+        // total line
+        $totalPerDay = [];
+        for ($i = 0; $i < count($fechas); $i++) {
+            $sum = 0;
+            foreach ($series as $s) $sum += $s['data'][$i];
+            $totalPerDay[] = $sum;
+        }
+        $series[] = ['name' => 'Total', 'data' => $totalPerDay, 'color' => '#00bbe3'];
+
+        return response()->json([
+            'categories' => $fechas,
+            'series'    => $series
+        ]);
     }
 }

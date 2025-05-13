@@ -31,6 +31,10 @@
             <script src="{{url('assets/vendor/libs/apex-charts/apexcharts.js')}}"></script>
             <script src="{{url('assets/vendor/libs/moment/moment.js')}}"></script>
             <script src="{{url('assets/vendor/libs/tagify/tagify.js')}}"></script>
+            <script src="https://cdn.jsdelivr.net/npm/notiflix@3.2.8/dist/notiflix-aio-3.2.8.min.js"></script>
+            <script src="{{url('assets/vendor/libs/sortablejs/sortable.js')}}"></script>
+            <script src="{{url('assets/js/cards-actions.js')}}"></script>
+            <script src="{{url('assets/js/cards-advance.js')}}"></script>
             <script src="{{url('assets/js/app.js')}}"></script>
             </body>
 

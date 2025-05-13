@@ -61,12 +61,21 @@ Route::controller(LoadController::class)->group(function () {
 
 // Estadísticas (se utiliza "estadisticas.panel1.v" como permiso de visualización global)
 Route::controller(EstadisticasController::class)->group(function () {
+    // Listado de estadísticas: Globales
+    Route::get('dashboard/estadisticas', 'index')
+        ->middleware(['auth', 'verified', 'permission:estadisticas.panel1.v']);
     Route::get('dashboard/estadisticas/citas', 'getCitasData')
         ->middleware(['auth', 'verified', 'permission:estadisticas.panel1.v']);
     Route::get('dashboard/estadisticas/creaciones', 'getCreacionesData')
         ->middleware(['auth', 'verified', 'permission:estadisticas.panel1.v']);
-    Route::get('dashboard/estadisticas', 'index')
-        ->middleware(['auth', 'verified', 'permission:estadisticas.panel1.v']);
+
+    // Listado de estadísticas: por agentes
+    Route::get('dashboard/estadisticas/agentes', 'estadisticasAgentes')
+        ->middleware(['auth', 'verified', 'permission:estadisticas.panel2.v']);
+    Route::get('dashboard/estadisticas/agentes/getStatsPorEstadoAgentes', 'getStatsPorEstadoAgentes')
+        ->middleware(['auth', 'verified', 'permission:estadisticas.panel2.v']);
+
+    // Listado de estadísticas: por sedes
     Route::get('dashboard/estadisticas/sedes', 'viewSedes')
         ->middleware(['auth', 'verified', 'permission:estadisticas.panel1.v']);
 })->name('estadisticas');
@@ -86,6 +95,9 @@ Route::controller(SedesController::class)->group(function () {
     Route::post('dashboard/sedes/save', 'save')
         ->middleware(['auth', 'verified', 'permission:sede.sede.a']);
     // Editar sede: "sede.sede.e"
+    Route::get('dashboard/sedes/view/{id}', 'edit')
+        ->middleware(['auth', 'verified', 'permission:sede.sede.e'])
+        ->name('sedes.view');
     Route::get('dashboard/sedes/edit/{id}', 'edit')
         ->middleware(['auth', 'verified', 'permission:sede.sede.e'])
         ->name('sedes.edit');

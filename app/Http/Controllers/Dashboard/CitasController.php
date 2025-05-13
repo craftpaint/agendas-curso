@@ -1024,7 +1024,8 @@ class CitasController extends Controller
             return response()->json($objLoad);
         }
     }
-    
+
+    //Descargar archivo
     public function dowload(Request $request)
     {
         if ($request->ajax()) {
@@ -1084,12 +1085,12 @@ class CitasController extends Controller
 
                 // Filtro de búsqueda (nombre, apellido, documento o teléfono del cliente)
                 if (!empty($filtros['filtro_search'])) {
-                    $query->where(function($q) use ($filtro_search) {
+                    $query->where(function ($q) use ($filtro_search) {
                         $searchTerm = '%' . $filtro_search . '%';
                         $q->where('t2.nombre_cliente', 'LIKE', $searchTerm)
-                        ->orWhere('t2.apellido_cliente', 'LIKE', $searchTerm)
-                        ->orWhere('t2.doc_cliente', 'LIKE', $searchTerm)
-                        ->orWhere('t2.telefono_cliente', 'LIKE', $searchTerm);
+                            ->orWhere('t2.apellido_cliente', 'LIKE', $searchTerm)
+                            ->orWhere('t2.doc_cliente', 'LIKE', $searchTerm)
+                            ->orWhere('t2.telefono_cliente', 'LIKE', $searchTerm);
                     });
                 }
 
@@ -1103,7 +1104,7 @@ class CitasController extends Controller
                     $query->where('t1.responsable_origen', $filtros['filtro_responsable']);
                 }
                 if (!empty($filtros['filtro_origen'])) {
-                $query->where('t1.origen', $filtros['filtro_origen']);
+                    $query->where('t1.origen', $filtros['filtro_origen']);
                 }
                 if (!empty($filtros['filtro_agente'])) {
                     $query->where('t1.id_agente_callcenter', $filtros['filtro_agente']);
@@ -1219,78 +1220,83 @@ class CitasController extends Controller
         }
     }
 
-    public function citasconsultaDB() {
+    public function citasconsultaDB()
+    {
         return DB::table('tb_cita as t1')
-        ->select([
-            't1.*',
-            't1.created_at as fecha_create',
-            't2.nombre_cliente',
-            't2.apellido_cliente',
-            't2.doc_cliente',
-            't2.tipo_doc_cliente',
-            't2.telefono_cliente',
-            't2.email_cliente',
-            't2.desc_cliente',
-            't3.id_estado as estado_actual_id',
-            't3.nombre_estado as estado_actual_nombre',
-            't3.color_estado as estado_actual_color',
-            't4.id_estado as estado_verificado_id',
-            't4.nombre_estado as estado_verificado_nombre',
-            't4.color_estado as estado_verificado_color',
-            't4.desc_estado as estado_verificado_desc',
-            't5.nombre_sede',
-            't5.direccion_sede',
-            't5.tel_sede',
-            't5.estado_sede',
-            't6.tipo_servicio',
-            'l.id_liquidador',
-            'l.estado_liquidador',
-            'l.comentario_liquidador',
-            'l.pago_liquidador',
-            'v.id_vehiculo',
-            'v.placa_vehiculo',
-            'v.tipo_vehiculo',
-            'v.modelo_vehiculo',
-            's.id_servicio_liquidador',
-            's.nombre_servicio_liquidador',
-            's.valor_servicio_liquidador',
-            's.color_servicio_liquidador',
-            DB::raw("(SELECT GROUP_CONCAT(
+            ->select([
+                't1.*',
+                't1.created_at as fecha_create',
+                't2.nombre_cliente',
+                't2.apellido_cliente',
+                't2.doc_cliente',
+                't2.tipo_doc_cliente',
+                't2.telefono_cliente',
+                't2.email_cliente',
+                't2.desc_cliente',
+                't3.id_estado as estado_actual_id',
+                't3.nombre_estado as estado_actual_nombre',
+                't3.color_estado as estado_actual_color',
+                't4.id_estado as estado_verificado_id',
+                't4.nombre_estado as estado_verificado_nombre',
+                't4.color_estado as estado_verificado_color',
+                't4.desc_estado as estado_verificado_desc',
+                't5.nombre_sede',
+                't5.direccion_sede',
+                't5.tel_sede',
+                't5.estado_sede',
+                't6.tipo_servicio',
+                'l.id_liquidador',
+                'l.estado_liquidador',
+                'l.comentario_liquidador',
+                'l.pago_liquidador',
+                'v.id_vehiculo',
+                'v.placa_vehiculo',
+                'v.tipo_vehiculo',
+                'v.modelo_vehiculo',
+                's.id_servicio_liquidador',
+                's.nombre_servicio_liquidador',
+                's.valor_servicio_liquidador',
+                's.color_servicio_liquidador',
+                DB::raw("(SELECT GROUP_CONCAT(
                     CONCAT_WS(' - ', titulo_seguimiento, nota_seguimiento)
                     SEPARATOR '|'
                 )
                 FROM tb_seguimiento
                 WHERE id_cita = t1.id_cita) AS comentarios")
-    ])
-        ->join('tb_cliente as t2', 't1.id_cliente', '=', 't2.id_cliente')
-        ->join('tb_estado as t3', 't1.id_estado', '=', 't3.id_estado')
-        ->join('tb_estado as t4', 't1.id_estado_verificado', '=', 't4.id_estado')
-        ->join('tb_sede as t5', 't1.id_sede', '=', 't5.id_sede')
-        ->join('tb_servicio as t6', 't5.id_servicio', '=', 't6.id_servicio')
-        ->leftJoin('tb_liquidador as l', 't1.id_cita', '=', 'l.id_cita')
-        ->leftJoin('tb_vehiculo as v', 't1.id_vehiculo', '=', 'v.id_vehiculo')
-        ->leftJoin('tb_servicio_liquidador as s', 't1.id_servicio_liquidador', '=', 's.id_servicio_liquidador')
-        ->where('t1.id_cita', '>', 0)
-        ->orderBy('t1.reserva_cita')
-        ->orderBy('t1.rango_horario')
-        ->orderBy('t1.id_sede');
+            ])
+            ->join('tb_cliente as t2', 't1.id_cliente', '=', 't2.id_cliente')
+            ->join('tb_estado as t3', 't1.id_estado', '=', 't3.id_estado')
+            ->join('tb_estado as t4', 't1.id_estado_verificado', '=', 't4.id_estado')
+            ->join('tb_sede as t5', 't1.id_sede', '=', 't5.id_sede')
+            ->join('tb_servicio as t6', 't5.id_servicio', '=', 't6.id_servicio')
+            ->leftJoin('tb_liquidador as l', 't1.id_cita', '=', 'l.id_cita')
+            ->leftJoin('tb_vehiculo as v', 't1.id_vehiculo', '=', 'v.id_vehiculo')
+            ->leftJoin('tb_servicio_liquidador as s', 't1.id_servicio_liquidador', '=', 's.id_servicio_liquidador')
+            ->where('t1.id_cita', '>', 0)
+            ->orderBy('t1.reserva_cita')
+            ->orderBy('t1.rango_horario')
+            ->orderBy('t1.id_sede');
     }
 
-    public function exportarExcel($name, $data, $headers) {
-        $export = new class($data, $headers) implements WithHeadings, FromCollection, ShouldAutoSize  {
+    public function exportarExcel($name, $data, $headers)
+    {
+        $export = new class($data, $headers) implements WithHeadings, FromCollection, ShouldAutoSize {
             private $data;
             private $headers;
-    
-            public function __construct(Collection $data, $headers) {
+
+            public function __construct(Collection $data, $headers)
+            {
                 $this->data = $data;
                 $this->headers = $headers;
             }
 
-            public function headings(): array {
+            public function headings(): array
+            {
                 return $this->headers;
             }
-    
-            public function Collection(): Collection {
+
+            public function Collection(): Collection
+            {
                 return $this->data;
             }
         };
@@ -1405,7 +1411,6 @@ class CitasController extends Controller
         } else {
             $data['sedes'] = DB::table('tb_sede')->get();
         }
-        $data['sedes'] = DB::select($sql);;
         //Estados
         $sql = "SELECT * FROM tb_estado";
         $data['estados'] = DB::select($sql);
@@ -1544,7 +1549,6 @@ class CitasController extends Controller
 
             try {
                 $user = Auth::user();
-                $rol  = $user->getRoleNames()->first();
 
                 // Parámetros de DataTables y filtros
                 $length      = $request->input('length', 10);
@@ -2254,7 +2258,7 @@ class CitasController extends Controller
                 'validate' => false,
                 'text' => 'Error al borrar el estado'
             ];
-            
+
             try {
                 $user = Auth::user();
                 $filtros = $request->input();
@@ -2305,12 +2309,12 @@ class CitasController extends Controller
 
                 // Filtro de búsqueda
                 if (!empty($filtros['filtro_search'])) {
-                    $query->where(function($q) use ($filtro_search) {
+                    $query->where(function ($q) use ($filtro_search) {
                         $searchTerm = '%' . $filtro_search . '%';
                         $q->where('t2.nombre_cliente', 'LIKE', $searchTerm)
-                        ->orWhere('t2.apellido_cliente', 'LIKE', $searchTerm)
-                        ->orWhere('t2.doc_cliente', 'LIKE', $searchTerm)
-                        ->orWhere('t2.telefono_cliente', 'LIKE', $searchTerm);
+                            ->orWhere('t2.apellido_cliente', 'LIKE', $searchTerm)
+                            ->orWhere('t2.doc_cliente', 'LIKE', $searchTerm)
+                            ->orWhere('t2.telefono_cliente', 'LIKE', $searchTerm);
                     });
                 }
 
@@ -2336,7 +2340,7 @@ class CitasController extends Controller
                 if (!file_exists(base_path('public_html/data'))) {
                     mkdir(base_path('public_html/data'), 0777, true);
                 }
-                    
+
                 $headers = [
                     'ID Cita',
                     'Cliente',
@@ -2420,7 +2424,8 @@ class CitasController extends Controller
         }
     }
 
-    public function liquidadorconsultaBD () {
+    public function liquidadorconsultaBD()
+    {
         return  DB::table('tb_cita as t1')
             ->select([
                 't1.*',
