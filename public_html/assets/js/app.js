@@ -2522,8 +2522,6 @@ $(function () {
            </span>`;
                     }
 
-                    $('#ConTextRangoFechas').html(rango);
-
                 })
                 .fail(() => {
                     document.querySelector(cfg.wrapper)?.remove();
