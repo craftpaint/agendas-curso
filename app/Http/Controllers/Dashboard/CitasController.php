@@ -1153,7 +1153,6 @@ class CitasController extends Controller
                     'Placa Vehiculo',
                     'Tipo Vehiculo',
                     'Modelo Vehiculo',
-                    'Creado Por',
                     'Origen',
                     'Url Variables',
                     'Tipo dispositivo'
@@ -1183,7 +1182,6 @@ class CitasController extends Controller
                         $record->placa_vehiculo,
                         $record->tipo_vehiculo,
                         $record->modelo_vehiculo,
-                        $record->placa_vehiculo,  // 'Creado Por' (ajusta si es otro campo)
                         $record->origen,
                         $record->url_variables,
                         $record->tipo_dispositivo
@@ -2357,7 +2355,6 @@ class CitasController extends Controller
                     'Placa Vehiculo',
                     'tipo Vehiculo',
                     'Modelo Vehiculo',
-                    'Creado Por',
                     'Origen',
                     'Url Variables',
                     'Tipo dispositivo'
@@ -2384,7 +2381,6 @@ class CitasController extends Controller
                         $record->placa_vehiculo,
                         $record->tipo_vehiculo,
                         $record->modelo_vehiculo,
-                        $record->placa_vehiculo,
                         $record->origen,
                         $record->url_variables,
                         $record->tipo_dispositivo,
