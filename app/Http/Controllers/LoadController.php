@@ -328,4 +328,28 @@ class LoadController extends Controller
             return response()->json($objLoad);
         }
     }
+
+    public function getCitasAgendadas(Request $request) {
+        $cedula = (string) $request->input('cc');
+        $fecha_actual = now()->startOfDay();
+
+        $query = DB::table('tb_cita')
+            ->join('tb_cliente', 'tb_cita.id_cliente', '=', 'tb_cliente.id_cliente')
+            ->select([
+                'tb_cita.*',
+                'tb_cliente.nombre_cliente',
+                'tb_cliente.apellido_cliente',
+            ])
+            ->where('tb_cliente.doc_cliente', $cedula)
+            ->where('tb_cita.reserva_cita', '>', $fecha_actual)
+            ->orderBy('reserva_cita', 'desc');
+
+        $result = $query->get();
+        
+        if ($result->count() != 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

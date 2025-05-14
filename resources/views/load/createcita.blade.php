@@ -91,6 +91,8 @@
                     <label class="form-label">Número de documento <span class="required_flied">*</span></label>
                     <input type="text" class="form-control" name="doc_cliente" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                 </div>
+                <div class="resultadoCitas">
+                </div>
                 <div class="mb-4 col-12 col-md-6">
                     <label class="form-label">Numero de Comparendo <span class="required_flied">*</span></label>
                     <select class="select2 form-select" id="selectServicioLiquidador" required name="servicio_liquidador">
