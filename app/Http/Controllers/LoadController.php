@@ -207,19 +207,33 @@ class LoadController extends Controller
                     $query_citas = DB::table('tb_cita')
                         ->join('tb_cliente', 'tb_cita.id_cliente', '=', 'tb_cliente.id_cliente')
                         ->select(['tb_cita.*'])
-                        ->where('tb_cliente.doc_cliente', $cedula)
+                        ->where('tb_cliente.doc_cliente', $doc_cliente)
                         ->where('tb_cita.reserva_cita', '>', $fecha_actual)
                         ->orderBy('reserva_cita', 'desc');
+
+                    $query_sistema = DB::table('users')
+                        ->select(['users.*'])
+                        ->where('email', 'jrubio@zocodigital.com');
                     
                     $estado_duplicado = $query_estado->first();
                     $citas = $query_citas->get();
+                    $sistema = $query_sistema->first();
 
-                    DB::transaction(function () use ($citas, $estado_duplicado) {
+                    //SE REALIZA EL CAMBIO DEL ESTADO DE LA CITA
+                    DB::transaction(function () use ($citas, $estado_duplicado, $sistema) {
                         foreach ($citas as $cita) {
-                            DB::table('tb_cita')
-                                ->where('id_cita', $cita->id_cita)
-                                ->update(['id_estado' => $estado_duplicado->id_estado]
-                            );
+                            if ($cita->id_estado != $estado_duplicado->id_estado) {
+                                DB::table('tb_cita')
+                                    ->where('id_cita', $cita->id_cita)
+                                    ->update(['id_estado' => $estado_duplicado->id_estado]
+                                );
+                                DB::table('tb_seguimiento')->insert([
+                                    'titulo_seguimiento' => 'Cambio de estado cita',
+                                    'nota_seguimiento'  => 'El sistema ha realizado el cambio del estado de la cita a duplicado.',
+                                    'id_cita'           => $cita->id_cita,
+                                    'id_user'           => $sistema->id,
+                                ]);
+                            }
                         }
                     });
                 }
