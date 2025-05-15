@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\AdminHelper;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Crypt;
 
 class LoadController extends Controller
 {
@@ -293,6 +296,7 @@ class LoadController extends Controller
                     }
                     // Obtener el ID de la cita recién creada
                     $id_cita = DB::getPdo()->lastInsertId();
+
                     try {
                         $saveliquidador = DB::table('tb_liquidador')->insert([
                             'id_cita' => $id_cita,
@@ -302,13 +306,19 @@ class LoadController extends Controller
                             'created_at' => DB::raw('DATE_SUB(NOW(), INTERVAL 5 HOUR)'),
                             'updated_at' => DB::raw('DATE_SUB(NOW(), INTERVAL 5 HOUR)')
                         ]);
+
+                    //AQUI SE ENVÍA LA INFORMACIÓN DE LOS DETALLES DE LA CITA
+                    //$url_detalles = config('app.url').'/agendas-cursos/public_html/api/detalles-cita/'.Crypt::encryptString($id_cita);
+                    //$detalles = Http::get($url_detalles);
+
                     } catch (\Throwable $e) {
                         Log::error($e->getMessage());
                     }
+
                     $objLoad = [
                         'validate' => true,
                         'text' => 'Cita guardada correctamente',
-                        'id' => $id_cita
+                        'id' => Crypt::encryptString($id_cita)
                     ];
                 }
             } catch (\Throwable $e) {
@@ -393,5 +403,28 @@ class LoadController extends Controller
         } else {
             return false;
         }
+    }
+
+    public function getDetallesCita($id) {
+        $idCita = Crypt::decryptString($id);
+
+        $query = DB::table('tb_cita')
+        ->join('tb_sede', 'tb_cita.id_sede', '=', 'tb_sede.id_sede')
+        ->join('tb_servicio_liquidador', 'tb_cita.id_servicio_liquidador', '=', 'tb_servicio_liquidador.id_servicio_liquidador')
+        ->select([
+            'tb_cita.id_cita',
+            'tb_cita.reserva_cita',
+            'tb_cita.rango_horario',
+            'tb_cita.codigos_comparendo',
+            'tb_sede.nombre_sede',
+            'tb_sede.direccion_sede',
+            'tb_servicio_liquidador.nombre_servicio_liquidador'
+        ])
+        ->where('tb_cita.id_cita', $idCita);
+
+        $data_cita = $query->first();
+        $data_cita->codigos_comparendo = json_decode($data_cita->codigos_comparendo, true);
+
+        return $data_cita;
     }
 }

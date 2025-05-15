@@ -255,6 +255,7 @@ $(function () {
                         //     if (result.isConfirmed) {
                         //     }
                         // });
+                        sessionStorage.setItem('detalles-cita-id', response.id);
                         window.parent.postMessage('cita_agendada', '*');
                     } else {
                         Swal.fire({
