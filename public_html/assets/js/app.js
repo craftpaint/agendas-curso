@@ -1314,7 +1314,7 @@ $(function () {
             ],
             createdRow: function(row, data) {
                 if (data.estado_actual_nombre == "Duplicado") {
-                    $(row).css('background-color', '#ffe0e04d');
+                    $(row).css('background-color', 'rgba(255, 224, 224, 0.5)');
                 }
             },
             pagingType: "simple"
