@@ -134,7 +134,7 @@
                         <div id="dateDiv" class="m-3">
                             <input
                                 type="text"
-                                class="dateInput"
+                                class="dateInput w-100"
                                 id="datePicker"
                                 placeholder="Date:  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MMYYYY" />
                         </div>

@@ -69,6 +69,12 @@ Route::controller(EstadisticasController::class)->group(function () {
         ->middleware(['auth', 'verified', 'permission:estadisticas.panel1.v']);
     Route::get('dashboard/estadisticas/creaciones', 'getCreacionesData')
         ->middleware(['auth', 'verified', 'permission:estadisticas.panel1.v']);
+    Route::get('dashboard/estadisticas/estado/comparativa', 'getComparativaEstado')
+        ->middleware(['auth', 'verified', 'permission:estadisticas.panel1.v']);
+    Route::get('dashboard/estadisticas/estado-verificado/comparativa', 'getComparativaEstadoVerificado')
+        ->middleware(['auth', 'verified', 'permission:estadisticas.panel1.v']);
+
+
 
     // Listado de estadísticas: por agentes
     Route::get('dashboard/estadisticas/agentes', 'estadisticasAgentes')
@@ -77,8 +83,10 @@ Route::controller(EstadisticasController::class)->group(function () {
         ->middleware(['auth', 'verified', 'permission:estadisticas.panel2.v']);
 
     // Listado de estadísticas: por sedes
-    Route::get('dashboard/estadisticas/sedes', 'viewSedes')
-        ->middleware(['auth', 'verified', 'permission:estadisticas.panel1.v']);
+    Route::get('dashboard/estadisticas/sedes', 'estadisticasSedes')
+        ->middleware(['auth', 'verified', 'permission:estadisticas.panel3.v']);
+    Route::get('dashboard/estadisticas/sedes/getStatsPorSede', 'getStatsPorSede')
+        ->middleware(['auth', 'verified', 'permission:estadisticas.panel3.v']);
 })->name('estadisticas');
 
 // Sedes

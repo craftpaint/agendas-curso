@@ -104,7 +104,7 @@ class EstadisticasController extends Controller
         echo view('layouts.footer', $data);
     }
 
-    public function viewSedes()
+    public function estadisticasSedes()
     {
         $user = Auth::user();
         $data = [
@@ -270,6 +270,160 @@ class EstadisticasController extends Controller
         ];
     }
 
+    public function getComparativaEstado(Request $r)
+    {
+        return $this->generateComparativaByField(
+            $r,
+            'id_estado',
+            $r->date_field ?? 'c.reserva_cita'
+        );
+    }
+
+    public function getComparativaEstadoVerificado(Request $r)
+    {
+        return $this->generateComparativaByField(
+            $r,
+            'id_estado_verificado',
+            $r->date_field ?? 'c.reserva_cita'
+        );
+    }
+
+    /**
+     * Helper genérico para armar comparativas “Actual vs Histórico” agrupadas por
+     * un campo de estado (por ejemplo c.id_estado o c.id_estado_verificado).
+     *
+     * @param  Request $r
+     * @param  string  $estadoField       // p.e. "c.id_estado"
+     * @param  string  $dateField         // p.e. "c.reserva_cita" o "c.created_at"
+     */
+    private function generateComparativaByField(Request $r, string $estadoField, string $dateField)
+    {
+        $user = Auth::user();
+
+        // 1) Parseo de fecha y rango
+        $startDate = $r->input('start_date')
+            ? Carbon::parse($r->input('start_date'))
+            : Carbon::today();
+
+        $range = (int)($r->input('range', 1));
+
+        // 2) Calcular intervalos actual / histórico
+        switch ($range) {
+            case 1: // Semana actual vs pasada
+                $currentStart  = $startDate->copy()->startOfWeek();
+                $currentEnd    = $startDate->copy()->endOfWeek();
+                $historicoStart = $currentStart->copy()->subWeek();
+                $historicoEnd  = $currentEnd->copy()->subWeek();
+                $periodo       = 'Semana';
+                break;
+
+            case 2: // Quincena: 2 semanas actual vs 2 semanas anteriores
+                $currentStart   = $startDate->copy()->subDays(13)->startOfWeek();
+                $currentEnd     = $startDate->copy()->endOfWeek();
+                $historicoStart = $currentStart->copy()->subWeeks(2);
+                $historicoEnd   = $currentEnd->copy()->subWeeks(2);
+                $periodo        = 'Quincena';
+                break;
+
+            case 3: // Mes actual vs anterior
+                $currentStart   = $startDate->copy()->startOfMonth();
+                $currentEnd     = $startDate->copy()->endOfMonth();
+                $historicoStart = $currentStart->copy()->subMonth()->startOfMonth();
+                $historicoEnd   = $currentStart->copy()->subMonth()->endOfMonth();
+                $periodo        = 'Mes';
+                break;
+
+            case 4: // Trimestre actual vs anterior
+                $currentStart   = $startDate->copy()->subMonths(2)->startOfMonth();
+                $currentEnd     = $startDate->copy()->endOfMonth();
+                $historicoStart = $currentStart->copy()->subMonths(3)->startOfMonth();
+                $historicoEnd   = $currentStart->copy()->subMonth()->endOfMonth();
+                $periodo        = 'Trimestre';
+                break;
+
+            default:
+                // fallback a semanal
+                $currentStart  = $startDate->copy()->startOfWeek();
+                $currentEnd    = $startDate->copy()->endOfWeek();
+                $historicoStart = $currentStart->copy()->subWeek();
+                $historicoEnd  = $currentEnd->copy()->subWeek();
+                $periodo       = 'Semana';
+                break;
+        }
+
+        // 3) Obtener lista maestro de nombres de estado
+        $estadosList = DB::table('tb_estado')
+            ->orderBy('nombre_estado')
+            ->pluck('nombre_estado')
+            ->all();
+
+        // 4) Consulta actual
+        $queryA = DB::table('tb_cita as c')
+            ->join('tb_estado as e', "c.{$estadoField}", '=', 'e.id_estado')
+            ->selectRaw("e.nombre_estado as estado, COUNT(*) as total")
+            ->whereBetween($dateField, [$currentStart, $currentEnd]);
+
+        // Filtra empresa aliada si aplica
+        if ($user->can('global.Pertenece a empresa aliada.v')) {
+            $empresa = DB::table('tb_sede')
+                ->where('id_sede', $user->id_sede)
+                ->value('id_empresa');
+            if ($empresa) {
+                $queryA->whereExists(function ($q) use ($empresa) {
+                    $q->select(DB::raw(1))
+                        ->from('tb_sede as s')
+                        ->whereColumn('c.id_sede', 's.id_sede')
+                        ->where('s.id_empresa', $empresa);
+                });
+            }
+        }
+
+        $actualData = $queryA
+            ->groupBy('e.nombre_estado')
+            ->pluck('total', 'estado')
+            ->all();
+
+        // 5) Consulta histórica
+        $queryH = DB::table('tb_cita as c')
+            ->join('tb_estado as e', "c.{$estadoField}", '=', 'e.id_estado')
+            ->selectRaw("e.nombre_estado as estado, COUNT(*) as total")
+            ->whereBetween($dateField, [$historicoStart, $historicoEnd]);
+
+        if ($user->can('global.Pertenece a empresa aliada.v') && isset($empresa)) {
+            $queryH->whereExists(function ($q) use ($empresa) {
+                $q->select(DB::raw(1))
+                    ->from('tb_sede as s')
+                    ->whereColumn('c.id_sede', 's.id_sede')
+                    ->where('s.id_empresa', $empresa);
+            });
+        }
+
+        $historicoData = $queryH
+            ->groupBy('e.nombre_estado')
+            ->pluck('total', 'estado')
+            ->all();
+
+        // 6) Armar series respetando el orden maestro
+        $serieActual = [];
+        $serieHist   = [];
+        foreach ($estadosList as $est) {
+            $serieActual[] = (int)($actualData[$est]   ?? 0);
+            $serieHist[]   = (int)($historicoData[$est] ?? 0);
+        }
+
+        // 7) Devolver JSON
+        return response()->json([
+            'labels'       => $estadosList,
+            'serieActual'  => $serieActual,
+            'serieHist'    => $serieHist,
+            'periodo'      => $periodo,
+            'currentStart' => $currentStart->toDateString(),
+            'currentEnd'   => $currentEnd->toDateString(),
+            'histStart'    => $historicoStart->toDateString(),
+            'histEnd'      => $historicoEnd->toDateString(),
+        ]);
+    }
+
     public function getStatsPorEstadoAgentes(Request $r)
     {
         $start      = Carbon::parse($r->start_date)->startOfDay();
@@ -334,6 +488,48 @@ class EstadisticasController extends Controller
         return response()->json([
             'categories' => $fechas,
             'series'    => $series
+        ]);
+    }
+
+    public function getStatsPorSede(Request $r)
+    {
+        // convertimos fechas
+        $start = Carbon::parse($r->start_date)->startOfDay();
+        $range = $r->rangeDays ?? 6;
+        $end   = $start->copy()->addDays($range)->endOfDay();
+
+        // sedes seleccionadas (array de id_sede)
+        $sedeIds = $r->input('sedes', []);
+
+        // consulta: total citas por sede
+        $qb = DB::table('tb_cita as c')
+            ->join('tb_sede as s', 'c.id_sede', '=', 's.id_sede')
+            ->select('s.id_sede', 's.nombre_sede', DB::raw('COUNT(*) as total'))
+            ->whereBetween('c.reserva_cita', [$start, $end])
+            ->groupBy('s.id_sede', 's.nombre_sede');
+
+        if (count($sedeIds))
+            $qb->whereIn('s.id_sede', $sedeIds);
+
+        $rows = $qb->get();
+
+        // preparar datos para la gráfica de barras
+        $categories = $rows->pluck('nombre_sede')->all();
+        $dataBar    = $rows->pluck('total')->all();
+
+        $sumTotal = array_sum($dataBar);
+
+        $dataPie = $rows->map(function ($r) {
+            return [
+                'name' => $r->nombre_sede,
+                'y'    => (int) $r->total,
+            ];
+        })->all();
+
+        return response()->json([
+            'categories' => $categories,
+            'dataBar'    => $dataBar,
+            'dataPie'    => $dataPie,
         ]);
     }
 }

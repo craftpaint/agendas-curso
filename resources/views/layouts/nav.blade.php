@@ -173,6 +173,20 @@
                         </li>
                     <?php
                     }
+                    if ($user->can('estadisticas.panel3.v')) {
+                    ?>
+                        <li class="menu-item <?= ($page == 'Estadisticas' && $subpage == 'Sedes') ? 'active' : '' ?>">
+                            <a href="{{ url('dashboard/estadisticas/sedes') }}" class="menu-link">
+                                <i class="menu-icon tf-icons ti ti-chart-histogram"></i>
+                                <?php if ($user->can('estadisticas.Solo ver estadisticas propias.v')) { ?>
+                                    <div>Como va la sede</div>
+                                <?php } else { ?>
+                                    <div>Sedes</div>
+                                <?php } ?>
+                            </a>
+                        </li>
+                    <?php
+                    }
                     ?>
                 </ul>
             </li>

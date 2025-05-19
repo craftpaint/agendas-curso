@@ -83,7 +83,7 @@
                             <?php } else { ?>
                                 <input type="hidden" name="id_servicio_liquidador" value="5">
                             <?php } ?>
-                            <div class="mb-4 col-12 col-md-6">
+                            <div class="mb-4 col-12 col-md-6" style="color: blue;">
                                 <label class="form-label">Codigo de Comparendo</label>
                                 <input id="codigo_comparendo_tagify" name="codigo_comparendo" class="form-control" placeholder="Escribe tu codigo de comparendo si lo conoces" autocomplete="off">
                             </div>

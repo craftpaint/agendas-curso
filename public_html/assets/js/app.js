@@ -20,6 +20,21 @@ $(function () {
     let tipoCita = '';
     let filtroAgente = '';
 
+    let MATERIAL3 = {
+        primary: getComputedStyle(document.documentElement).getPropertyValue('--color-azul-500').trim(),
+        secondary: getComputedStyle(document.documentElement).getPropertyValue('--color-verde').trim(),
+        tertiary: getComputedStyle(document.documentElement).getPropertyValue('--color-azul-300').trim(),
+        neutral: getComputedStyle(document.documentElement).getPropertyValue('--color-gris-oscuro').trim(),
+    };
+
+    // (Opcional) función para generar tonos (0–100).
+    // Aquí podrías integrar una librería como TonalPalette de Material3
+    function tone(color, shade) {
+        // Implementa tu conversión HSL/CAM16 → tono M3
+        // Por simplicidad usamos siempre el mismo color:
+        return color;
+    }
+
     $('.send_form').on('submit', function (event) {
         event.preventDefault(); // Evita que el formulario se envíe inmediatamente
         let isValid = true;
@@ -1312,7 +1327,7 @@ $(function () {
                     }
                 }
             ],
-            createdRow: function(row, data) {
+            createdRow: function (row, data) {
                 if (data.estado_actual_nombre == "Duplicado") {
                     $(row).css('background-color', 'rgba(255, 224, 224, 0.5)');
                 }
@@ -2381,6 +2396,103 @@ $(function () {
             updateCharts(null, $(this).val());
         });
 
+        // 1) Crear instancias
+        var chartEstado = new ApexCharts(
+            document.querySelector("#ChartComparacionEstado"), {
+            chart: { type: 'bar', height: 350, stacked: false },
+            series: [
+                { name: 'Actual', data: [] },
+                { name: 'Histórico', data: [] }
+            ],
+            xaxis: { categories: [] },
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    borderRadiusApplication: 'end',
+                    horizontal: true,
+                }
+            },
+            legend: {
+                fontFamily: 'Roboto, sans-serif',
+                markers: { radius: 12, width: 12, height: 12 },
+                position: 'top'
+            },
+            tooltip: {
+                theme: 'light',
+                style: { fontFamily: 'Roboto, sans-serif' },
+                onDatasetHover: { highlightDataSeries: true },
+            },
+            theme: {
+                mode: 'light',
+                palette: 'palette1' // puedes elegir palette1–5 para probar presets
+            },
+        }
+        );
+        var chartVerificado = new ApexCharts(
+            document.querySelector("#ChartComparacionEstadoVerificado"), {
+            chart: { type: 'bar', height: 350, stacked: false },
+            series: [
+                { name: 'Actual', data: [] },
+                { name: 'Histórico', data: [] }
+            ],
+            xaxis: { categories: [] },
+            plotOptions: { bar: { horizontal: true } },
+            legend: {
+                fontFamily: 'Roboto, sans-serif',
+                markers: { radius: 12, width: 12, height: 12 },
+                position: 'top'
+            },
+            tooltip: {
+                theme: 'light',
+                style: { fontFamily: 'Roboto, sans-serif' },
+                onDatasetHover: { highlightDataSeries: true },
+            },
+            theme: {
+                mode: 'light',
+                palette: 'palette4' // puedes elegir palette1–5 para probar presets
+            },
+        }
+        );
+
+        // 2) Render vacío
+        chartEstado.render();
+        chartVerificado.render();
+
+        // 3) Función genérica para cargar comparativa de estados
+        function fetchComparativa(endpoint, chart, tituloSelector) {
+            const fecha = $('#datePicker').val();
+            const range = +$('#select-rango-fechas-estadisticas').val();
+            $.getJSON(endpoint, { start_date: fecha, range: range })
+                .done(resp => {
+                    // labels y series
+                    chart.updateOptions({ xaxis: { categories: resp.labels } });
+                    chart.updateSeries([
+                        { name: resp.periodo + ' Actual', data: resp.serieActual },
+                        { name: resp.periodo + ' Histórico', data: resp.serieHist }
+                    ]);
+                    // título dinámico
+                    $(tituloSelector).text(`Comparativa ${resp.periodo}: Estados`);
+                })
+                .fail(err => console.error('fetchComparativa', endpoint, err));
+        }
+
+        // 4) Llamar a las dos comparativas
+        fetchComparativa(
+            'estadisticas/estado/comparativa',
+            chartEstado,
+            '#comp-estado-titulo'
+        );
+        fetchComparativa(
+            'estadisticas/estado-verificado/comparativa',
+            chartVerificado,
+            '#comp-estado-verificado-titulo'
+        );
+
+        // 5) Volver a cargar al cambiar filtros
+        $('#select-rango-fechas-estadisticas, #datePicker').on('change', function () {
+            fetchComparativa('estadisticas/estado/comparativa', chartEstado, '#comp-estado-titulo');
+            fetchComparativa('estadisticas/estado-verificado/comparativa', chartVerificado, '#comp-estado-verificado-titulo');
+        });
 
     };
 
@@ -2621,6 +2733,106 @@ $(function () {
 
             .val(DEFAULT_ESTADOS)
             .trigger('change');
+
+
+    }
+
+    if ($('#estadisticas-Sedes').length) {
+
+
+        // factory Apex
+        function crearBarChart() {
+            return new ApexCharts(document.querySelector("#barSedes"), {
+                chart: { type: 'bar', height: 300 },
+                xaxis: { categories: [] },
+                series: [{ name: 'Citas', data: [] }]
+            });
+        }
+        function crearPieChart() {
+            return new ApexCharts(document.querySelector("#pieSedes"), {
+                chart: { type: 'pie', height: 300 },
+                series: [],
+                labels: []
+            });
+        }
+
+        const barChart = crearBarChart(), pieChart = crearPieChart();
+        barChart.render(); pieChart.render();
+
+        function recargarSedes() {
+            // calculamos fechas igual que en agentes...
+            const r = +$('#select-rango-fechas-estadisticas').val();
+            const fecha = $('#datePicker').val();
+            const m = moment(fecha, 'YYYY-MM-DD');
+            let start, days;
+            switch (r) {
+                case 1: start = m.clone().startOf('isoWeek'); days = 6; break;
+                case 2: start = m.clone().startOf('isoWeek').subtract(7, 'days'); days = 13; break;
+                case 3: start = m.clone().startOf('month'); days = start.daysInMonth() - 1; break;
+                case 4:
+                    start = m.clone().startOf('month').subtract(2, 'months');
+                    days = m.clone().endOf('month').diff(start, 'days');
+                    break;
+            }
+            const start_date = start.format('YYYY-MM-DD');
+            const end_date = start.clone().add(days, 'days').format('YYYY-MM-DD');
+
+            $('#ConTextRangoFechas').text(`${start_date} — ${end_date}`);
+
+
+            const params = {
+                start_date,
+                rangeDays: days,
+                sedes: $('#filter-sedes').val() || []
+            };
+
+            $.getJSON('sedes/getStatsPorSede', params)
+                .done(resp => {
+                    // 1) barras
+                    barChart.updateOptions({ xaxis: { categories: resp.categories } });
+                    barChart.updateSeries([{ name: 'Citas', data: resp.dataBar }]);
+                    // 2) pastel
+                    pieChart.updateSeries(resp.dataPie.map(x => x.y));
+                    pieChart.updateOptions({ labels: resp.dataPie.map(x => x.name) });
+                });
+        }
+
+        // disparadores
+        $('#select-rango-fechas-estadisticas,#datePicker,#filter-sedes').on('change', recargarSedes);
+        $(function () { recargarSedes(); });
+
+
+
+        $('#btnClearFilters').on('click', () => {
+            location.reload();
+        });
+        // Inicializar Flatpickr
+        const today = new Date();
+
+        // Función para obtener el primer día de la semana
+        function getFirstDayOfWeek(date) {
+            const day = date.getDay(); // Día de la semana (0 = domingo, 1 = lunes, ...)
+            const diff = (day === 0 ? -6 : 1) - day; // Ajuste para que el lunes sea el primer día
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate() + diff);
+        }
+
+        const firstDayOfWeek = getFirstDayOfWeek(today);
+
+        flatpickr("#datePicker", {
+            dateFormat: "Y-m-d", // Formato de fecha (Año-Mes-Día)
+            defaultDate: firstDayOfWeek, // Fecha por defectoS
+            enable: [
+                function (date) {
+                    // Permitir solo los primeros días de la semana (lunes)
+                    return date.getDay() === 1; // 1 = Lunes
+                }
+            ],
+        });
+
+        $('#filter-sedes').select2({
+            placeholder: 'Selecciona Sedes...',
+            width: 'resolve'
+        })
 
 
     }
