@@ -410,9 +410,13 @@ class LoadController extends Controller
 
         $query = DB::table('tb_cita')
         ->join('tb_sede', 'tb_cita.id_sede', '=', 'tb_sede.id_sede')
+        ->join('tb_cliente', 'tb_cita.id_cliente', '=', 'tb_cliente.id_cliente')
         ->join('tb_servicio_liquidador', 'tb_cita.id_servicio_liquidador', '=', 'tb_servicio_liquidador.id_servicio_liquidador')
         ->select([
-            'tb_cita.id_cita',
+            'tb_cliente.nombre_cliente',
+            'tb_cliente.apellido_cliente',
+            'tb_cliente.tipo_doc_cliente',
+            'tb_cliente.doc_cliente',
             'tb_cita.reserva_cita',
             'tb_cita.rango_horario',
             'tb_cita.codigos_comparendo',

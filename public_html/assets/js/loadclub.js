@@ -56,8 +56,8 @@
 
         // Escuchamos el mensaje del iframe
         window.addEventListener('message', function (e) {
-            if (e.data === 'cita_agendada') {
-                window.location.href = redirect;
+            if (e.data.tipo === 'cita_agendada') {
+                window.location.href = redirect  + "?citaConfirm=" + e.data.idcita;
             }
         });
     } else {

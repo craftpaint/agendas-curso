@@ -231,6 +231,8 @@ $(function () {
                 $('#phoneCliente').val(fullPhoneNumber);
             }
             let data = form.serialize();
+            $('.boton_submit').prop('disabled', true);
+            
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -255,8 +257,10 @@ $(function () {
                         //     if (result.isConfirmed) {
                         //     }
                         // });
-                        sessionStorage.setItem('detalles-cita-id', response.id);
-                        window.parent.postMessage('cita_agendada', '*');
+                        window.parent.postMessage({
+                            tipo: 'cita_agendada',
+                            idcita: response.id
+                        }, '*');
                     } else {
                         Swal.fire({
                             title: '¡Error!',
