@@ -1,4 +1,44 @@
 $(function () {
+
+    //===================================================================================================================================================================================================================================================================================================================================================================================================================
+    //                   FUNCIONES GENERALES
+    //===================================================================================================================================================================================================================================================================================================================================================================================================================
+
+    // Ajustes globales de Toastr
+    toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": true,
+        "progressBar": true,
+        "positionClass": "toast-bottom-right",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "3000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    };
+    /**
+     * Copia al portapapeles el texto que recibe como parámetro.
+     * @param {string} texto - Lo que queremos copiar.
+     */
+    window.copiarContenido = async function (texto) {
+        try {
+            await navigator.clipboard.writeText(texto);
+            // Toast de éxito con Toastr
+            toastr.info(`Documento copiado: ${texto}`, 'Copiado');
+
+        } catch (err) {
+            console.error('Error al copiar:', err);
+            // Toast de error con Toastr
+            toastr.error('No se pudo copiar el documento.', 'Error');
+        }
+    };
+
     //Variables Globales
     let table_horarios = false;
     let table_festivos = false;
@@ -35,11 +75,79 @@ $(function () {
         return color;
     }
 
+    $('#formNuevoCliente').on('submit', function (event) {
+        event.preventDefault(); // Evita que el formulario se envíe inmediatamente
+        let isValid = true;
+        let action = $(this).attr('action');
+        let form = $(this);
+        // Recorrer todos los elementos con el atributo 'required'
+        form.find('[required]').each(function () {
+            if ($(this).val() === "" || (this.type === "checkbox" && !$(this).is(':checked'))) {
+                isValid = false;
+                $(this).css('border-color', 'red');
+            } else {
+                $(this).css('border-color', '');
+            }
+        });
+        // Si todos los campos son válidos, proceder con el envío por AJAX
+        if (isValid) {
+            if ($('#phoneCliente').length) {
+                const fullPhoneNumber = phoneInput.getNumber();
+                $('#phoneCliente').val(fullPhoneNumber);
+            }
+            $.ajax({
+                url: action,
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.validate) {
+
+                        // 2) Mostrar un SweetAlert sencillo
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Cliente creado!',
+                            text: response.text,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        }).then(() => {
+                            // 3) Cerrar modal
+                            $('#modalNuevoCliente').modal('hide');
+                            // 4) Limpiar el formulario
+                            $('#formNuevoCliente')[0].reset();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.text
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo guardar el cliente'
+                    });
+                }
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: '¡Por favor, completa todos los campos requeridos!'
+            });
+        }
+    });
+
     $('.send_form').on('submit', function (event) {
         event.preventDefault(); // Evita que el formulario se envíe inmediatamente
         let isValid = true;
         let action = $(this).attr('action');
         let form = $(this);
+        $('.boton_submit').prop('disabled', true); // Deshabilitar el botón de envío
         // Recorrer todos los elementos con el atributo 'required'
         form.find('[required]').each(function () {
             if ($(this).val() === "" || (this.type === "checkbox" && !$(this).is(':checked'))) {
@@ -94,6 +202,7 @@ $(function () {
             });
         } else {
             alertNotify('¡Error!', '¡Por favor, completa todos los campos requeridos!', 'error');
+            $('.boton_submit').prop('disabled', false); // habilitar el botón de envíob
         }
     });
     //Funciones Generales
@@ -182,6 +291,11 @@ $(function () {
             });
         });
     }
+
+    //===================================================================================================================================================================================================================================================================================================================================================================================================================
+    //                   FUNCIONES ESPECIFICAS
+    //===================================================================================================================================================================================================================================================================================================================================================================================================================
+
     //INICIO: SEDES------------------------------------------------------------------------
     //TABLAS DE SEDES
     if ($('.datatables-sedes').length) {
@@ -699,144 +813,145 @@ $(function () {
     //INICIO: CITAS------------------------------------------------------------------------
     let currentServiceType = null;
     if ($('.content_citas').length) {
-        let horarios = false;
-        //SELECT DE SEDES
-        $('#selectSede').change(function () {
-            let id = $(this).val();
-            let festivos = $(this).find(':selected').data('festivos');
-            let dias_fijos = [0, 1, 2, 3, 4, 5, 6];
-            // Configuración en español para el datepicker
-            $.fn.datepicker.dates['es'] = {
-                days: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
-                daysShort: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
-                daysMin: ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sá"],
-                months: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
-                monthsShort: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                today: "Hoy",
-                clear: "Limpiar",
-                format: "dd/mm/yyyy",
-                titleFormat: "MM yyyy",
-                weekStart: 0
-            };
-            // Ocultar y limpiar el select de vehículos (si lo tienes)
+        let horarios = [];
+        const $selectSede = $('#selectSede');
+        const $inputDia = $('#citaDia');
+        const $selectHora = $('#citaHora');
+
+        // 1) Localización de datepicker — se define una vez al cargar la página
+        $.fn.datepicker.dates['es'] = {
+            days: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
+            daysShort: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
+            daysMin: ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sá"],
+            months: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+            monthsShort: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+            today: "Hoy", clear: "Limpiar",
+            format: "dd/mm/yyyy", titleFormat: "MM yyyy", weekStart: 0
+        };
+
+        // Función para “resetear” el pickers y selects
+        function resetDateAndTime() {
+            // Destruyo cualquier datepicker existente y vuelvo a dejarlo en blanco y deshabilitado
+            $inputDia.datepicker('destroy').val('').prop('disabled', true);
+
+            // Limpio el select de horas y lo deshabilito
+            $selectHora
+                .html('<option value="">Seleccione una opción</option>')
+                .prop('disabled', true);
+        }
+
+        // Al cambiar de sede:
+        $selectSede.on('change', function () {
+            const sedeId = $(this).val();
+            const festivos = $(this).find(':selected').data('festivos') || [];
+            const diasFijos = [0, 1, 2, 3, 4, 5, 6];
+
+            // 2) Reinicio el flujo: limpio fecha y hora
+            resetDateAndTime();
+
+            // 3) (Opcional) Ocultar o limpiar select de vehículo
             hideVehiculoSelect();
 
-            // Llamada para obtener el servicio asociado a la sede en una función separada
-            obtenerServicioSede(id);
+            // 4) Cargo parámetros extra si tienes lógica aparte
+            obtenerServicioSede(sedeId);
 
+            // 5) Pido horarios vía AJAX
             $.ajax({
-                // AJAX para obtener los horarios de la sede seleccionada
-                url: url + '/dashboard/citas/get_horarios',
+                url: `${url}/dashboard/citas/get_horarios`,
                 type: 'POST',
-                data: { id: id },
+                data: { id: sedeId },
                 dataType: 'json',
                 success: function (response) {
-                    horarios = response.horarios;
-                    let dias_disponibles = [];
-                    let dias_disponibles_datapicker = [];
-                    horarios.forEach(function (item, index) {
-                        let dia_sede_horario = parseInt(item.dia_sede_horario);
-                        let dia_sede_horario_datapicker = parseInt(item.dia_sede_horario);
-                        if (dia_sede_horario_datapicker == 7) {
-                            dia_sede_horario_datapicker = 0;
-                        }
-                        dias_disponibles.push(dia_sede_horario);
-                        dias_disponibles_datapicker.push(dia_sede_horario_datapicker);
+                    horarios = response.horarios || [];
+
+                    // Construyo los arrays de días habilitados para el datepicker
+                    let disponibles = new Set();
+                    let disponiblesDP = new Set();
+
+                    horarios.forEach(item => {
+                        let d = parseInt(item.dia_sede_horario, 10);
+                        disponibles.add(d);
+                        // Para datepicker el domingo es 0, tu API usa 7
+                        disponiblesDP.add(d === 7 ? 0 : d);
                     });
-                    dias_disponibles = [...new Set(dias_disponibles)];
-                    dias_disponibles_datapicker = [...new Set(dias_disponibles_datapicker)];
-                    let dias_no_disponibles = dias_fijos.filter(elemento => !dias_disponibles_datapicker.includes(elemento));
-                    var startDateDatepicker = new Date(); // Por defecto se restringe a partir de hoy
-                    if (canEditCualquierFecha) {
-                        startDateDatepicker = null; // Permite seleccionar cualquier fecha
-                    }
 
-                    // Destruye el calendario antes de volver a inicializarlo
-                    $('#citaDia').datepicker('destroy');
-                    $('#citaDia').attr('disabled', false);
-                    $('#citaDia').datepicker({
-                        todayHighlight: true,
-                        daysOfWeekDisabled: dias_no_disponibles,
-                        orientation: isRtl ? 'auto right' : 'auto left',
-                        language: 'es',
-                        startDate: startDateDatepicker,
-                        beforeShowDay: function (date) {
-                            const fechaString = date.toISOString().split('T')[0];
-                            if (festivos !== null && festivos.includes(fechaString)) {
-                                return { enabled: false, classes: 'disabled-date', tooltip: 'Fecha no disponible' };
-                            }
-                            return true;
-                        }
-                    }).on('changeDate', function (e) {
-                        if (e.date !== undefined) {
-                            let dia_semana = e.date.getDay();
-                            if (dia_semana == 0) {
-                                dia_semana = 7;
-                            }
-                            let horarios_disponibles = [];
-                            // Verificamos si el día seleccionado es hoy
-                            let hoy = new Date();
-                            let dia = hoy.getDate().toString().padStart(2, '0'); // Agregar cero inicial si es necesario
-                            let mes = (hoy.getMonth() + 1).toString().padStart(2, '0'); // Agregar cero inicial
-                            let anio = hoy.getFullYear();
-                            let fecha_hoy = `${dia}/${mes}/${anio}`;
-                            let fecha_seleccionada = e.format();
-                            if (fecha_hoy == fecha_seleccionada) {
-                                horarios_disponibles = horarios.filter(function (item) {
-                                    let hora_inicio = item.inicio_horario; // formato 24 horas como string: "HH:mm:ss"
-                                    let hora_actual = hoy.getHours().toString().padStart(2, '0') + ':' +
-                                        hoy.getMinutes().toString().padStart(2, '0') + ':' +
-                                        hoy.getSeconds().toString().padStart(2, '0');
+                    // Días que el datepicker debe deshabilitar
+                    const diasNo = diasFijos.filter(d => !disponiblesDP.has(d));
 
-                                    // Convierte ambas horas a objetos Date con una fecha base
-                                    let horaInicioDate = new Date(`1970-01-01T${hora_inicio}Z`);
-                                    let horaActualDate = new Date(`1970-01-01T${hora_actual}Z`);
-                                    if ($('.content_citas_edit').length) {
-                                        return item.dia_sede_horario == dia_semana && (horaInicioDate > horaActualDate || item.rango_horario == rango_horario);;
-                                    } else {
-                                        return item.dia_sede_horario == dia_semana && horaInicioDate > horaActualDate;
-                                    }
-                                });
-
-                            } else {
-                                horarios_disponibles = horarios.filter(function (item) {
-                                    return item.dia_sede_horario == dia_semana;
-                                });
+                    // 6) Inicializo el datepicker ya limpio
+                    $inputDia
+                        .prop('disabled', false)
+                        .datepicker({
+                            todayHighlight: true,
+                            daysOfWeekDisabled: diasNo,
+                            orientation: isRtl ? 'auto right' : 'auto left',
+                            language: 'es',
+                            startDate: canEditCualquierFecha ? null : new Date(),
+                            beforeShowDay: date => {
+                                let iso = date.toISOString().slice(0, 10);
+                                if (festivos.includes(iso)) {
+                                    return { enabled: false, classes: 'disabled-date', tooltip: 'No disponible' };
+                                }
+                                return true;
                             }
-                            let html_select = '<option value="">Seleccione una opción</option>';
-                            horarios_disponibles.forEach(function (item, index) {
-                                html_select += '<option value="' + item.id_sede_horario + '">' + item.rango_horario + '</option>';
+                        })
+                        .off('changeDate')  // aseguro no duplicar handlers
+                        .on('changeDate', function (e) {
+                            if (!e.date) return;
+
+                            // Calculo si el día es hoy para filtrar horarios pasados
+                            const hoy = new Date();
+                            const sel = e.date;
+                            const mismoDia = (
+                                hoy.getFullYear() === sel.getFullYear() &&
+                                hoy.getMonth() === sel.getMonth() &&
+                                hoy.getDate() === sel.getDate()
+                            );
+
+                            const diaSemana = sel.getDay() === 0 ? 7 : sel.getDay();
+
+                            // Filtro horarios según si ya pasó la hora
+                            let disp = horarios.filter(item => {
+                                if (item.dia_sede_horario != diaSemana) return false;
+                                if (!mismoDia) return true;
+
+                                // Si es hoy, solo los que inician después de la hora actual
+                                const [h, m, s] = item.inicio_horario.split(':').map(Number);
+                                const inicio = new Date(); inicio.setHours(h, m, s, 0);
+                                return inicio > hoy;
                             });
-                            $('#citaHora').html(html_select);
-                            $('#citaHora').attr('disabled', false);
-                            //EDITAR CITA
+
+                            // 7) Pinto el select de horas
+                            let opts = '<option value="">Seleccione una opción</option>';
+                            disp.forEach(i => {
+                                opts += `<option value="${i.id_sede_horario}">${i.rango_horario}</option>`;
+                            });
+                            $selectHora.html(opts).prop('disabled', false);
+
+                            // 8) Si estamos en edición, selecciono el rango guardado
                             if ($('.content_citas_edit').length) {
-                                $('#citaHora option').each(function () {
-                                    if ($(this).text().trim() === rango_horario.trim()) { // Compara el texto
-                                        $(this).prop('selected', true); // Selecciona la opción
-                                        $('#citaHora').trigger('change'); // Dispara el evento 'change' si es necesario
-                                        return false; // Sale del bucle
-                                    }
-                                });
+                                $selectHora.find(`option:contains("${rango_horario.trim()}")`)
+                                    .prop('selected', true)
+                                    .trigger('change');
                             }
-                        }
-                    });
-                    //EDITAR CITA
+                        });
+
+                    // 9) Si es edición, precargo fecha y disparo changeDate
                     if ($('.content_citas_edit').length) {
-                        $('#citaDia').datepicker('setDate', new Date(reserva_cita)).trigger('changeDate');
+                        $inputDia.datepicker('setDate', new Date(reserva_cita))
+                            .trigger('changeDate');
                     }
                 },
-                error: function (error) {
-                    console.log(error);
-                }
+                error: console.error
             });
         });
-        //Editar citas
+
+        // Si estamos editando, disparo el cambio inicial
         if ($('.content_citas_edit').length) {
-            //Ejecutamos evento de cambio de sede
-            $('#selectSede').trigger('change');
+            $selectSede.trigger('change');
         }
     }
+
 
     function obtenerServicioSede(idSede) {
         $.ajax({
@@ -1421,31 +1536,51 @@ $(function () {
                 method: 'POST',
                 data: { id_cita: idCita },
                 success: function (response) {
-                    if (response.validate) {
-                        // Se abre el modal con SweetAlert2 y se inyecta el HTML recibido (línea de tiempo + formulario)
-                        Swal.fire({
-                            title: 'Seguimiento de la Cita',
-                            html: response.html,
-                            width: '80%',
-                            showCancelButton: true,
-                            cancelButtonText: 'Cerrar',
-                            showConfirmButton: false,
-                            customClass: {
-                                cancelButton: 'btn btn-outline-danger ml-1'
-                            }
+                    if (!response.validate) {
+                        return Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.text || 'No se pudo obtener el seguimiento.',
+                            confirmButtonText: 'OK',
+                            customClass: { confirmButton: 'btn btn-primary' }
                         });
+                    }
 
-                        // Dado que el HTML se inyecta de manera dinámica, debemos esperar a que se cargue en el DOM
-                        // y luego asignamos el evento "submit" al formulario dentro del modal.
-                        $('#form-seguimiento-modal').on('submit', function (e) {
-                            e.preventDefault(); // Evita el envío tradicional del formulario
+                    Swal.fire({
+                        title: 'Seguimiento de la Cita',
+                        html: response.html,
+                        width: '80%',
+                        showCancelButton: true,
+                        cancelButtonText: 'Cerrar',
+                        showConfirmButton: false,
+                        customClass: { cancelButton: 'btn btn-outline-danger ml-1' }
+                    });
 
-                            // Se serializan los datos del formulario. El campo "id_cita" ya se encuentra en el formulario.
-                            let formData = $(this).serialize();
+                    // Espera un tick para que SweetAlert pinte el modal en el DOM
+                    setTimeout(() => {
+                        const $form = $('#form-seguimiento-modal');
+                        const $submit = $form.find('button[type="submit"]');
 
-                            // Petición AJAX para guardar el nuevo seguimiento
+                        // 1) Quita handlers previos
+                        $form.off('submit');
+
+                        // 2) Ata uno nuevo, pero con bloqueo de reenvío
+                        $form.on('submit', function (e) {
+                            e.preventDefault();
+
+                            // Si ya se envió, cortamos aquí
+                            if ($submit.data('submitted')) {
+                                return;
+                            }
+
+                            // Bloqueamos reenvíos
+                            $submit.data('submitted', true);
+                            $submit.prop('disabled', true);
+
+                            // Serializar y enviar
+                            const formData = $form.serialize();
                             $.ajax({
-                                url: url + '/dashboard/citas/save_seguimiento', // Endpoint para guardar
+                                url: url + '/dashboard/citas/save_seguimiento',
                                 method: 'POST',
                                 data: formData,
                                 success: function (resp) {
@@ -1455,9 +1590,7 @@ $(function () {
                                             title: 'Éxito',
                                             text: resp.text,
                                             confirmButtonText: 'OK',
-                                            customClass: {
-                                                confirmButton: 'btn btn-primary'
-                                            }
+                                            customClass: { confirmButton: 'btn btn-primary' }
                                         });
                                         table_citas.ajax.reload();
                                     } else {
@@ -1466,9 +1599,7 @@ $(function () {
                                             title: 'Error',
                                             text: resp.text,
                                             confirmButtonText: 'OK',
-                                            customClass: {
-                                                confirmButton: 'btn btn-primary'
-                                            }
+                                            customClass: { confirmButton: 'btn btn-primary' }
                                         });
                                     }
                                 },
@@ -1478,26 +1609,12 @@ $(function () {
                                         title: 'Error',
                                         text: 'No se pudo conectar con el servidor.',
                                         confirmButtonText: 'OK',
-                                        customClass: {
-                                            confirmButton: 'btn btn-primary'
-                                        }
+                                        customClass: { confirmButton: 'btn btn-primary' }
                                     });
                                 }
                             });
                         });
-                    } else {
-                        // Si no se pudo obtener el seguimiento, mostramos un mensaje de error
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.text || 'No se pudo obtener el seguimiento.',
-                            confirmButtonText: 'OK',
-                            customClass: {
-                                confirmButton: 'btn btn-primary',
-                                cancelButton: 'btn btn-outline-danger ml-1'
-                            }
-                        });
-                    }
+                    }, 0);
                 },
                 error: function () {
                     // Manejo de error en caso de no poder conectar con el servidor

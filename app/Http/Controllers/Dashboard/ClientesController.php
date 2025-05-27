@@ -62,7 +62,7 @@ class ClientesController extends Controller
             return response()->json($objLoad);
         }
     }
-    //Ver sede
+    //Guardar cliente
     public function add()
     {
         $user = Auth::user();
@@ -89,21 +89,22 @@ class ClientesController extends Controller
             ];
             //Ejecución de la funcion
             try {
-                $nombre_cliente = $request->request->get('nombre_cliente');
-                $apellido_cliente = $request->request->get('apellido_cliente');
-                $email_cliente = $request->request->get('email_cliente');
-                $tipo_doc_cliente = $request->request->get('tipo_doc_cliente');
-                $doc_cliente = $request->request->get('doc_cliente');
-                $telefono_cliente = $request->request->get('telefono_cliente');
-                $desc_cliente = $request->request->get('desc_cliente');
-                //Guardamo la sede
-                $sql = "INSERT INTO tb_cliente (nombre_cliente, apellido_cliente, email_cliente, tipo_doc_cliente, doc_cliente, telefono_cliente, desc_cliente) VALUES ('$nombre_cliente', '$apellido_cliente', '$email_cliente', '$tipo_doc_cliente', '$doc_cliente', '$telefono_cliente', '$desc_cliente')";
-                $save = DB::insert($sql);
-                if ($save) {
+                $id = DB::table('tb_cliente')->insertGetId([
+                    'nombre_cliente'   => $request->nombre_cliente,
+                    'apellido_cliente' => $request->apellido_cliente,
+                    'email_cliente'    => $request->email_cliente,
+                    'tipo_doc_cliente' => $request->tipo_doc_cliente,
+                    'doc_cliente'      => $request->doc_cliente,
+                    'telefono_cliente' => $request->telefono_cliente,
+                    'desc_cliente'     => $request->desc_cliente,
+                ]);
+
+                if ($id) {
                     $objLoad = array(
                         "validate" => true,
-                        "text" => 'Sede guardada correctamente',
-                        "id" => DB::getPdo()->lastInsertId()
+                        "text" => 'Cliente guardado correctamente',
+                        "id" => $id,
+                        'nombre'   => $request->nombre_cliente . ' ' . $request->apellido_cliente
                     );
                 }
             } catch (\Throwable $e) {
@@ -113,7 +114,7 @@ class ClientesController extends Controller
             return response()->json($objLoad);
         }
     }
-    //Ver sede
+    //Ver cliente
     public function view($id)
     {
         $user = Auth::user();
@@ -132,7 +133,7 @@ class ClientesController extends Controller
         echo view('dashboard.clientes.view', $data);
         echo view('layouts.footer', $data);
     }
-    //Ver sede
+    //editar cliente
     public function edit($id)
     {
         $user = Auth::user();

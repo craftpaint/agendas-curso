@@ -141,7 +141,7 @@
         <?php
         }
         // Módulo estadísticas: se muestra si el usuario tiene permiso para ver el panel de estadísticas (ej. "estadisticas.panel1.v")
-        if ($user->can('estadisticas.panel1.v') || $user->can('estadisticas.panel2.v')) {
+        if ($user->can('estadisticas.panel1.v') || $user->can('estadisticas.panel2.v') || $user->can('estadisticas.panel3.v')) {
         ?>
             <li class="menu-item <?= ($page == 'Estadisticas') ? 'active open' : '' ?>">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">

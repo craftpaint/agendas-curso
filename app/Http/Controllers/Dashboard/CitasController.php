@@ -538,6 +538,19 @@ class CitasController extends Controller
                             'created_at' => $now,
                             'updated_at' => $now
                         ]);
+                        // Verificar si se envían anotaciones para seguimiento
+                        $nota_seguimiento  = $request->input('nota_seguimiento');
+                        $titulo_seguimiento = $request->input('titulo_seguimiento');
+                        if (!empty($nota_seguimiento) && !empty($titulo_seguimiento)) {
+                            DB::table('tb_seguimiento')->insert([
+                                'titulo_seguimiento' => $titulo_seguimiento,
+                                'nota_seguimiento'   => $nota_seguimiento,
+                                'id_cita'            => $id_cita,
+                                'id_user'            => Auth::user()->id,
+                                'created_at'         => Carbon::now(),
+                                'updated_at'         => Carbon::now()
+                            ]);
+                        }
                     } catch (\Throwable $e) {
                         Log::error($e->getMessage());
                     }
@@ -722,6 +735,16 @@ class CitasController extends Controller
                     ->where('id_cita', $id_cita)
                     ->update($updateData);
 
+                // Insertar la nueva anotación en la base de datos
+                DB::table('tb_seguimiento')->insert([
+                    'titulo_seguimiento' => 'Actualización de cita',
+                    'nota_seguimiento'   => 'La cita ha sido actualizada completamente.',
+                    'id_cita'            => $id_cita,
+                    'id_user'            => Auth::user()->id,
+                    'created_at'         => Carbon::now(),
+                    'updated_at'         => Carbon::now()
+                ]);
+
                 // Verificar si se envían anotaciones para seguimiento
                 $nota_seguimiento  = $request->input('nota_seguimiento');
                 $titulo_seguimiento = $request->input('titulo_seguimiento');
@@ -735,6 +758,8 @@ class CitasController extends Controller
                         'updated_at'         => Carbon::now()
                     ]);
                 }
+
+
 
                 $objLoad = [
                     'validate' => true,
@@ -784,7 +809,24 @@ class CitasController extends Controller
 
                 DB::table('tb_cita')
                     ->where('id_cita', $id_cita)
-                    ->update(['id_estado' => $id_estado]);
+                    ->update([
+                        'id_estado' => $id_estado,
+                        'updated_at' => Carbon::now()
+                    ]);
+
+                $nombre_estado = DB::table('tb_estado')
+                    ->where('id_estado', $id_estado)
+                    ->value('nombre_estado');
+
+                // Insertar la nueva anotación en la base de datos
+                DB::table('tb_seguimiento')->insert([
+                    'titulo_seguimiento' => 'El estado de la cita ha cambiado',
+                    'nota_seguimiento'   => 'El estado de la cita ha cambiado a ' . $nombre_estado,
+                    'id_cita'            => $id_cita,
+                    'id_user'            => Auth::user()->id,
+                    'created_at'         => Carbon::now(),
+                    'updated_at'         => Carbon::now()
+                ]);
 
                 $objLoad = [
                     'validate' => true,
@@ -808,7 +850,24 @@ class CitasController extends Controller
 
                 DB::table('tb_cita')
                     ->where('id_cita', $id_cita)
-                    ->update(['id_estado_verificado' => $id_estado_verificado]);
+                    ->update([
+                        'id_estado_verificado' => $id_estado_verificado,
+                        'updated_at' => Carbon::now()
+                    ]);
+
+                $nombre_estado = DB::table('tb_estado')
+                    ->where('id_estado', $id_estado_verificado)
+                    ->value('nombre_estado');
+
+                // Insertar la nueva anotación en la base de datos
+                DB::table('tb_seguimiento')->insert([
+                    'titulo_seguimiento' => 'El estado verificado de la cita ha cambiado',
+                    'nota_seguimiento'   => 'El estado verificado de la cita ha cambiado a ' . $nombre_estado,
+                    'id_cita'            => $id_cita,
+                    'id_user'            => Auth::user()->id,
+                    'created_at'         => Carbon::now(),
+                    'updated_at'         => Carbon::now()
+                ]);
 
                 $objLoad = [
                     'validate' => true,
@@ -831,9 +890,30 @@ class CitasController extends Controller
 
                 $id_agente = $request->request->get('id_agente');
                 $id_cita = $request->request->get('id_cita');
-                $sql = "UPDATE tb_cita SET id_agente_callcenter = '$id_agente' WHERE id_cita = '$id_cita'";
-                $sqlupdate = DB::update($sql);
-                if ($sqlupdate) {
+                // Usamos el Query Builder
+                $updated = DB::table('tb_cita')
+                    ->where('id_cita', $id_cita)
+                    ->update([
+                        'id_agente_callcenter' => $id_agente,
+                        'updated_at' => Carbon::now()
+                    ]);
+
+                if ($updated) {
+
+                    $nombre_agente = DB::table('users')
+                        ->where('id', $id_agente)
+                        ->value('name');
+
+                    // Insertar la nueva anotación en la base de datos
+                    DB::table('tb_seguimiento')->insert([
+                        'titulo_seguimiento' => 'El agente de la cita ha cambiado',
+                        'nota_seguimiento'   => 'El agente de la cita ha sido reasignado a ' . $nombre_agente,
+                        'id_cita'            => $id_cita,
+                        'id_user'            => Auth::user()->id,
+                        'created_at'         => Carbon::now(),
+                        'updated_at'         => Carbon::now()
+                    ]);
+
                     $objLoad = [
                         'validate' => true,
                         'text' => 'Agente Callcenter actualizado correctamente',
@@ -842,7 +922,7 @@ class CitasController extends Controller
                 } else {
                     $objLoad['text'] = 'No se realizaron cambios en el agente Callcenter.';
                     log::error('No se realizaron cambios en el agente Callcenter.');
-                    log::error($sqlupdate);
+                    log::error($updated);
                     log::info($id_agente);
                     log::info($id_cita);
                 }
@@ -977,7 +1057,7 @@ class CitasController extends Controller
                         'nombre_estado' => $request->nombre_estado,
                         'desc_estado' => $request->desc_estado,
                         'color_estado' => $request->color_estado,
-                        'updated_at' => now() // Actualizar la fecha de modificación
+                        'updated_at' =>  Carbon::now() // Actualizar la fecha de modificación
                     ]);
 
                 if ($update) {
@@ -1774,15 +1854,40 @@ class CitasController extends Controller
             $objLoad = ['validate' => false];
             //Ejecución de la funcion
             try {
+                $id_servicio_liquidador = $request->input('id_servicio_liquidador');
+                $id_cita = $request->input('id_cita');
 
-                $id_servicio_liquidador = $request->request->get('id_servicio_liquidador');
-                $id_cita = $request->request->get('id_cita');
-                $sql = "UPDATE tb_cita SET id_servicio_liquidador = '$id_servicio_liquidador' WHERE id_cita = '$id_cita'";
-                DB::update($sql);
-                $objLoad = [
-                    'validate' => true,
-                    'text' => 'Servicio actualizado correctamente'
-                ];
+                $updated = DB::table('tb_cita')
+                    ->where('id_cita', $id_cita)
+                    ->update([
+                        'id_servicio_liquidador' => $id_servicio_liquidador,
+                        'updated_at' => Carbon::now()
+                    ]);
+
+                if ($updated) {
+
+                    $nombre_servicio = DB::table('tb_servicio_liquidador')
+                        ->where('id_servicio_liquidador', $id_servicio_liquidador)
+                        ->value('nombre_servicio_liquidador');
+
+                    // Insertar la nueva anotación en la base de datos
+                    DB::table('tb_seguimiento')->insert([
+                        'titulo_seguimiento' => 'El servicio de la cita ha cambiado',
+                        'nota_seguimiento'   => 'El servicio de la cita ha cambiado a ' . $nombre_servicio,
+                        'id_cita'            => $id_cita,
+                        'id_user'            => Auth::user()->id,
+                        'created_at'         => Carbon::now(),
+                        'updated_at'         => Carbon::now()
+                    ]);
+
+                    $objLoad = [
+                        'validate' => true,
+                        'text' => 'Servicio actualizado correctamente'
+                    ];
+                } else {
+                    $objLoad['text'] = 'No se realizaron cambios en el servicio.';
+                    Log::warning("No se actualizó la cita ID $id_cita con el servicio liquidador ID $id_servicio_liquidador");
+                }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
@@ -1922,7 +2027,7 @@ class CitasController extends Controller
                         <label class="form-label">Nota del seguimiento</label>
                         <textarea class="form-control" rows="3" name="nota_seguimiento" id="nota_seguimiento" required></textarea>
                     </div>
-                    <button type="submit" class="btn btn-success">Guardar Seguimiento</button>
+                    <button type="submit" class="btn btn-success" id="btn-save-seguimiento">Guardar Seguimiento</button>
                 </form>
                 </div>
                 </div>
@@ -2099,7 +2204,7 @@ class CitasController extends Controller
                         'nombre_servicio_liquidador' => $request->nombre_servicio_liquidador,
                         'valor_servicio_liquidador' => $request->valor_servicio_liquidador,
                         'color_servicio_liquidador' => $request->color_servicio_liquidador,
-                        'updated_at' => now() // Actualizar la fecha de modificación
+                        'updated_at' => carbon::now() // Actualizar la fecha de modificación
                     ]);
 
                 if ($update) {
@@ -2158,9 +2263,15 @@ class CitasController extends Controller
 
                 $id_liquidador = $request->request->get('id_liquidador');
                 $estado_liquidador = $request->request->get('estado_liquidador');
-                $sql = "UPDATE tb_liquidador SET estado_liquidador = '$estado_liquidador' WHERE id_liquidador = '$id_liquidador'";
-                $sqlupdate = DB::update($sql);
-                if ($sqlupdate) {
+
+                $updated = DB::table('tb_liquidador')
+                    ->where('id_liquidador', $id_liquidador)
+                    ->update([
+                        'estado_liquidador' => $estado_liquidador,
+                        'updated_at' => Carbon::now()
+                    ]);
+
+                if ($updated) {
                     $objLoad = [
                         'validate' => true,
                         'text' => 'Estado servicio liquidador actualizado correctamente',
@@ -2169,7 +2280,7 @@ class CitasController extends Controller
                 } else {
                     $objLoad['text'] = 'No se realizaron cambios en el estado.';
                     log::error('No se realizaron cambios en el estado.');
-                    log::error($sqlupdate);
+                    log::error($updated);
                     log::info($id_liquidador);
                     log::info($estado_liquidador);
                 }
@@ -2194,12 +2305,26 @@ class CitasController extends Controller
                 $id_liquidador = $request->request->get('id_liquidador');
                 $comentario = $request->request->get('comentario_liquidador');
 
-                $sql = "UPDATE tb_liquidador SET comentario_liquidador = '$comentario' WHERE id_cita = $id_cita AND id_liquidador = $id_liquidador";
-                DB::update($sql);
-                $objLoad = [
-                    'validate' => true,
-                    'text' => 'Comentario actualizado correctamente'
-                ];
+                $updated = DB::table('tb_liquidador')
+                    ->where('id_cita', $id_cita)
+                    ->where('id_liquidador', $id_liquidador)
+                    ->update([
+                        'comentario_liquidador' => $comentario,
+                        'updated_at' => Carbon::now()
+                    ]);
+
+                if ($updated) {
+                    DB::table('tb_cita')
+                        ->where('id_cita', $id_cita)
+                        ->update(['updated_at' => Carbon::now()]);
+
+                    $objLoad = [
+                        'validate' => true,
+                        'text' => 'Comentario actualizado correctamente'
+                    ];
+                } else {
+                    Log::warning("No se actualizó el comentario. ID cita: $id_cita, ID liquidador: $id_liquidador");
+                }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
@@ -2232,7 +2357,8 @@ class CitasController extends Controller
                         ->where('id_cita', $id_cita)
                         ->where('id_liquidador', $id_liquidador)
                         ->update([
-                            'pago_liquidador' => $pago_liquidador
+                            'pago_liquidador' => $pago_liquidador,
+                            'updated_at' => Carbon::now()
                         ]);
                 }
 

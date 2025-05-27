@@ -36,9 +36,11 @@
     <link rel="stylesheet" href="{{url('assets/vendor/libs/spinkit/spinkit.css')}}" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notiflix@3.2.8/src/notiflix.min.css">
     <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{url('assets/css/style.css')}}" />
     <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet">
     <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css">
+    <link rel="stylesheet" href="{{url('assets/css/style.css')}}" />
+
 
     <script src="{{url('assets/vendor/js/helpers.js')}}"></script>
     <script src="https://unpkg.com/filepond/dist/filepond.js"></script>

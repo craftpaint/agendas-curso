@@ -117,7 +117,7 @@
                 </div>
                 <div class="mb-4 col-12 col-md-6">
                     <label class="form-label">Codigo de Comparendo</label>
-                    <input id="codigo_comparendo_tagify" name="codigo_comparendo" class="form-control" placeholder="Escribe tu codigo de comparendo si lo conoces" autocomplete="off">
+                    <input id="codigo_comparendo_tagify" name="codigo_comparendo" class="form-control" placeholder="Escribe tu codigo de comparendo si lo conoces" autocomplete="off" maxlength="3">
                     <p class="text-muted">Si conoce el codigo del Comparendo, puede ingresarlo aquí. de lo contrario puedes dejarlo vacio.</p>
                 </div>
                 <div class="col-12 row mx-auto p-0" id="divContentVehiculo">

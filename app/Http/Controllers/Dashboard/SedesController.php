@@ -204,50 +204,92 @@ class SedesController extends Controller
     public function update(Request $request)
     {
         if ($request->ajax()) {
+
+            // 1. Validación de campos
+            $data = $request->validate([
+                'id_sede'         => 'required|integer|exists:tb_sede,id_sede',
+                'idrun_sede'      => 'required|string|max:50',
+                'nombre_sede'     => 'required|string|max:255',
+                'tel_sede'        => 'required|string|max:50',
+                'estado_sede'     => 'required|in:Activo,Inactivo',
+                'id_servicio'     => 'required|integer|exists:tb_servicio,id_servicio',
+                'direccion_sede'  => 'required|string',
+                'festivos_sede'   => 'nullable|array',
+                'festivos_sede.*' => 'date',
+                'id_empresa'      => 'nullable|integer|exists:tb_empresa,id_empresa',
+                'semanaFull'      => 'nullable|in:1',
+                // No validamos aquí los arrays dinámicos de horarios
+            ]);
+
+            $id_sede = $data['id_sede'];
+
             $objLoad = [
                 'validate' => false,
                 'text' => 'Error al guardar la sede'
             ];
             try {
-                $id_sede = $request->request->get('id_sede');
-                $idrun_sede = $request->request->get('idrun_sede');
-                $nombre_sede = $request->request->get('nombre_sede');
-                $tel_sede = $request->request->get('tel_sede');
-                $estado_sede = $request->request->get('estado_sede');
-                $id_servicio = $request->request->get('id_servicio');
-                $direccion_sede = $request->request->get('direccion_sede');
-                $festivos_sede = $request->input('festivos_sede');
-                $id_empresa = $request->request->get('id_empresa');
-                //Verificamos si viene full
-                $semanaFull = $request->request->get('semanaFull');
-                $sql = "UPDATE tb_sede SET idrun_sede = '" . $idrun_sede . "', nombre_sede = '" . $nombre_sede . "', direccion_sede = '" . $direccion_sede . "', tel_sede = '" . $tel_sede . "', estado_sede = '" . $estado_sede . "', id_servicio = '" . $id_servicio . "', id_empresa = '" . $id_empresa . "', festivos_sede = '" . serialize($festivos_sede) . "' WHERE id_sede = " . $id_sede . "";
-                DB::update($sql);
-                $sql = "DELETE FROM tb_sede_horario WHERE id_sede = " . $id_sede . "";
-                DB::delete($sql);
-                $a_dias = array('1', '2', '3', '4', '5', '6', '7');
-                foreach ($a_dias as $dia) {
-                    if (isset($_POST['horario_' . $dia])) {
-                        $horarios = $_POST['horario_' . $dia];
-                        foreach ($horarios as $horario) {
-                            if ($horario['id'] != '' && $horario['cupos'] != '') {
-                                $sql = "INSERT INTO tb_sede_horario (id_sede, id_horario, cupo_sede_horario, dia_sede_horario) VALUES ('" . $id_sede . "', '" . $horario['id'] . "', '" . $horario['cupos'] . "', '" . $dia . "')";
-                                DB::insert($sql);
-                                if ($semanaFull == 1) {
-                                    $sql = "INSERT INTO tb_sede_horario (id_sede, id_horario, cupo_sede_horario, dia_sede_horario) VALUES ('" . $id_sede . "', '" . $horario['id'] . "', '" . $horario['cupos'] . "', '2')";
-                                    DB::insert($sql);
-                                    $sql = "INSERT INTO tb_sede_horario (id_sede, id_horario, cupo_sede_horario, dia_sede_horario) VALUES ('" . $id_sede . "', '" . $horario['id'] . "', '" . $horario['cupos'] . "', '3')";
-                                    DB::insert($sql);
-                                    $sql = "INSERT INTO tb_sede_horario (id_sede, id_horario, cupo_sede_horario, dia_sede_horario) VALUES ('" . $id_sede . "', '" . $horario['id'] . "', '" . $horario['cupos'] . "', '4')";
-                                    DB::insert($sql);
-                                    $sql = "INSERT INTO tb_sede_horario (id_sede, id_horario, cupo_sede_horario, dia_sede_horario) VALUES ('" . $id_sede . "', '" . $horario['id'] . "', '" . $horario['cupos'] . "', '5')";
-                                    DB::insert($sql);
-                                }
+
+                DB::table('tb_sede')
+                    ->where('id_sede', $id_sede)
+                    ->update([
+                        'idrun_sede'        => $data['idrun_sede'],
+                        'nombre_sede'       => $data['nombre_sede'],
+                        'direccion_sede'    => $data['direccion_sede'],
+                        'tel_sede'          => $data['tel_sede'],
+                        'estado_sede'       => $data['estado_sede'],
+                        'id_servicio'       => $data['id_servicio'],
+                        'id_empresa'        => $data['id_empresa'] ?? null,
+                        'festivos_sede'     => serialize($data['festivos_sede'] ?? []),
+                    ]);
+
+                // 3. Eliminar horarios anteriores
+                DB::table('tb_sede_horario')
+                    ->where('id_sede', $id_sede)
+                    ->delete();
+
+                // 4. Preparar inserciones de horarios
+                $inserts = [];
+                $dias = range(1, 7); // 1=Lun ... 7=Dom
+
+                foreach ($dias as $dia) {
+                    $key = "horario_{$dia}";
+                    $horariosDia = $request->input($key, []);
+
+                    // Si estamos en martes–viernes y se marco semanaFull, saltamos:
+                    if (! empty($data['semanaFull']) && $dia >= 2 && $dia <= 5) {
+                        continue;
+                    }
+
+                    foreach ($horariosDia as $item) {
+                        if (empty($item['id']) || empty($item['cupos'])) {
+                            continue;
+                        }
+
+                        // inserción para el día original
+                        $inserts[] = [
+                            'id_sede'           => $id_sede,
+                            'id_horario'        => $item['id'],
+                            'cupo_sede_horario' => $item['cupos'],
+                            'dia_sede_horario'  => $dia,
+                        ];
+
+                        // si es lunes y marcaste semanaFull, replicamos a Mart–Vie
+                        if (! empty($data['semanaFull']) && $dia == 1) {
+                            for ($d = 2; $d <= 5; $d++) {
+                                $inserts[] = [
+                                    'id_sede'           => $id_sede,
+                                    'id_horario'        => $item['id'],
+                                    'cupo_sede_horario' => $item['cupos'],
+                                    'dia_sede_horario'  => $d,
+                                ];
                             }
                         }
                     }
-                    if ($semanaFull == 1) {
-                        break;
-                    }
+                }
+
+                // 5. Insertar todos los horarios de una vez
+                if (! empty($inserts)) {
+                    DB::table('tb_sede_horario')->insert($inserts);
                 }
                 $objLoad = array(
                     "validate" => true,
