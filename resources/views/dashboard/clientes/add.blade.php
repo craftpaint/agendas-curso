@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
 <!-- Layout container -->
-<div class="layout-page content_clientes" style="padding-top:0 !important">
+<div class="layout-page content_clientes">
     <!-- Content wrapper -->
     <div class="content-wrapper">
         <!-- Content -->

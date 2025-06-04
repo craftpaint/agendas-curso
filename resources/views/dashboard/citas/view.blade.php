@@ -1,5 +1,5 @@
 <!-- Layout container -->
-<div class="layout-page content_citas content_citas_edit" style="padding-top:0 !important">
+<div class="layout-page content_citas content_citas_edit">
     <!-- Content wrapper -->
     <div class="content-wrapper">
         <!-- Content -->

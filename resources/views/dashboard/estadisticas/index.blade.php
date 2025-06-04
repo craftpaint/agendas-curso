@@ -1,5 +1,5 @@
 <!-- Layout container -->
-<div class="layout-page" style="padding-top:0 !important" id="estadisticas-fechas-citas">
+<div class="layout-page" id="estadisticas-fechas-citas">
     <!-- Content wrapper -->
     <div class="content-wrapper">
         <!-- Content -->

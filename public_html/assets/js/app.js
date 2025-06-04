@@ -141,6 +141,70 @@ $(function () {
             });
         }
     });
+    $('#formNuevoVehiculo').on('submit', function (event) {
+        event.preventDefault(); // Evita que el formulario se envíe inmediatamente
+        let isValid = true;
+        let action = $(this).attr('action');
+        let form = $(this);
+        // Recorrer todos los elementos con el atributo 'required'
+        form.find('[required]').each(function () {
+            if ($(this).val() === "" || (this.type === "checkbox" && !$(this).is(':checked'))) {
+                isValid = false;
+                $(this).css('border-color', 'red');
+            } else {
+                $(this).css('border-color', '');
+            }
+        });
+        // Si todos los campos son válidos, proceder con el envío por AJAX
+        if (isValid) {
+            $.ajax({
+                url: action,
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.validate) {
+
+                        // 2) Mostrar un SweetAlert sencillo
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡El vehiculo ha sido agregado!',
+                            text: response.text,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        }).then(() => {
+                            checkAndLoadVehiculos();
+
+                            // 3) Cerrar modal
+                            $('#modalNuevoVehiculo').modal('hide');
+                            // 4) Limpiar el formulario
+                            $('#formNuevoVehiculo')[0].reset();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.text
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo agregar el vehiculo'
+                    });
+                }
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: '¡Por favor, completa todos los campos requeridos!'
+            });
+        }
+    });
 
     $('.send_form').on('submit', function (event) {
         event.preventDefault(); // Evita que el formulario se envíe inmediatamente
@@ -809,6 +873,16 @@ $(function () {
                 dataType: 'json'
             }
         });
+
+    }
+    if ($('.select_search_cliente_modal').length) {
+        $('.select_search_cliente_modal').select2({
+            dropdownParent: $('#modalNuevoVehiculo'),
+            ajax: {
+                url: url + '/dashboard/clientes/get_clientes_in_vehicle',
+                dataType: 'json'
+            },
+        });
     }
     //INICIO: CITAS------------------------------------------------------------------------
     let currentServiceType = null;
@@ -989,7 +1063,7 @@ $(function () {
         // Condiciones:
         // 1. currentServiceType debe existir y ser "CIA"
         // 2. Debe haber un cliente seleccionado
-        if (currentServiceType && currentServiceType == 'CIA' && clientId) {
+        if (clientId) {
             loadVehiculos(clientId);
         } else {
             hideVehiculoSelect();
@@ -1790,8 +1864,8 @@ $(function () {
                                     <i class="tf-icons ti ti-edit ti-md"></i>
                                 </a>` : ``}
                             ${(canDeleteUsuarios) ? `
-                                <a href="#" data-id="${full.id}" class="btn_edit_usuario btn btn-icon btn-label-primary waves-effect me-2">
-                                    <i class="tf-icons ti ti-edit ti-md"></i>
+                                <a href="#" data-id="${full.id}" class="btn_delete_usuario btn btn-icon btn-label-danger waves-effect">
+                                    <i class="tf-icons ti ti-trash ti-md"></i>
                                 </a>` : ``}
                         </div>`	;
                     }
@@ -1822,7 +1896,7 @@ $(function () {
                         data: { id: id },
                         success: function (data) {
                             if (data.validate) {
-                                table_estados.ajax.reload();
+                                table_usuarios.ajax.reload();
                             } else {
                                 alertNotify('¡Error!', data.text, 'error');
                             }

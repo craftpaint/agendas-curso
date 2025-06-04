@@ -29,6 +29,7 @@ class UsersController extends Controller
         $data['sedes'] = DB::select($sql);;
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.users.index', $data);
         echo view('layouts.footer', $data);
     }
@@ -231,11 +232,7 @@ class UsersController extends Controller
             ];
             //Ejecución de la funcion
             try {
-                $id = $request->request->get('id');
-                $sql = "DELETE FROM tb_sede_horario WHERE id_sede = " . $id . "";
-                DB::delete($sql);
-                $sql = "DELETE FROM tb_sede WHERE id_sede = " . $id . "";
-                DB::delete($sql);
+                //Se debe corregir para usar soft delete
                 $objLoad = array(
                     "validate" => true,
                     "text" => 'Sede borrada correctamente'

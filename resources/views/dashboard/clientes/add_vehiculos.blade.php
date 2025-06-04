@@ -1,5 +1,5 @@
 <!-- Layout container -->
-<div class="layout-page content_vehiculos" style="padding-top:0 !important">
+<div class="layout-page content_vehiculos">
 
     <!-- Content wrapper -->
     <div class="content-wrapper">

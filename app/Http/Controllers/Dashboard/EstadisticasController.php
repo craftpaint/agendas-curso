@@ -49,6 +49,7 @@ class EstadisticasController extends Controller
 
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.estadisticas.index', $data);
         echo view('layouts.footer', $data);
     }
@@ -100,6 +101,7 @@ class EstadisticasController extends Controller
 
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.estadisticas.agentes', $data);
         echo view('layouts.footer', $data);
     }
@@ -136,6 +138,7 @@ class EstadisticasController extends Controller
 
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.estadisticas.sedes', $data);
         echo view('layouts.footer', $data);
     }

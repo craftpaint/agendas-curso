@@ -1,5 +1,5 @@
 <!-- Layout container -->
-<div class="layout-page" style="padding-top:0 !important" id="estadisticas-Sedes">
+<div class="layout-page" id="estadisticas-Sedes">
     <!-- Content wrapper -->
     <div class="content-wrapper">
         <!-- Content -->

@@ -24,6 +24,7 @@ class ClientesController extends Controller
         $data['alert'] = $alert;
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.clientes.index', $data);
         echo view('layouts.footer', $data);
     }
@@ -76,6 +77,7 @@ class ClientesController extends Controller
         $data['alert'] = $alert;
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.clientes.add', $data);
         echo view('layouts.footer', $data);
     }
@@ -130,6 +132,7 @@ class ClientesController extends Controller
         $data['vehiculos'] = AdminHelper::get_vehiculo_by_id_cliente($id);
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.clientes.view', $data);
         echo view('layouts.footer', $data);
     }
@@ -149,6 +152,7 @@ class ClientesController extends Controller
         $data['vehiculos'] = AdminHelper::get_vehiculo_by_id_cliente($id);
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.clientes.edit', $data);
         echo view('layouts.footer', $data);
     }
@@ -233,6 +237,7 @@ class ClientesController extends Controller
         $data['alert'] = $alert;
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.clientes.vehiculos', $data);
         echo view('layouts.footer', $data);
     }
@@ -310,6 +315,7 @@ class ClientesController extends Controller
         $data['alert'] = $alert;
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.clientes.add_vehiculos', $data);
         echo view('layouts.footer', $data);
     }
@@ -379,6 +385,7 @@ class ClientesController extends Controller
         }
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.clientes.edit_vehiculos', $data);
         echo view('layouts.footer', $data);
     }
@@ -401,6 +408,7 @@ class ClientesController extends Controller
         }
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.clientes.view_vehiculos', $data);
         echo view('layouts.footer', $data);
     }

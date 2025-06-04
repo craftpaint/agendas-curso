@@ -1,4 +1,4 @@
-<div class="layout-page" style="padding-top:0 !important">
+<div class="layout-page">
     <!-- Content wrapper -->
     <div class="content-wrapper">
 

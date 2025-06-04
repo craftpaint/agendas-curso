@@ -2,26 +2,35 @@
     rol = '<?= $rol ?>';
 </script>
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
-    <div class="app-brand my-3">
-        <a href="{{ url('') }}" class="app-brand-link pt-5">
-            <img src="{{ url('assets/img/logos/logo-curso.svg') }}" alt="Logo" class="img-fluid w-100" style="object-fit: contain;">
+    <div class="app-brand py-4 px-6">
+        <a href="{{ url('') }}" class="app-brand-link w-100">
+            <!-- Logo pequeño para menú colapsado -->
+            <img src="{{ url('assets/img/logos/logo-small.svg') }}"
+                class="app-brand-img-collapsed w-px-30 mx-auto"
+                style="object-fit: contain;"
+                alt="logo pequeño curso comparendo">
+            <!-- Logo para menú expandido -->
+            <img src="{{ url('assets/img/logos/logo-curso.svg') }}"
+                class="app-brand-img w-px-120 mx-auto"
+                style="object-fit: contain;"
+                alt="logo grande curso comparendo">
         </a>
         <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
             <i class="ti menu-toggle-icon d-none d-xl-block align-middle"></i>
             <i class="ti ti-x d-block d-xl-none ti-md align-middle"></i>
         </a>
     </div>
-    <div class="menu-inner-shadow"></div>
+    <div class="menu-inner-shadow mt-4"></div>
     <ul class="menu-inner py-1">
-        <li class="menu-header small" style="padding-top:0">
-            <span class="menu-header-text pb-2" style="display: block; color:#000"><?= $user->email ?></span>
+        <li class="menu-header small">
+            <span class="pb-2" style="display: block; color:#000"><?= $user->email ?></span>
             <?php
             if ($user->id_sede !== null) {
                 $sede = \App\Helpers\AdminHelper::get_sede_by_id($user->id_sede);
             ?>
-                <span class="badge bg-label-dark">Sede: <?= $sede['nombre_sede'] ?></span>
+                <span class="badge bg-label-dark mb-2">Sede: <?= $sede['nombre_sede'] ?></span>
             <?php } ?>
-            <span class="badge bg-label-primary">Rol: <?= $rol ?></span>
+            <span class="badge bg-label-primary mb-2">Rol: <?= $rol ?></span>
         </li>
 
         <?php

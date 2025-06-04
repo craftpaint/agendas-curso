@@ -2,7 +2,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
 
 <!-- Layout container -->
-<div class="layout-page content_citas" style="padding-top:0 !important">
+<div class="layout-page content_citas">
     <!-- Content wrapper -->
     <div class="content-wrapper">
         <!-- Content -->
@@ -41,7 +41,7 @@
                             </div>
                             <div class="mb-4 col-md-6">
                                 <label class="form-label">Estado de la cita <span class="required_flied">*</span></label>
-                                <select id="selectEstado" class="form-select" required name="id_estado">
+                                <select id="selectEstado" class="select2 form-select" required name="id_estado">
                                     <option value="">Seleccionar estado</option>
                                     <?php
                                     if ($sedes->isNotEmpty()) {
@@ -55,7 +55,7 @@
                             <?php if ($user->can('cita.Estado Verificado.e')) { ?>
                                 <div class="mb-4 col-md-6">
                                     <label class="form-label">Estado verificado de la cita <span class="required_flied">*</span></label>
-                                    <select id="selectEstadoVerificado" class="form-select" required name="id_estado_verificado">
+                                    <select id="selectEstadoVerificado" class="select2 form-select" required name="id_estado_verificado">
                                         <option value="">Seleccionar estado</option>
                                         <?php
                                         if ($sedes->isNotEmpty()) {
@@ -73,7 +73,7 @@
                             <?php if ($user->can('cita.Servicio Liquidador.e')) { ?>
                                 <div class="mb-4 col-md-6">
                                     <label class="form-label">Servicio Liquidador<span class="required_flied">*</span></label>
-                                    <select id="selectSede" class="select2 form-select" required name="id_servicio_liquidador">
+                                    <select id="selectServicioLiquidador" class="select2 form-select" required name="id_servicio_liquidador">
                                         <option value="">Seleccionar servicio</option>
                                         <?php
                                         if ($sedes->isNotEmpty()) {
@@ -106,11 +106,19 @@
                                     + Nuevo cliente
                                 </button>
                             </div>
-                            <div class="mb-4 col-md-12" id="divSelectVehiculo" style="display: none;">
-                                <label class="form-label">Vehículo</label>
-                                <select id="selectVehiculo" class="select2 form-select" name="id_vehiculo">
-                                    <option value="">Seleccionar vehículo</option>
-                                </select>
+                            <label class="form-label col-12">Vehículo</label>
+                            <div class="mb-4 col-md-12 input-group">
+                                <div class="col-10">
+                                    <select id="selectVehiculo" class="select2 form-select" name="id_vehiculo">
+                                        <option value="">Seleccionar vehículo</option>
+                                    </select>
+                                </div>
+                                <button type="button"
+                                    class="col-2 btn btn-outline-primary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalNuevoVehiculo">
+                                    + Agregar vehículo
+                                </button>
                             </div>
                             <div class="mb-4 col-md-12">
                                 <label class="form-label">Descripción de la cita <span class="required_flied">*</span></label>
@@ -226,6 +234,56 @@
                             utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
                         });
                     </script>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal “agregar vehiculo” -->
+    <div class="modal fade" id="modalNuevoVehiculo" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="{{url('dashboard/clientes/save_vehiculo')}}" id="formNuevoVehiculo">
+                <div class="modal-content">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title">Agregar vehiculo</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div class="row">
+                            <div class="mb-4 col-md-12">
+                                <label class="form-label">Cliente <span class="required_flied">*</span></label>
+                                <select class="select_search_cliente_modal" name="id_cliente" required>
+                                    <option value="">Seleccione un cliente</option>
+                                </select>
+                            </div>
+                            <div class="mb-4 col-md-4">
+                                <label class="form-label">Tipo de vehiculo <span class="required_flied">*</span></label>
+                                <select class="select2 form-select" required name="tipo_vehiculo">
+                                    <option value="Motocicleta">Motocicleta</option>
+                                    <option value="Automotor">Automotor</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="mb-4 col-md-4">
+                                <label class="form-label">Placa de vehiculo <span class="required_flied">*</span></label>
+                                <input type="text" class="form-control" name="placa_vehiculo" required>
+                            </div>
+                            <div class="mb-4 col-md-4">
+                                <label class="form-label">Modelo de vehiculo <span class="required_flied">*</span></label>
+                                <input type="number" class="form-control" name="modelo_vehiculo" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary boton_submit">Agregar</button>
+                    </div>
                 </div>
             </form>
         </div>

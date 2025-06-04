@@ -1,5 +1,5 @@
 <!-- Layout container -->
-<div class="layout-page" style="padding-top:0 !important">
+<div class="layout-page">
     <!-- Content wrapper -->
     <div class="content-wrapper">
         <!-- Content -->
@@ -30,13 +30,13 @@
                                 </form>
                                 <label class="form-label">Horarios registrados</label>
                                 <table class="datatables-horarios table">
-																	<thead>
-																		<tr>
-																				<th>Rango horario</th>
-																				<th>opt</th>
-																		</tr>
-																	</thead>
-																</table>
+                                    <thead>
+                                        <tr>
+                                            <th>Rango horario</th>
+                                            <th>opt</th>
+                                        </tr>
+                                    </thead>
+                                </table>
                             </div>
                         </div>
                     </div>
