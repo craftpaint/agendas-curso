@@ -35,6 +35,7 @@ class PermissionsController extends Controller
         $data['alert'] = $alert;
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.permissions.index', $data);
         echo view('layouts.footer', $data);
     }

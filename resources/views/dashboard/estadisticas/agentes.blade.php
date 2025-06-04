@@ -1,5 +1,5 @@
 <!-- Layout container -->
-<div class="layout-page" style="padding-top:0 !important" id="estadisticas-agentes">
+<div class="layout-page" id="estadisticas-agentes">
     @php
     $agentes = $listado_agentes;
     @endphp

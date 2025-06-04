@@ -79,6 +79,7 @@ class CitasController extends Controller
 
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.citas.index', $data);
         echo view('layouts.footer', $data);
     }
@@ -332,6 +333,7 @@ class CitasController extends Controller
 
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.citas.add', $data);
         echo view('layouts.footer', $data);
     }
@@ -605,6 +607,7 @@ class CitasController extends Controller
         }
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.citas.view', $data);
         echo view('layouts.footer', $data);
     }
@@ -650,6 +653,7 @@ class CitasController extends Controller
 
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.citas.edit', $data);
         echo view('layouts.footer', $data);
     }
@@ -947,6 +951,7 @@ class CitasController extends Controller
         $data['alert'] = $alert;
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.citas.configuracion', $data);
         echo view('layouts.footer', $data);
     }
@@ -1031,6 +1036,7 @@ class CitasController extends Controller
 
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.citas.edit_estados', $data);
         echo view('layouts.footer', $data);
     }
@@ -1464,6 +1470,7 @@ class CitasController extends Controller
 
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.liquidador.index', $data);
         echo view('layouts.footer', $data);
     }
@@ -1501,6 +1508,7 @@ class CitasController extends Controller
         $data['tipoSede'] = "CDA";
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.liquidador.index', $data);
         echo view('layouts.footer', $data);
     }
@@ -1539,6 +1547,7 @@ class CitasController extends Controller
         $data['tipoSede'] = "CIA";
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.liquidador.index', $data);
         echo view('layouts.footer', $data);
     }
@@ -1577,6 +1586,7 @@ class CitasController extends Controller
         $data['tipoSede'] = "CRC";
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.liquidador.index', $data);
         echo view('layouts.footer', $data);
     }
@@ -1615,6 +1625,7 @@ class CitasController extends Controller
         $data['tipoSede'] = "CEA";
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.liquidador.index', $data);
         echo view('layouts.footer', $data);
     }
@@ -2178,6 +2189,7 @@ class CitasController extends Controller
 
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.liquidador.edit_servicios', $data);
         echo view('layouts.footer', $data);
     }
@@ -2380,7 +2392,7 @@ class CitasController extends Controller
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
-                'text' => 'Error al borrar el estado'
+                'text' => 'Error al descargar el archivo liquidador'
             ];
 
             try {
@@ -2394,7 +2406,7 @@ class CitasController extends Controller
                 // Construcción de la consulta
 
                 //Construcción de la consulta
-                $query = $this->liquidadorconsultaDB();
+                $query = $this->liquidadorconsultaBD();
 
                 // Filtro si el rol es 'gestorsede'
                 if ($user->can('global.Solo ver sede asignada.v')) {
@@ -2413,12 +2425,12 @@ class CitasController extends Controller
 
                 // Filtro de sede
                 if (!empty($filtros['filtro_sede'])) {
-                    $query->where('t5.id_sede', $filtro_sede);
+                    $query->where('t5.id_sede', $filtros['filtro_sede']);
                 }
 
                 // Filtro de servicio liquidador
                 if (!empty($filtros['filtro_servicio_liquidador'])) {
-                    $query->where('t1.id_servicio_liquidador', $filtro_servicio_liquidador);
+                    $query->where('t1.id_servicio_liquidador', $filtros['filtro_servicio_liquidador']);
                 }
 
                 // Filtro de estado validacion liquidador
@@ -2433,6 +2445,7 @@ class CitasController extends Controller
 
                 // Filtro de búsqueda
                 if (!empty($filtros['filtro_search'])) {
+                    $filtro_search = $filtros['filtro_search'];
                     $query->where(function ($q) use ($filtro_search) {
                         $searchTerm = '%' . $filtro_search . '%';
                         $q->where('t2.nombre_cliente', 'LIKE', $searchTerm)

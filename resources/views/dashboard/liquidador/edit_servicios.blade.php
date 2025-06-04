@@ -1,5 +1,5 @@
 <!-- Layout container -->
-<div class="layout-page content_citas_edit_servicios_liquidador" style="padding-top:0 !important">
+<div class="layout-page content_citas_edit_servicios_liquidador">
     <!-- Content wrapper -->
     <div class="content-wrapper">
         <!-- Content -->

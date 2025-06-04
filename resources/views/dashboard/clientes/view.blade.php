@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
 <!-- Layout container -->
-<div class="layout-page content_clientes" style="padding-top:0 !important">
+<div class="layout-page content_clientes">
     <!-- Content wrapper -->
     <div class="content-wrapper">
         <!-- Content -->
@@ -51,21 +51,21 @@
                     </div>
                     <?php
                     if (is_array($vehiculos) && !empty($vehiculos)) {
-                        ?>
+                    ?>
                         <h5>Vehiculos</h5>
                         <div class="list-group">
                             <?php
-                                foreach ($vehiculos as $key => $vehiculo) {
-                                    ?>
-                                    <a href="javascript:void(0);" class="list-group-item list-group-item-action flex-column align-items-start waves-effect">
-                                        <div class="d-flex justify-content-between w-100">
-                                            <h5 class="mb-1">Placa: <?=$vehiculo['placa_vehiculo']?></h5>
-                                            <small><?=$vehiculo['tipo_vehiculo']?></small>
-                                        </div>
-                                        <small>Modelo: <?=$vehiculo['modelo_vehiculo']?></small>
-                                    </a>
-                                    <?php
-                                }
+                            foreach ($vehiculos as $key => $vehiculo) {
+                            ?>
+                                <a href="javascript:void(0);" class="list-group-item list-group-item-action flex-column align-items-start waves-effect">
+                                    <div class="d-flex justify-content-between w-100">
+                                        <h5 class="mb-1">Placa: <?= $vehiculo['placa_vehiculo'] ?></h5>
+                                        <small><?= $vehiculo['tipo_vehiculo'] ?></small>
+                                    </div>
+                                    <small>Modelo: <?= $vehiculo['modelo_vehiculo'] ?></small>
+                                </a>
+                            <?php
+                            }
                             ?>
                         </div>
 

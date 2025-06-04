@@ -35,6 +35,7 @@ class RolesController extends Controller
         $data['alert'] = $alert;
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.roles.index', $data);
         echo view('layouts.footer', $data);
     }
@@ -56,6 +57,7 @@ class RolesController extends Controller
         $data['alert'] = $alert;
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.roles.create', $data);
         echo view('layouts.footer', $data);
     }
@@ -104,6 +106,7 @@ class RolesController extends Controller
         $data['alert'] = $alert;
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.roles.edit', $data);
         echo view('layouts.footer', $data);
     }

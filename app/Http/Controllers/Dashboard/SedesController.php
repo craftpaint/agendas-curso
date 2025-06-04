@@ -28,6 +28,7 @@ class SedesController extends Controller
         $data['alert'] = $alert;
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.sedes.index', $data);
         echo view('layouts.footer', $data);
     }
@@ -112,6 +113,7 @@ class SedesController extends Controller
         $data['festivos'] = AdminHelper::get_festivos();
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.sedes.add', $data);
         echo view('layouts.footer', $data);
     }
@@ -197,6 +199,7 @@ class SedesController extends Controller
         $data['festivos'] = AdminHelper::get_festivos();
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.sedes.edit', $data);
         echo view('layouts.footer', $data);
     }
@@ -342,6 +345,7 @@ class SedesController extends Controller
         $data['alert'] = $alert;
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.sedes.configuracion', $data);
         echo view('layouts.footer', $data);
     }

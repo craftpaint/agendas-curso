@@ -51,6 +51,7 @@ class EmpresasController extends Controller
 
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.empresas.index', $data);
         echo view('layouts.footer', $data);
     }
@@ -73,6 +74,7 @@ class EmpresasController extends Controller
 
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.empresas.create', $data);
         echo view('layouts.footer', $data);
     }
@@ -128,6 +130,7 @@ class EmpresasController extends Controller
 
         echo view('layouts.header', $data);
         echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
         echo view('dashboard.empresas.edit', $data);
         echo view('layouts.footer', $data);
     }

@@ -1,5 +1,5 @@
 <!-- Layout container -->
-<div class="layout-page" style="padding-top:0 !important">
+<div class="layout-page">
     <!-- Content wrapper -->
     <div class="content-wrapper">
         <!-- Content -->
@@ -23,6 +23,7 @@
                         </div>
                         <div class="filtros_form_liquidador col-8">
                             <form id="form_filtros">
+                                @csrf
                                 <input type="hidden" name="tipo_cita" id="tipo_cita" value="<?= isset($tipoSede) ? $tipoSede : '' ?>">
                                 <div class="form-group form-group-grow">
                                     <input type="date" class="form-control" id="filtro-fecha" name="filtro-fecha">
