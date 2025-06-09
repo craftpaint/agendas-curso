@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Crypt;
+use Carbon\Carbon;
 
 class LoadController extends Controller
 {
@@ -162,93 +163,14 @@ class LoadController extends Controller
                         $id_vehiculo = $vehiculo[0]['id_vehiculo'];
                     }
                 }
-                //  OBTENER EL LISTADO DE AGENTES CALLCENTER HABILITADOS
-                $agentes = User::permission('global.Asignar citas call.v')
-                    ->where('callcenter_habilitado', 1)
-                    ->orderBy('id', 'asc')
-                    ->get();
-
-                //  LEER EL PUNTERO ACTUAL DESDE tb_config
-                $config = DB::table('tb_config')
-                    ->where('config_key', 'round_robin_callcenter')
-                    ->first();
-                // Si no existe, lo iniciamos en 0
-                $puntero = $config ? (int)$config->config_value : 0;
-
-                // SELECCIONAR AL AGENTE SIGUIENTE
-                $countAgentes = $agentes->count();
-                $idAgenteCallcenter = null;
-
-                // log::info("Numero de agentes" . $countAgentes);
-                if ($countAgentes > 0) {
-                    // Si el puntero sobrepasa el total de agentes, reiniciamos a 0
-                    if ($puntero >= $countAgentes) {
-                        $puntero = 0;
-                    }
-                    // Asignamos el agente según la posición del puntero
-                    $idAgenteCallcenter = $agentes[$puntero]->id;
-
-                    // Incrementamos el puntero y lo guardamos en tb_config
-                    $puntero++;
-                    DB::table('tb_config')->updateOrInsert(
-                        ['config_key' => 'round_robin_callcenter'],
-                        ['config_value' => $puntero]
-                    );
-                }
-                // log::info($idAgenteCallcenter);
-                $agenteValue   = is_null($idAgenteCallcenter) ? "NULL" : $idAgenteCallcenter;
 
                 // VERIFICA SI TIENE CITAS AGENDADAS
                 $citas_agendadas = $this->getCitasAgendadas(new \Illuminate\Http\Request(['cc' => $doc_cliente]));
-
-                if ($citas_agendadas) {
-                    $fecha_actual = now()->startOfDay();
-                    $query_estado = DB::table('tb_estado')
-                        ->select(['tb_estado.*'])
-                        ->where('tb_estado.nombre_estado', 'Duplicado');
-                    
-                    $query_citas = DB::table('tb_cita')
-                        ->join('tb_cliente', 'tb_cita.id_cliente', '=', 'tb_cliente.id_cliente')
-                        ->select(['tb_cita.*'])
-                        ->where('tb_cliente.doc_cliente', $doc_cliente)
-                        ->where('tb_cita.reserva_cita', '>', $fecha_actual)
-                        ->orderBy('reserva_cita', 'desc');
-
-                    $query_sistema = DB::table('users')
-                        ->select(['users.*'])
-                        ->where('email', 'jrubio@zocodigital.com');
-                    
-                    $estado_duplicado = $query_estado->first();
-                    $citas = $query_citas->get();
-                    $sistema = $query_sistema->first();
-
-                    //SE REALIZA EL CAMBIO DEL ESTADO DE LA CITA
-                    DB::transaction(function () use ($citas, $estado_duplicado, $sistema) {
-                        foreach ($citas as $cita) {
-                            if ($cita->id_estado != $estado_duplicado->id_estado) {
-                                DB::table('tb_cita')
-                                    ->where('id_cita', $cita->id_cita)
-                                    ->update(['id_estado' => $estado_duplicado->id_estado]
-                                );
-                                DB::table('tb_seguimiento')->insert([
-                                    'titulo_seguimiento' => 'Cambio de estado cita',
-                                    'nota_seguimiento'  => 'El sistema ha realizado el cambio del estado de la cita a duplicado.',
-                                    'id_cita'           => $cita->id_cita,
-                                    'id_user'           => $sistema->id,
-                                ]);
-                            }
-                        }
-                    });
-                }
-
-                //Creamos la cita
-                $save = DB::table('tb_cita')->insert([
+                $save = null;
+                $insertData = [
                     'id_cliente' => $id_cliente,
                     'id_sede' => $id_sede,
-                    'id_estado' => 1,
-                    'id_estado_verificado' => 1,
                     'id_servicio_liquidador' => $servicio_liquidador,
-                    'id_agente_callcenter' => $agenteValue,
                     'codigos_comparendo' => $codigo_comparendo, // Este puede ser un string JSON
                     'id_vehiculo' => $id_vehiculo,
                     'reserva_cita' => $reserva_cita,
@@ -259,9 +181,77 @@ class LoadController extends Controller
                     'origen' => $origen,
                     'url_variables' => json_encode($urlVariablesArray),
                     'tipo_dispositivo' => $tipo_dispositivo,
-                    'created_at' => DB::raw('DATE_SUB(NOW(), INTERVAL 5 HOUR)'),
-                    'updated_at' => DB::raw('DATE_SUB(NOW(), INTERVAL 5 HOUR)')
-                ]);
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now()
+                ];
+
+                if ($citas_agendadas) {
+                    $query_estado_duplicado = DB::table('tb_estado')->select(['tb_estado.*'])->where('tb_estado.nombre_estado', 'Duplicado');
+                    $estado_duplicado = $query_estado_duplicado->first();
+                    $response_citas_agendadas_historico = $this->getCitasAgendadasHistorico(new \Illuminate\Http\Request(['cc' => $doc_cliente]));
+                    $data_citas_agendadas_historico = $response_citas_agendadas_historico->getData(true);
+
+                    // SE AGREGAN LOS ESTADOS
+                    $insertData['id_estado'] = $estado_duplicado->id_estado;
+                    $insertData['id_estado_verificado'] = $estado_duplicado->id_estado;
+                    $callcenter_habilitado = false;
+                    $agenteValue = null;
+
+                    // SE VERIFICA SI EL AGENTE CALL-CENTER ESTÁ HABILITADO
+                    try {
+                        $callcenter_habilitado = $this->verificarEstadoCallCenter($data_citas_agendadas_historico['Data'][0]['id_agente_callcenter']);
+                    } catch(\Exception $e) {
+                        $callcenter_habilitado = false;
+                    }
+
+                    if ($callcenter_habilitado) {
+                        $agenteValue = $data_citas_agendadas_historico['Data'][0]['id_agente_callcenter'];
+                        $insertData['id_agente_callcenter'] = $agenteValue;
+                    } else {
+                        $idAgenteCallcenter = $this->RoundRobinCallCenter();
+                        $agenteValue = is_null($idAgenteCallcenter) ? "NULL" : $idAgenteCallcenter;
+                        $insertData['id_agente_callcenter'] = $agenteValue;
+                    }
+
+                    // SE REALIZA LA INSERCIÓN DE LA CITA
+                    $save = DB::table('tb_cita')->insert($insertData);
+
+                    // SE REALIZA LA INSERCIÓN DEL SEGUIMIENTO
+                    if ($save) {
+                        $this->postSeguimientoDuplicados(new \Illuminate\Http\Request(['cc' => $doc_cliente]));
+                    }
+                } else {
+                    $query_estado_agendado = DB::table('tb_estado')->select(['tb_estado.*'])->where('tb_estado.nombre_estado', 'Agendado');
+                    $estado_agendado = $query_estado_agendado->first();
+                    $response_citas_agendadas_historico = $this->getCitasAgendadasHistorico(new \Illuminate\Http\Request(['cc' => $doc_cliente]));
+                    $data_citas_agendadas_historico = $response_citas_agendadas_historico->getData(true);
+                    $callcenter_habilitado = false;
+                    $agenteValue = null;
+
+                    // SE VERIFICA SI EL AGENTE CALL-CENTER ESTÁ HABILITADO
+                    try {
+                        $callcenter_habilitado = $this->verificarEstadoCallCenter($data_citas_agendadas_historico['Data'][0]['id_agente_callcenter']);
+                    } catch (\Exception $e) {
+                        $callcenter_habilitado = false;
+                    }
+
+                    if ($callcenter_habilitado) {
+                        $agenteValue = $data_citas_agendadas_historico['Data'][0]['id_agente_callcenter'];
+                        $insertData['id_agente_callcenter'] = $agenteValue;
+                    } else {
+                        $idAgenteCallcenter = $this->RoundRobinCallCenter();
+                        $agenteValue = is_null($idAgenteCallcenter) ? "NULL" : $idAgenteCallcenter;
+                        $insertData['id_agente_callcenter'] = $agenteValue;
+                    }
+
+                    // SE AGREGAN LOS ESTADOS Y EL CALLCENTER
+                    $insertData['id_estado'] = $estado_agendado->id_estado;
+                    $insertData['id_estado_verificado'] = $estado_agendado->id_estado;
+                    $insertData['id_agente_callcenter'] = $agenteValue;
+
+                    // SE REALIZA LA INSERCIÓN DE LA CITA
+                    $save = DB::table('tb_cita')->insert($insertData);
+                }
 
                 if ($save) {
 
@@ -294,8 +284,10 @@ class LoadController extends Controller
                     } catch (\Exception $e) {
                         Log::error($e->getMessage());
                     }
+                    
                     // Obtener el ID de la cita recién creada
-                    $id_cita = DB::getPdo()->lastInsertId();
+                    $ultimaCita = DB::table('tb_cita')->orderBy('id_cita', 'desc')->first();
+                    $id_cita = $ultimaCita->id_cita;
 
                     try {
                         $saveliquidador = DB::table('tb_liquidador')->insert([
@@ -327,6 +319,46 @@ class LoadController extends Controller
             return response()->json($objLoad);
         }
     }
+
+    public function RoundRobinCallCenter() {
+        $agentes = User::permission('global.Asignar citas call.v')
+            ->where('callcenter_habilitado', 1)
+            ->orderBy('id', 'asc')
+            ->get();
+
+        Log::info($agentes);
+
+        $config = DB::table('tb_config')
+            ->where('config_key', 'round_robin_callcenter')
+            ->first();
+
+        // SI NO EXISTE, SE INICIALIZA EN 0 DE NUEVO
+        $puntero = $config ? (int)$config->config_value : 0;
+
+        $countAgentes = $agentes->count();
+        $idAgenteCallcenter = null;
+
+        if ($countAgentes > 0) {
+            // SI EL PUNTERO SOBREPASA EL TOTAL DE AGENTES, REINICIAMOS A 0
+            if ($puntero >= $countAgentes) {
+                $puntero = 0;
+            }
+
+            // ASIGNAMOS EL AGENTE SEGÚN LA POSICIÓN DEL PUNTERO Y SE INCREMENTA
+            $idAgenteCallcenter = $agentes[$puntero]->id;
+            $puntero++;
+
+            DB::table('tb_config')->updateOrInsert(
+                ['config_key' => 'round_robin_callcenter'],
+                ['config_value' => $puntero]
+            );
+
+            Log::info($idAgenteCallcenter);
+
+            return $idAgenteCallcenter;
+        }
+    }
+
     public function gethorarios(Request $request)
     {
         if ($request->ajax()) {
@@ -383,7 +415,7 @@ class LoadController extends Controller
 
     public function getCitasAgendadas(Request $request) {
         $cedula = (string) $request->input('cc');
-        $fecha_actual = now()->startOfDay();
+        $fecha_comparacion = now()->subDay(4)->startOfDay();
 
         $query = DB::table('tb_cita')
             ->join('tb_cliente', 'tb_cita.id_cliente', '=', 'tb_cliente.id_cliente')
@@ -393,7 +425,7 @@ class LoadController extends Controller
                 'tb_cliente.apellido_cliente',
             ])
             ->where('tb_cliente.doc_cliente', $cedula)
-            ->where('tb_cita.reserva_cita', '>', $fecha_actual)
+            ->where('tb_cita.reserva_cita', '>', $fecha_comparacion)
             ->orderBy('reserva_cita', 'desc');
 
         $result = $query->get();
@@ -409,26 +441,79 @@ class LoadController extends Controller
         $idCita = Crypt::decryptString($id);
 
         $query = DB::table('tb_cita')
-        ->join('tb_sede', 'tb_cita.id_sede', '=', 'tb_sede.id_sede')
-        ->join('tb_cliente', 'tb_cita.id_cliente', '=', 'tb_cliente.id_cliente')
-        ->join('tb_servicio_liquidador', 'tb_cita.id_servicio_liquidador', '=', 'tb_servicio_liquidador.id_servicio_liquidador')
-        ->select([
-            'tb_cliente.nombre_cliente',
-            'tb_cliente.apellido_cliente',
-            'tb_cliente.tipo_doc_cliente',
-            'tb_cliente.doc_cliente',
-            'tb_cita.reserva_cita',
-            'tb_cita.rango_horario',
-            'tb_cita.codigos_comparendo',
-            'tb_sede.nombre_sede',
-            'tb_sede.direccion_sede',
-            'tb_servicio_liquidador.nombre_servicio_liquidador'
-        ])
-        ->where('tb_cita.id_cita', $idCita);
+            ->join('tb_sede', 'tb_cita.id_sede', '=', 'tb_sede.id_sede')
+            ->join('tb_cliente', 'tb_cita.id_cliente', '=', 'tb_cliente.id_cliente')
+            ->select([
+                'tb_cliente.nombre_cliente',
+                'tb_cliente.apellido_cliente',
+                'tb_cliente.tipo_doc_cliente',
+                'tb_cliente.doc_cliente',
+                'tb_cita.reserva_cita',
+                'tb_cita.rango_horario',
+                'tb_sede.nombre_sede',
+                'tb_sede.direccion_sede'
+            ])
+            ->where('tb_cita.id_cita', $idCita);
 
         $data_cita = $query->first();
-        $data_cita->codigos_comparendo = json_decode($data_cita->codigos_comparendo, true);
-
         return $data_cita;
+    }
+
+    public function verificarEstadoCallCenter($idCallcenter) {
+        $agente = User::permission('global.Asignar citas call.v')
+            ->where('id', $idCallcenter)
+            ->where('callcenter_habilitado', 1)
+            ->first();
+        
+        if ($agente != null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    public function getCitasAgendadasHistorico(Request $request) {
+        $cedula = (string) $request->input('cc');
+
+        $query = DB::table('tb_cita')
+            ->join('tb_cliente', 'tb_cita.id_cliente', '=', 'tb_cliente.id_cliente')
+            ->select([
+                'tb_cita.*',
+                'tb_cliente.nombre_cliente',
+                'tb_cliente.apellido_cliente',
+            ])
+            ->where('tb_cliente.doc_cliente', $cedula)
+            ->orderBy('reserva_cita', 'desc');
+        
+        $result = $query->get();
+
+        if ($result->count() != 0) {
+            return response()->json([
+                'resultado' => true,
+                'Data' => $result
+            ]);
+        } else {
+            return response()->json([
+                'resultado' => false,
+                'Data' => []
+            ]);
+        }
+    }
+
+    public function postSeguimientoDuplicados(Request $request) {
+        $cedula = (string) $request->input('cc');
+        $query_sistema = DB::table('users')->select(['users.*'])->where('email', 'jrubio@zocodigital.com');
+        $query = DB::table('tb_cita')->join('tb_cliente', 'tb_cita.id_cliente', '=', 'tb_cliente.id_cliente')->select(['tb_cita.*'])->where('tb_cliente.doc_cliente', $cedula)->orderBy('created_at', 'desc');
+        $ultimaCita = $query->first();
+        $sistema = $query_sistema->first();
+
+        if ($ultimaCita != null && $sistema != null) {
+            DB::table('tb_seguimiento')->insert([
+                'titulo_seguimiento' => 'Cambio de estado cita',
+                'nota_seguimiento'  => 'El sistema ha realizado el cambio del estado de la cita a duplicado.',
+                'id_cita'           => $ultimaCita->id_cita,
+                'id_user'           => $sistema->id,
+            ]);
+        }
     }
 }
