@@ -516,4 +516,40 @@ class LoadController extends Controller
             ]);
         }
     }
+
+    public function postVerificarCuposHorario(Request $request) {
+        $fechaFormateada = \Carbon\Carbon::createFromFormat('d/m/Y', $request->input('fecha_seleccionada'))->format('Y-m-d');
+
+        $countCitas = DB::table('tb_cita')
+            ->where('id_sede', $request->input('sede'))
+            ->where('reserva_cita', $fechaFormateada)
+            ->where('rango_horario', $request->input('sede_horario'))
+            ->count();
+
+        if ($countCitas < (int) $request->input('cupo')) {
+            return true;
+        }
+        return false;
+    }
+
+    public function postVerificarCuposHorarioNuevoMetodo(Request $request) {
+        $horarios_disponibles = $request->input('horarios_disponibles');
+        $fechaFormateada = \Carbon\Carbon::createFromFormat('d/m/Y', $request->input('fecha_seleccionada'))->format('Y-m-d');
+        
+        foreach ($horarios_disponibles as $index => &$horario) {
+            $countCitas = DB::table('tb_cita')
+            ->where('id_sede', $request->input('sede'))
+            ->where('reserva_cita', $fechaFormateada)
+            ->where('rango_horario', $horario['rango_horario'])
+            ->count();
+
+            if ($countCitas < (int) $horario['cupo_sede_horario']) {
+                $horario['disponible'] = true;
+            } else {
+                $horario['disponible'] = false;
+            }
+        }
+
+        return $horarios_disponibles;
+    }
 }

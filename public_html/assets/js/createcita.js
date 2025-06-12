@@ -53,7 +53,7 @@ $(function () {
                         }
                         return true;
                     }
-                }).on('changeDate', function (e) {
+                }).on('changeDate', async function (e) {
                     if (e.date !== undefined) {
                         let dia_semana = e.date.getDay();
                         if (dia_semana == 0) {
@@ -87,12 +87,44 @@ $(function () {
                                 return item.dia_sede_horario == dia_semana;
                             });
                         }
-                        let html_select = '<option value="">Seleccione una opción</option>';
-                        horarios_disponibles.forEach(function (item, index) {
-                            html_select += '<option value="' + item.id_sede_horario + '">' + item.rango_horario + '</option>';
-                        });
-                        $('#citaHora').html(html_select);
-                        $('#citaHora').attr('disabled', false);
+
+                        $('#vuexy-loading').removeClass('d-none').addClass('d-flex');
+
+                        try {
+                            // PRUEBA DE NUEVO METODO
+                            const data = {
+                                horarios_disponibles: horarios_disponibles,
+                                fecha_seleccionada: fecha_seleccionada,
+                                sede: id_sede,
+                            };
+
+                            $.ajax({
+                                url: url + '/verificar-cupos-horario-nuevo-metodo',
+                                type: 'POST',
+                                data: data,
+                                dataType: 'json',
+                                success: function (response) {
+                                    console.log("RESPUESTA: ", response);
+                                },
+                                error: function (error) {
+                                    console.log("ERROR: ", error);
+                                },
+                            });
+
+                            let html_select = await VerificarCupoHorario(horarios_disponibles, fecha_seleccionada, id);
+                            $('#citaHora').html(html_select);
+                            $('#citaHora').attr('disabled', false);
+                        } catch (error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'No se pudieron cargar los horarios, por favor intente de nuevo.',
+                                confirmButtonText: 'Entendido'
+                            });
+                        }
+
+                        $('#vuexy-loading').addClass('d-none').removeClass('d-flex');
+
                         //EDITAR CITA
                         if ($('.content_citas_edit').length) {
                             $('#citaHora').val(id_sede_horario).trigger('change');
@@ -111,6 +143,49 @@ $(function () {
         });
     }
     get_hours();
+
+    function VerificarCupoHorario(horarios, fecha_seleccionada, id_sede) {
+        return new Promise((resolve) => {
+            let html_select = '<option value="">Seleccione una opción</option>';
+            let contadorPeticiones = 0;
+            const totalPeticiones = horarios.length;
+            const opcionesOrdenadas = new Array(totalPeticiones);
+
+            if (totalPeticiones === 0) {
+                resolve(html_select);
+                return;
+            }
+
+            horarios.forEach(function (item, index) {
+                const data = {
+                    fecha_seleccionada: fecha_seleccionada,
+                    sede_horario: item.rango_horario,
+                    sede: id_sede,
+                    cupo: item.cupo_sede_horario,
+                };
+
+                $.ajax({
+                    url: url + '/verificar-cupos-horario',
+                    type: 'POST',
+                    data: data,
+                    dataType: 'json',
+                    success: function (response) {
+                        opcionesOrdenadas[index] = '<option value="' + item.id_sede_horario + '">' + item.rango_horario + '</option>';
+                    },
+                    error: function (error) {
+                        opcionesOrdenadas[index] = '<option value="' + item.id_sede_horario + '" disabled>' + item.rango_horario + '</option>';
+                    },
+                    complete: function() {
+                        contadorPeticiones++;
+                        if (contadorPeticiones === totalPeticiones) {
+                            html_select += opcionesOrdenadas.join('');
+                            resolve(html_select);
+                        }
+                    }
+                });
+            });
+        });
+    }
 
     let currentServiceType = null;
     // Ocultar y limpiar el select de vehículos (si lo tienes)
@@ -231,7 +306,6 @@ $(function () {
                 $('#phoneCliente').val(fullPhoneNumber);
             }
             let data = form.serialize();
-            $('.boton_submit').prop('disabled', true);
             
             $.ajax({
                 url: url,
