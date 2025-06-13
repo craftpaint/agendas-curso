@@ -93,6 +93,8 @@ class CitasController extends Controller
             try {
                 $user = Auth::user();
 
+
+
                 // Obtener los parámetros del request
                 $length = $request->input('length');
                 $start = $request->input('start');
@@ -108,6 +110,11 @@ class CitasController extends Controller
                 $filtro_agente = $request->input('filtro_agente');
                 $filtro_search = $request->input('filtro_search');
                 $fecha_actual = date('Y-m-d');
+
+                // Subconsulta: obtener el último liquidador por cita
+                $liquidadorSub = DB::table('tb_liquidador')
+                    ->select('id_cita', DB::raw('MAX(id_liquidador) as id_liquidador'))
+                    ->groupBy('id_cita');
 
                 // Construir el query base utilizando el Query Builder
                 $query = DB::table('tb_cita as t1')
@@ -150,7 +157,17 @@ class CitasController extends Controller
                     ->join('tb_sede as t5', 't1.id_sede', '=', 't5.id_sede')
                     ->join('tb_servicio as t6', 't5.id_servicio', '=', 't6.id_servicio')
                     ->join('users as a', 't1.id_agente_callcenter', '=', 'a.id')
-                    ->leftJoin('tb_liquidador as l', 't1.id_cita', '=', 'l.id_cita')
+                    // JOIN con subconsulta para evitar duplicados
+                    ->leftJoinSub(
+                        $liquidadorSub,
+                        'lm',
+                        function ($join) {
+                            $join->on('t1.id_cita', '=', 'lm.id_cita');
+                        }
+                    )
+                    ->leftJoin('tb_liquidador as l', function ($join) {
+                        $join->on('lm.id_liquidador', '=', 'l.id_liquidador');
+                    })
                     ->leftJoin('tb_servicio_liquidador as s', 't1.id_servicio_liquidador', '=', 's.id_servicio_liquidador')
                     ->leftJoin('tb_vehiculo as v', 't1.id_vehiculo', '=', 'v.id_vehiculo')
                     ->where('t1.id_cita', '>', 0);
@@ -1648,7 +1665,7 @@ class CitasController extends Controller
                 $filtro_dia                  = $request->input('filtro_dia');
                 $filtro_dia_end              = $request->input('filtro_dia_end');
                 $filtro_sede                 = $request->input('filtro_sede');
-                $filtro_search               = $request->input('search.value', '');
+                $filtro_search               = $request->input('filtro_search');
                 $filtro_servicio_liquidador  = $request->input('filtro_servicio_liquidador');
                 $filtro_estado_validacion_liquidador = $request->input('filtro_estado_validacion_liquidador');
                 $filtro_estado_pago_liquidador      = $request->input('filtro_estado_pago_liquidador');
