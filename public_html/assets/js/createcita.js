@@ -144,18 +144,29 @@ $(function () {
     get_hours();
 
     function VerificarCupoHorario(response) {
-        return new Promise((resolve) => {
-            let html_select = '<option value="">Seleccione una opción</option>';
 
-            response.forEach(horario => {
-                if (horario.disponible) {
-                    html_select += '<option value="' + horario.id_sede_horario + '">' + horario.rango_horario + '</option>';
-                } else {
-                    html_select += '<option value="' + horario.id_sede_horario + '" disabled>' + horario.rango_horario + '</option>';
-                }
+        console.log("RESPONSE VERIFICAR CUPOS HORARIO: ", response);
+        if (!Array.isArray(response)) {
+            console.log("No hay horarios disponibles para la fecha seleccionada.");
+            let html_select = '<option value="">No hay horarios disponibles</option>';
+            return new Promise((resolve) => {
+                resolve(html_select);
             });
-            resolve(html_select);
-        });
+
+        } else {
+            return new Promise((resolve) => {
+                let html_select = '<option value="">Seleccione una opción</option>';
+
+                response.forEach(horario => {
+                    if (horario.disponible) {
+                        html_select += '<option value="' + horario.id_sede_horario + '">' + horario.rango_horario + '</option>';
+                    } else {
+                        html_select += '<option value="' + horario.id_sede_horario + '" disabled>' + horario.rango_horario + '</option>';
+                    }
+                });
+                resolve(html_select);
+            });
+        }
     }
 
     let currentServiceType = null;
@@ -277,7 +288,7 @@ $(function () {
                 $('#phoneCliente').val(fullPhoneNumber);
             }
             let data = form.serialize();
-            
+
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -337,7 +348,7 @@ $(function () {
         $.ajax({
             url: url + '/get-citas-agendadas',
             type: 'POST',
-            data: { cc: cc},
+            data: { cc: cc },
             dataType: 'json',
             success: function (response) {
                 if (response) {
