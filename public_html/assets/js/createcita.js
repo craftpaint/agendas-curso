@@ -91,27 +91,26 @@ $(function () {
                         $('#vuexy-loading').removeClass('d-none').addClass('d-flex');
 
                         try {
-                            // PRUEBA DE NUEVO METODO
+                            let html_select = '';
+
                             const data = {
                                 horarios_disponibles: horarios_disponibles,
                                 fecha_seleccionada: fecha_seleccionada,
                                 sede: id_sede,
                             };
 
-                            $.ajax({
-                                url: url + '/verificar-cupos-horario-nuevo-metodo',
+                            await $.ajax({
+                                url: url + '/verificar-cupos-horario',
                                 type: 'POST',
                                 data: data,
                                 dataType: 'json',
-                                success: function (response) {
-                                    console.log("RESPUESTA: ", response);
+                                success: async function (response) {
+                                    html_select = await VerificarCupoHorario(response);
                                 },
                                 error: function (error) {
-                                    console.log("ERROR: ", error);
+                                    console.log("ERROR AL CARGAR HORARIOS: ", error);
                                 },
                             });
-
-                            let html_select = await VerificarCupoHorario(horarios_disponibles, fecha_seleccionada, id);
                             $('#citaHora').html(html_select);
                             $('#citaHora').attr('disabled', false);
                         } catch (error) {
@@ -144,46 +143,18 @@ $(function () {
     }
     get_hours();
 
-    function VerificarCupoHorario(horarios, fecha_seleccionada, id_sede) {
+    function VerificarCupoHorario(response) {
         return new Promise((resolve) => {
             let html_select = '<option value="">Seleccione una opción</option>';
-            let contadorPeticiones = 0;
-            const totalPeticiones = horarios.length;
-            const opcionesOrdenadas = new Array(totalPeticiones);
 
-            if (totalPeticiones === 0) {
-                resolve(html_select);
-                return;
-            }
-
-            horarios.forEach(function (item, index) {
-                const data = {
-                    fecha_seleccionada: fecha_seleccionada,
-                    sede_horario: item.rango_horario,
-                    sede: id_sede,
-                    cupo: item.cupo_sede_horario,
-                };
-
-                $.ajax({
-                    url: url + '/verificar-cupos-horario',
-                    type: 'POST',
-                    data: data,
-                    dataType: 'json',
-                    success: function (response) {
-                        opcionesOrdenadas[index] = '<option value="' + item.id_sede_horario + '">' + item.rango_horario + '</option>';
-                    },
-                    error: function (error) {
-                        opcionesOrdenadas[index] = '<option value="' + item.id_sede_horario + '" disabled>' + item.rango_horario + '</option>';
-                    },
-                    complete: function() {
-                        contadorPeticiones++;
-                        if (contadorPeticiones === totalPeticiones) {
-                            html_select += opcionesOrdenadas.join('');
-                            resolve(html_select);
-                        }
-                    }
-                });
+            response.forEach(horario => {
+                if (horario.disponible) {
+                    html_select += '<option value="' + horario.id_sede_horario + '">' + horario.rango_horario + '</option>';
+                } else {
+                    html_select += '<option value="' + horario.id_sede_horario + '" disabled>' + horario.rango_horario + '</option>';
+                }
             });
+            resolve(html_select);
         });
     }
 

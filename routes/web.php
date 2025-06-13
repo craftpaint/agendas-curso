@@ -59,7 +59,6 @@ Route::controller(LoadController::class)->group(function () {
     Route::post('get-servicio-by-id-sede', 'get_servicio_by_id_sede');
     Route::post('get-citas-agendadas', 'getCitasAgendadas');
     Route::post('verificar-cupos-horario', 'postVerificarCuposHorario');
-    Route::post('verificar-cupos-horario-nuevo-metodo', 'postVerificarCuposHorarioNuevoMetodo');
 })->name('load');
 
 // Estadísticas (se utiliza "estadisticas.panel1.v" como permiso de visualización global)
