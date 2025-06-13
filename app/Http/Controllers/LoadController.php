@@ -58,7 +58,8 @@ class LoadController extends Controller
         ];
         echo view('load/createcita', $data);
     }
-    public function savecita(Request $request) {
+    public function savecita(Request $request)
+    {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -200,7 +201,7 @@ class LoadController extends Controller
                     // SE VERIFICA SI EL AGENTE CALL-CENTER ESTÁ HABILITADO
                     try {
                         $callcenter_habilitado = $this->verificarEstadoCallCenter($data_citas_agendadas_historico['Data'][0]['id_agente_callcenter']);
-                    } catch(\Exception $e) {
+                    } catch (\Exception $e) {
                         $callcenter_habilitado = false;
                     }
 
@@ -284,7 +285,7 @@ class LoadController extends Controller
                     } catch (\Exception $e) {
                         Log::error($e->getMessage());
                     }
-                    
+
                     // Obtener el ID de la cita recién creada
                     $ultimaCita = DB::table('tb_cita')->orderBy('id_cita', 'desc')->first();
                     $id_cita = $ultimaCita->id_cita;
@@ -299,9 +300,9 @@ class LoadController extends Controller
                             'updated_at' => DB::raw('DATE_SUB(NOW(), INTERVAL 5 HOUR)')
                         ]);
 
-                    //AQUI SE ENVÍA LA INFORMACIÓN DE LOS DETALLES DE LA CITA
-                    //$url_detalles = config('app.url').'/agendas-cursos/public_html/api/detalles-cita/'.Crypt::encryptString($id_cita);
-                    //$detalles = Http::get($url_detalles);
+                        //AQUI SE ENVÍA LA INFORMACIÓN DE LOS DETALLES DE LA CITA
+                        //$url_detalles = config('app.url').'/agendas-cursos/public_html/api/detalles-cita/'.Crypt::encryptString($id_cita);
+                        //$detalles = Http::get($url_detalles);
 
                     } catch (\Throwable $e) {
                         Log::error($e->getMessage());
@@ -320,7 +321,8 @@ class LoadController extends Controller
         }
     }
 
-    public function RoundRobinCallCenter() {
+    public function RoundRobinCallCenter()
+    {
         $agentes = User::permission('global.Asignar citas call.v')
             ->where('callcenter_habilitado', 1)
             ->orderBy('id', 'asc')
@@ -368,7 +370,7 @@ class LoadController extends Controller
             ];
             try {
                 $id = $request->request->get('id');
-                $sql = "SELECT * FROM tb_sede_horario as t1 INNER JOIN tb_horario as t2 ON t1.id_horario = t2.id_horario  WHERE t1.id_sede = $id";
+                $sql = "SELECT * FROM tb_sede_horario as t1 INNER JOIN tb_horario as t2 ON t1.id_horario = t2.id_horario  WHERE t1.id_sede = $id order by t2.inicio_horario asc";
                 $horarios = DB::select($sql);
                 if (is_array($horarios) && !empty($horarios)) {
                     $objLoad = [
@@ -413,7 +415,8 @@ class LoadController extends Controller
         }
     }
 
-    public function getCitasAgendadas(Request $request) {
+    public function getCitasAgendadas(Request $request)
+    {
         $cedula = (string) $request->input('cc');
         $fecha_comparacion = now()->subDay(4)->startOfDay();
 
@@ -429,7 +432,7 @@ class LoadController extends Controller
             ->orderBy('reserva_cita', 'desc');
 
         $result = $query->get();
-        
+
         if ($result->count() != 0) {
             return true;
         } else {
@@ -437,7 +440,8 @@ class LoadController extends Controller
         }
     }
 
-    public function getDetallesCita($id) {
+    public function getDetallesCita($id)
+    {
         $idCita = Crypt::decryptString($id);
 
         $query = DB::table('tb_cita')
@@ -459,20 +463,22 @@ class LoadController extends Controller
         return $data_cita;
     }
 
-    public function verificarEstadoCallCenter($idCallcenter) {
+    public function verificarEstadoCallCenter($idCallcenter)
+    {
         $agente = User::permission('global.Asignar citas call.v')
             ->where('id', $idCallcenter)
             ->where('callcenter_habilitado', 1)
             ->first();
-        
+
         if ($agente != null) {
             return true;
         } else {
             return false;
         }
     }
-    
-    public function getCitasAgendadasHistorico(Request $request) {
+
+    public function getCitasAgendadasHistorico(Request $request)
+    {
         $cedula = (string) $request->input('cc');
 
         $query = DB::table('tb_cita')
@@ -484,7 +490,7 @@ class LoadController extends Controller
             ])
             ->where('tb_cliente.doc_cliente', $cedula)
             ->orderBy('reserva_cita', 'desc');
-        
+
         $result = $query->get();
 
         if ($result->count() != 0) {
@@ -500,7 +506,8 @@ class LoadController extends Controller
         }
     }
 
-    public function postSeguimientoDuplicados(Request $request) {
+    public function postSeguimientoDuplicados(Request $request)
+    {
         $cedula = (string) $request->input('cc');
         $query_sistema = DB::table('users')->select(['users.*'])->where('email', 'jrubio@zocodigital.com');
         $query = DB::table('tb_cita')->join('tb_cliente', 'tb_cita.id_cliente', '=', 'tb_cliente.id_cliente')->select(['tb_cita.*'])->where('tb_cliente.doc_cliente', $cedula)->orderBy('created_at', 'desc');
@@ -515,5 +522,26 @@ class LoadController extends Controller
                 'id_user'           => $sistema->id,
             ]);
         }
+    }
+
+    public function postVerificarCuposHorario(Request $request) {
+        $horarios_disponibles = $request->input('horarios_disponibles');
+        $fechaFormateada = \Carbon\Carbon::createFromFormat('d/m/Y', $request->input('fecha_seleccionada'))->format('Y-m-d');
+        
+        foreach ($horarios_disponibles as $index => &$horario) {
+            $countCitas = DB::table('tb_cita')
+            ->where('id_sede', $request->input('sede'))
+            ->where('reserva_cita', $fechaFormateada)
+            ->where('rango_horario', $horario['rango_horario'])
+            ->count();
+
+            if ($countCitas < (int) $horario['cupo_sede_horario']) {
+                $horario['disponible'] = true;
+            } else {
+                $horario['disponible'] = false;
+            }
+        }
+
+        return $horarios_disponibles;
     }
 }

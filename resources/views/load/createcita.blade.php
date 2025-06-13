@@ -255,7 +255,22 @@
             }
         });
     </script>
-
+    <div id="vuexy-loading" class="d-none" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(140, 140, 141, 0.9);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    ">
+        <div class="spinner-border text-white" style="width: 3rem; height: 3rem;"></div>
+        <p class="text-white mt-2">Cargando horarios...</p>
+    </div>
 </body>
 
 </html>

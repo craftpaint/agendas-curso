@@ -340,3 +340,8 @@ table tbody tr:nth-child(even) {
 .light-style .select2-dropdown {
     z-index: 1500;
 }
+
+.select2-container--default .select2-results__option[aria-disabled=true] {
+    color: #999;
+    background-color: #e4dfdf;
+}
