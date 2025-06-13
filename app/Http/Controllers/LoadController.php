@@ -524,16 +524,22 @@ class LoadController extends Controller
         }
     }
 
-    public function postVerificarCuposHorario(Request $request) {
+    public function postVerificarCuposHorario(Request $request)
+    {
+
+        if (!$request->has('horarios_disponibles')) {
+            return true;
+        }
+
         $horarios_disponibles = $request->input('horarios_disponibles');
         $fechaFormateada = \Carbon\Carbon::createFromFormat('d/m/Y', $request->input('fecha_seleccionada'))->format('Y-m-d');
-        
+
         foreach ($horarios_disponibles as $index => &$horario) {
             $countCitas = DB::table('tb_cita')
-            ->where('id_sede', $request->input('sede'))
-            ->where('reserva_cita', $fechaFormateada)
-            ->where('rango_horario', $horario['rango_horario'])
-            ->count();
+                ->where('id_sede', $request->input('sede'))
+                ->where('reserva_cita', $fechaFormateada)
+                ->where('rango_horario', $horario['rango_horario'])
+                ->count();
 
             if ($countCitas < (int) $horario['cupo_sede_horario']) {
                 $horario['disponible'] = true;
