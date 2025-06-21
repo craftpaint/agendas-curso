@@ -667,3 +667,12 @@ if (typeof $ !== 'undefined') {
     }
   });
 }
+
+$(document).ajaxSend(function(event, xhr, options) {
+    if (!options.crossDomain) {
+        xhr.setRequestHeader(
+            'X-CSRF-TOKEN',
+            $('meta[name="csrf-token"]').attr('content')
+        );
+    }
+});
