@@ -144,8 +144,6 @@ $(function () {
     get_hours();
 
     function VerificarCupoHorario(response) {
-
-        console.log("RESPONSE VERIFICAR CUPOS HORARIO: ", response);
         if (!Array.isArray(response)) {
             console.log("No hay horarios disponibles para la fecha seleccionada.");
             let html_select = '<option value="">No hay horarios disponibles</option>';
