@@ -17,8 +17,11 @@
                     <div class="content_filtros mb-4">
                         <div class="filtros_botones">
                             <div class="btn-group" role="group" aria-label="Filtro Día">
-                                <button id="filtro-mes-anterior" class="btn btn-outline-primary">Mes anterior</button>
-                                <button id="filtro-mes-actual" class="btn btn-outline-primary">Mes actual</button>
+                                <button id="filtro-cuatro-meses-anteriores" class="btn btn-outline-primary"></button>
+                                <button id="filtro-tres-meses-anteriores" class="btn btn-outline-primary"></button>
+                                <button id="filtro-dos-meses-anteriores" class="btn btn-outline-primary"></button>
+                                <button id="filtro-mes-anterior" class="btn btn-outline-primary"></button>
+                                <button id="filtro-mes-actual" class="btn btn-outline-primary"></button>
                             </div>
                         </div>
                         <div class="filtros_form_liquidador col-8">
@@ -35,13 +38,13 @@
                                     <select id="filtro-sede" class="select2 form-select" placeholder="Selecciona una sede">
                                         <option value="">Todas las sedes</option>
                                         <?php
-                                        if (is_array($sedes) && !empty($sedes)) {
-                                            foreach ($sedes as $key => $sede) {
-                                                $a_festivos = @unserialize($sede->festivos_sede);
-                                                $a_festivos = $a_festivos !== false ? $a_festivos : array();
-                                                echo '<option data-festivos=' . json_encode($a_festivos) . ' value="' . $sede->id_sede . '">' . $sede->nombre_sede . '</option>';
+                                            if ($sedes->isNotEmpty()) {
+                                                foreach ($sedes as $key => $sede) {
+                                                    $a_festivos = @unserialize($sede->festivos_sede);
+                                                    $a_festivos = $a_festivos !== false ? $a_festivos : array();
+                                                    echo '<option data-festivos=' . json_encode($a_festivos) . ' value="' . $sede->id_sede . '">' . $sede->nombre_sede . '</option>';
+                                                }
                                             }
-                                        }
                                         ?>
                                     </select>
                                 </div>

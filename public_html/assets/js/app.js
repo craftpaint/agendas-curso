@@ -1595,8 +1595,6 @@ $(function () {
             $('#filtro-estado-verificado').val("").trigger('change');
             $('#filtro-origen').val("").trigger('change');
             $('#woow-search-citas').val("").trigger('input');
-            console.log("Filtro día: " + $('#filtro-dia').val());
-            console.log("Filtro sede: " + $('#filtro-sede').val());
             table_citas.ajax.reload();
         });
         // Cuando se hace clic en el botón para abrir el modal de seguimiento
@@ -3357,7 +3355,35 @@ $(function () {
                 updateTotales(json.extra);
             }
         });
+
         // Eventos para los filtros
+        $('#filtro-cuatro-meses-anteriores').on('click', function () {
+            const ahora = new Date();
+            const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth() - 4, 1);
+            const finMes = new Date(ahora.getFullYear(), ahora.getMonth() - 3, 0);
+            filtroDia = formatDate(inicioMes);
+            filtroDiaEnd = formatDate(finMes);
+            table.ajax.reload();
+        });
+
+        $('#filtro-tres-meses-anteriores').on('click', function () {
+            const ahora = new Date();
+            const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth() - 3, 1);
+            const finMes = new Date(ahora.getFullYear(), ahora.getMonth() - 2, 0);
+            filtroDia = formatDate(inicioMes);
+            filtroDiaEnd = formatDate(finMes);
+            table.ajax.reload();
+        });
+
+        $('#filtro-dos-meses-anteriores').on('click', function () {
+            const ahora = new Date();
+            const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth() - 2, 1);
+            const finMes = new Date(ahora.getFullYear(), ahora.getMonth() -1, 0);
+            filtroDia = formatDate(inicioMes);
+            filtroDiaEnd = formatDate(finMes);
+            table.ajax.reload();
+        });
+
         $('#filtro-mes-anterior').on('click', function () {
             const ahora = new Date();
             const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1);
@@ -3366,6 +3392,7 @@ $(function () {
             filtroDiaEnd = formatDate(finMes);
             table.ajax.reload();
         });
+
         $('#filtro-mes-actual').on('click', function () {
             const ahora = new Date();
             const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
@@ -3374,6 +3401,7 @@ $(function () {
             filtroDiaEnd = formatDate(finMes);
             table.ajax.reload();
         });
+
         // Eventos para los filtros
         $('#filtro-fecha').on('change', function () {
             filtroDia = $(this).val();
@@ -3426,8 +3454,6 @@ $(function () {
             $('#filtro-estado-verificado').val("").trigger('change');
             $('#filtro-origen').val("").trigger('change');
             $('#woow-search-citas').val("").trigger('input');
-            console.log("Filtro día: " + $('#filtro-dia').val());
-            console.log("Filtro sede: " + $('#filtro-sede').val());
             table.ajax.reload();
         });
         // Función para formatear fecha en formato 'YYYY-MM-DD'
@@ -3493,6 +3519,23 @@ $(function () {
             $('#lblPagoPendiente').html(extra.total_pago_pendiente);
             $('#lblPagoPagado').html(extra.total_pago_pagado);
         }
+
+        const fechaActual = new Date();
+        const mesActual = fechaActual.getMonth();
+        const meses = [
+            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ];
+
+        function ajustarIndiceMes(offset) {
+            return (mesActual - offset + 12) % 12;
+        }
+        
+        $('#filtro-mes-actual').text(meses[fechaActual.getMonth()]);
+        $('#filtro-mes-anterior').text(meses[ajustarIndiceMes(1)]);
+        $('#filtro-dos-meses-anteriores').text(meses[ajustarIndiceMes(2)]);
+        $('#filtro-tres-meses-anteriores').text(meses[ajustarIndiceMes(3)]);
+        $('#filtro-cuatro-meses-anteriores').text(meses[ajustarIndiceMes(4)]);
     }
 
     //TABLA DE SERVICIO LIQUIDADOR DE CITAS
