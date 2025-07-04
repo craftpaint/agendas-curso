@@ -3876,5 +3876,36 @@ $(function () {
             }
         });
     }
+
+    
+    var table_paquetes;
+    // TABLAS DE PAQUETES
+    if ($('.databases-paquetes').length) {
+        table_paquetes = $('.datatables-paquetes').DataTable({
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            searching: false,
+            info: true,
+            pageLength: 10,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
+                infoEmpty: "No hay datos disponibles"
+            },
+            dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+            ajax: {
+                url: url + '/dashboard/paquetes/obtener_paquetes',
+                type: 'POST',
+                data: function(d) {
+                    d.filtro_nombre = filtroNombre;
+                    d.filtro_valor = filtroValor;
+                    d.filtro_tipo = filtroTipo;
+                }
+            },
+            columns: [
+                { data: ''}
+            ]
+        });
+    }
 });
 

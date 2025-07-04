@@ -13,6 +13,7 @@ use App\Http\Controllers\Dashboard\EstadisticasController;
 use App\Http\Controllers\Dashboard\RolesController;
 use App\Http\Controllers\Dashboard\PermissionsController;
 use App\Http\Controllers\Dashboard\EmpresasController;
+use App\Http\Controllers\Dashboard\PaquetesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -414,5 +415,13 @@ Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.d'])->group(f
 
 Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.a'])
     ->post('dashboard/empresas/upload-logo', [EmpresasController::class, 'uploadLogo'])->name('empresas.uploadLogo');
+
+Route::controller(PaquetesController::class)->group(function () {
+    Route::get('dashboard/paquetes', 'index')
+    ->middleware(['auth', 'verified', 'permission:paquete.listado.v'])
+    ->name('paquetes.index');
+    Route::post('dashboard/paquetes/obtener_paquetes', 'obtenerPaquetes')
+    ->middleware(['auth', 'verified', 'permission:paquete.listado.v']);
+})->name('paquetes');
 
 require __DIR__ . '/auth.php';
