@@ -422,6 +422,8 @@ Route::controller(PaquetesController::class)->group(function () {
     ->name('paquetes.index');
     Route::post('dashboard/paquetes/obtener_paquetes', 'obtenerPaquetes')
     ->middleware(['auth', 'verified', 'permission:paquete.listado.v']);
+    Route::post('dashboard/paquetes/cambio_estado', 'cambioEstadoPaquete')
+    ->middleware(['auth', 'verified', 'permission:paquete.listado.v']);
 })->name('paquetes');
 
 require __DIR__ . '/auth.php';

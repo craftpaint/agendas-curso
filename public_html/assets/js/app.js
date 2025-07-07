@@ -60,6 +60,11 @@ $(function () {
     let tipoCita = '';
     let filtroAgente = '';
 
+    //Filtros de paquetes
+    let filtroNombre = '';
+    let filtroTipo = '';
+    let filtroValor = '';
+
     let MATERIAL3 = {
         primary: getComputedStyle(document.documentElement).getPropertyValue('--color-azul-500').trim(),
         secondary: getComputedStyle(document.documentElement).getPropertyValue('--color-verde').trim(),
@@ -3880,7 +3885,7 @@ $(function () {
     
     var table_paquetes;
     // TABLAS DE PAQUETES
-    if ($('.databases-paquetes').length) {
+    if ($('.datatables-paquetes').length) {
         table_paquetes = $('.datatables-paquetes').DataTable({
             ordering: true,
             processing: true,
@@ -3890,7 +3895,9 @@ $(function () {
             pageLength: 10,
             language: {
                 url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
-                infoEmpty: "No hay datos disponibles"
+                info: "Mostrando _START_ a _END_ de _MAX_ registros",
+                infoEmpty: "No hay datos disponibles",
+                infoFiltered: "(filtrados de un total de _MAX_ registros)"
             },
             dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
             ajax: {
@@ -3900,12 +3907,112 @@ $(function () {
                     d.filtro_nombre = filtroNombre;
                     d.filtro_valor = filtroValor;
                     d.filtro_tipo = filtroTipo;
+                },
+                dataSrc: function (json) {
+                    // Se extraen los datos para la información de la tabla
+                    json.draw = json.Data.draw;
+                    json.recordsTotal = json.Data.recordsTotal;
+                    json.recordsFiltered = json.Data.recordsFiltered;
+
+                    // Se retorna los datos de los paquetes
+                    return json.Data.paquetes;
                 }
             },
             columns: [
-                { data: ''}
-            ]
+                { data: 'nombre_paquete' },
+                { data: 'descripcion_paquete' },
+                { data: 'numero_citas' },
+                { data: 'valor' },
+                { data: 'tipo_paquete' },
+                { data: null },
+                { data: null }
+            ],
+            columnDefs: [
+                {
+                    targets: '_all',
+                    className: 'dt-center'
+                },
+                {
+                    targets: 5,
+                    render: function (data) {
+                        if (data.deleted_at == null) {
+                           return `<span class="badge bg-label-success">ACTIVO</span>`; 
+                        } else {
+                            return `<span class="badge bg-label-danger">INACTIVO</span>`; 
+                        }
+                    }
+                },
+                {
+                    targets: 6,
+                    orderable: false,
+                    render: function (data) {
+                        return `
+                            <a class="btn btn-icon btn-label-info waves-effect">
+                                <i class="tf-icons ti ti-pencil-cog ti-md"></i>
+                            </a>
+                            ${(data.deleted_at == null) ? `
+                                <button type="button" class="btn btn-icon btn-label-danger waves-effect cambio_estado_paquete" data-id_paquete="${data.id_paquete}">
+                                    <i class="tf-icons ti ti-box-off ti-md"></i>
+                                </button>
+                            ` : `
+                                <button type="button" class="btn btn-icon btn-label-success waves-effect cambio_estado_paquete" data-id_paquete="${data.id_paquete}">
+                                    <i class="tf-icons ti ti-package ti-md"></i>
+                                </button>
+                            `}
+                        `;
+                    }
+                }
+            ],
+            createdRow: function (row, data) {
+                if (data.deleted_at == null) {
+                    $(row).css('background-color', 'rgba(225, 247, 222, 0.5)');
+                } else {
+                    $(row).css('background-color', 'rgba(255, 224, 224, 0.5)');
+                }
+            },
+            pagingType: "simple"
         });
     }
+
+    // Cambio de estado de paquete
+    $('.datatables-paquetes').on('click', '.cambio_estado_paquete', function () {
+        let id_paquete = $(this).data('id_paquete');
+
+        $.ajax({
+            url: url + '/dashboard/paquetes/cambio_estado',
+            type: 'POST',
+            data: {
+                id_paquete: id_paquete
+            },
+            success: function () {
+                table_paquetes.ajax.reload();
+            }
+        });
+    });
+
+    // Eventos para los filtros de paquetes
+    $('#buscar-nombre-paquetes').on('keyup', function () {
+        filtroNombre = $(this).val();
+        table_paquetes.ajax.reload();
+    });
+
+    $('#filtro-tipo-paquete').on('change', function () {
+        filtroTipo = $(this).val();
+        table_paquetes.ajax.reload();
+    });
+
+    $('#buscar-valor-paquetes').on('keyup', function () {
+        filtroValor = $(this).val();
+        table_paquetes.ajax.reload();
+    });
+
+    $('#filtro-reiniciar').on('click', function () {
+        filtroNombre = '';
+        filtroTipo = '';
+        filtroValor = '';
+        $('#buscar-nombre-paquetes').val("").trigger('input');
+        $('#filtro-tipo-paquete').val("").trigger('change');
+        $('#buscar-valor-paquetes').val("").trigger('input');
+    })
 });
 

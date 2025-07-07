@@ -59,6 +59,23 @@
             </li>
         <?php
         }
+        if ($user->can('paquete.listado.v')) {
+        ?>
+            <li class="menu-item <?= ($page == 'Clientes') ? 'active open' : '' ?>">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
+                    <i class="menu-icon tf-icons ti ti-package"></i>
+                    <div>Módulo Paquetes</div>
+                </a>
+                <ul class="menu-sub">
+                    <li class="menu-item <?= ($page == 'Paquete' && $subpage == 'Listado') ? 'active' : '' ?>">
+                        <a href="{{ url('dashboard/paquetes') }}" class="menu-link">
+                            <div>Todos los paquetes</div>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        <?php
+        }
         // Módulo clientes: se muestra si el usuario tiene permiso para ver clientes (cliente.listado.v)
         if ($user->can('cliente.listado.v')) {
         ?>
