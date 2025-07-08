@@ -423,7 +423,11 @@ Route::controller(PaquetesController::class)->group(function () {
     Route::post('dashboard/paquetes/obtener_paquetes', 'obtenerPaquetes')
     ->middleware(['auth', 'verified', 'permission:paquete.listado.v']);
     Route::post('dashboard/paquetes/cambio_estado', 'cambioEstadoPaquete')
-    ->middleware(['auth', 'verified', 'permission:paquete.listado.v']);
+    ->middleware(['auth', 'verified', 'permission:paquete.listado.d']);
+    Route::post('dashboard/paquetes/guardar', 'guardarPaquete')
+    ->middleware(['auth', 'verified', 'permission:paquete.listado.a']);
+    Route::post('dashboard/paquetes/actualizar/{id}', 'actualizarPaquete')
+    ->middleware(['auth', 'verified', 'permission:paquete.listado.e']);
 })->name('paquetes');
 
 require __DIR__ . '/auth.php';

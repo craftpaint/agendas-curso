@@ -139,4 +139,82 @@ class PaquetesController extends Controller {
         }
         return response()->json($response);
     }
+
+    public function guardarPaquete(Request $request) {
+        $response = [
+            'Status' => 500,
+            'Message' => "Ocurrió un error al guardar el nuevo paquete.",
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            $nombre_paquete = $request->input('nombre-paquete');
+            $descripcion_paquete = $request->input('descripcion-paquete');
+            $numero_citas = (int) $request->input('numero-citas-paquete');
+            $valor_paquete = (int) $request->input('valor-paquete');
+            $tipo_paquete = $request->input('tipo-paquete');
+
+            $data = DB::table('tb_paquete')->insert([
+                'nombre_paquete' => $nombre_paquete,
+                'descripcion_paquete' => $descripcion_paquete,
+                'numero_citas' => $numero_citas,
+                'valor' => $valor_paquete,
+                'tipo_paquete' => $tipo_paquete,
+            ]);
+
+            $response = [
+                'Status' => 200,
+                'Message' => "El paquete se ha guardado exitosamente.",
+                'Success' => true,
+                'Data' => $data
+            ];
+
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            $response['Message'] = "Error al guardar los datos del nuevo paquete.";
+        }
+        return response()->json($response);
+    }
+
+    public function actualizarPaquete(Request $request, $id) {
+        $response = [
+            'Status' => 500,
+            'Message' => "Ocurrió un error al actualizar el paquete.",
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            $nombre_paquete = $request->input('nombre-paquete');
+            $descripcion_paquete = $request->input('descripcion-paquete');
+            $numero_citas = (int) $request->input('numero-citas-paquete');
+            $valor_paquete = (int) $request->input('valor-paquete');
+            $tipo_paquete = $request->input('tipo-paquete');
+
+            $data = DB::table('tb_paquete')->where('id_paquete', $id)->update([
+                'nombre_paquete' => $nombre_paquete,
+                'descripcion_paquete' => $descripcion_paquete,
+                'numero_citas' => $numero_citas,
+                'valor' => $valor_paquete,
+                'tipo_paquete' => $tipo_paquete,
+            ]);
+
+            if ($data) {
+                $response = [
+                    'Status' => 200,
+                    'Message' => "El paquete se ha actualizado exitosamente.",
+                    'Success' => true,
+                    'Data' => $data
+                ];
+            } else {
+                $response['Message'] = "No se encontraron cambios para actualizar.";
+            }
+
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            $response['Message'] = "Error al actualizar los datos del paquete.";
+        }
+        return response()->json($response);
+    }
 }

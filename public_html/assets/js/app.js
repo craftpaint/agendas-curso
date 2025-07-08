@@ -3925,7 +3925,7 @@ $(function () {
                 { data: 'valor' },
                 { data: 'tipo_paquete' },
                 { data: null },
-                { data: null }
+                { data: null, visible: (canEditPaquetes || canDeletePaquetes) ? true : false }
             ],
             columnDefs: [
                 {
@@ -3947,18 +3947,27 @@ $(function () {
                     orderable: false,
                     render: function (data) {
                         return `
-                            <a class="btn btn-icon btn-label-info waves-effect">
-                                <i class="tf-icons ti ti-pencil-cog ti-md"></i>
-                            </a>
-                            ${(data.deleted_at == null) ? `
-                                <button type="button" class="btn btn-icon btn-label-danger waves-effect cambio_estado_paquete" data-id_paquete="${data.id_paquete}">
-                                    <i class="tf-icons ti ti-box-off ti-md"></i>
-                                </button>
-                            ` : `
-                                <button type="button" class="btn btn-icon btn-label-success waves-effect cambio_estado_paquete" data-id_paquete="${data.id_paquete}">
-                                    <i class="tf-icons ti ti-package ti-md"></i>
-                                </button>
-                            `}
+                            ${(canEditPaquetes) ? `
+                                <button class="btn btn-icon btn-label-info waves-effect btn-editar-paquete" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-info" title="Editar"
+                                    data-id-paquete="${data.id_paquete}"
+                                    data-nombre-paquete="${data.nombre_paquete}"
+                                    data-descripcion-paquete="${data.descripcion_paquete}"
+                                    data-tipo-paquete="${data.tipo_paquete}"
+                                    data-numero-citas="${data.numero_citas}"
+                                    data-valor="${data.valor}">
+                                    <i class="tf-icons ti ti-pencil-cog ti-md"></i>
+                                </button>` : ''}
+                            ${(canDeletePaquetes) ? `
+                                ${(data.deleted_at == null) ? `
+                                    <button type="button" class="btn btn-icon btn-label-danger waves-effect cambio_estado_paquete" data-id_paquete="${data.id_paquete}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-danger" title="Desactivar">
+                                        <i class="tf-icons ti ti-box-off ti-md"></i>
+                                    </button>
+                                ` : `
+                                    <button type="button" class="btn btn-icon btn-label-success waves-effect cambio_estado_paquete" data-id_paquete="${data.id_paquete}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-success" title="Activar">
+                                        <i class="tf-icons ti ti-package ti-md"></i>
+                                    </button>
+                                `}
+                            `: ''}
                         `;
                     }
                 }
@@ -3969,6 +3978,12 @@ $(function () {
                 } else {
                     $(row).css('background-color', 'rgba(255, 224, 224, 0.5)');
                 }
+            },
+            drawCallback: function(settings) {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
             },
             pagingType: "simple"
         });
@@ -3985,6 +4000,15 @@ $(function () {
                 id_paquete: id_paquete
             },
             success: function () {
+                // Destruir todos los tooltips activos antes de recargar la tabla
+                var tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                tooltips.forEach(function(el) {
+                    var instance = bootstrap.Tooltip.getInstance(el);
+                    if (instance) {
+                        instance.dispose();
+                    }
+                });
+
                 table_paquetes.ajax.reload();
             }
         });
@@ -4014,5 +4038,75 @@ $(function () {
         $('#filtro-tipo-paquete').val("").trigger('change');
         $('#buscar-valor-paquetes').val("").trigger('input');
     })
+
+    $('#crear-paquete').on('click', function () {
+        $('#modalNuevoPaqueteLabel').text('Crear Paquete');
+        $('#form-nuevo-paquete').attr('action', url + '/dashboard/paquetes/guardar');
+        $('#form-nuevo-paquete')[0].reset();
+        $('#tipo-paquete').val('').trigger('change');
+        $('#modalNuevoPaquete').modal('show');
+    });
+
+    $('.datatables-paquetes').on('click', '.btn-editar-paquete', function () {
+        const id = $(this).data('id-paquete');
+        const nombre = $(this).data('nombre-paquete');
+        const descripcion = $(this).data('descripcion-paquete');
+        const numeroCitas = $(this).data('numero-citas');
+        const tipo = $(this).data('tipo-paquete');
+        const valor = $(this).data('valor');
+
+        $('#modalNuevoPaqueteLabel').text('Editar Paquete');
+        $('#form-nuevo-paquete').attr('action', url + '/dashboard/paquetes/actualizar/' + id);
+        $('#nombre-paquete').val(nombre);
+        $('#descripcion-paquete').val(descripcion);
+        $('#numero-citas-paquete').val(numeroCitas);
+        $('#valor-paquete').val(valor);
+        $('#tipo-paquete').val(tipo);
+
+        $('#modalNuevoPaquete').modal('show');
+    });
+
+    //Formulario para crear un nuevo paquete
+    $('#form-nuevo-paquete').on('submit', function (event) {
+        event.preventDefault();
+        let action = $(this).attr('action');
+        let formData = $(this).serialize();
+
+        $.ajax({
+            url: action,
+            type: 'POST',
+            data: formData,
+            success: function (response) {
+                if (response.Success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Exito!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    }).then(() => {
+                        table_paquetes.ajax.reload();
+                        $('#modalNuevoPaquete').modal('hide');
+                        $('#form-nuevo-paquete')[0].reset();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al enviar los datos.'
+                });
+            }
+        });
+    });
 });
 
