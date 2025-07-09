@@ -1310,6 +1310,26 @@ $(function () {
                             badgeAnotaciones = `<span class="badge rounded-pill text-bg-danger badge-notifications px-1">${full.total_anotaciones}</span>`;
                             iconColorAnotaciones = 'text-success';
                         }
+                        
+                        // Corrección de fecha
+                        let fecha = data.reserva_cita.split(" ")[0];
+                        fecha = fecha.replace(/-/g, '/');
+
+                        // Correccion horario
+                        let horario = data.rango_horario.split('-')[0].trim()
+
+                        // Plantilla de mensaje para copiar
+                        let plantilla = `
+                            Buen día señor@ *${data.nombre_cliente + " " + data.apellido_cliente}* me comunico de curso comparendo Ciatran, mi nombre es *${data.agente_callcenter}*. \n
+                            ✅ *_Le confirmo su cita_* \n
+                            🗓️ *_Fecha:_* ${fecha}
+                            🕐 *_Hora:_* ${horario}
+                            🏬 *_Sede:_* ${data.nombre_sede}
+                            📍 *_Dirección:_* ${data.direccion_sede} \n
+                            Por favor indicar que va por parte de Curso comparendo Ciatran, llegar 40 minutos antes de la hora agendada para realizar el procedimiento. \n
+                            Tan pronto salga del curso nos confirma, para registrar su asistencia. Recuerde consular su comparendo en la pagina del Simit, este debe estar notificado.
+                        `;
+                        plantilla = plantilla.replace(/^[ \t]+/gm, '');
 
                         return `
                         <div style="position:relative; display:inline-block;">
@@ -1322,6 +1342,15 @@ $(function () {
                             </button>
                             ${badgeAnotaciones}
                         </div>
+                        ${(rol == "superadmin" || rol == "admin" || rol == "lidercallcenter" || rol == "callcenter") ? `
+                        <div style="position:relative; margin-top: 5px;">
+                            <button type="button"
+                                class="btn btn-sm btn-label-success waves-effect btn-copiar-plantilla"
+                                title="Copiar plantilla"
+                                data-texto-plantilla="${plantilla}">
+                                <i class="ti ti-message-2"></i>
+                            </button>
+                        </div>` : ``}
                       `;
                     }
                 },
@@ -1522,6 +1551,15 @@ $(function () {
                 }
             },
             pagingType: "simple"
+        });
+
+        // Evento botón plantilla
+        $(document).on('click', '.btn-copiar-plantilla', function () {
+            // Usa el atributo correcto: data-texto-plantilla
+            const texto = $(this).data('texto-plantilla');
+            if (texto) {
+                copiarContenido(texto);
+            }
         });
 
         // Eventos para los filtros
@@ -3530,7 +3568,7 @@ $(function () {
         function ajustarIndiceMes(offset) {
             return (mesActual - offset + 12) % 12;
         }
-        
+
         $('#filtro-mes-actual').text(meses[fechaActual.getMonth()]);
         $('#filtro-mes-anterior').text(meses[ajustarIndiceMes(1)]);
         $('#filtro-dos-meses-anteriores').text(meses[ajustarIndiceMes(2)]);
