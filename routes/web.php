@@ -401,7 +401,7 @@ Route::middleware(['auth', 'verified', 'permission:empresa.listado.v'])->group(f
 // Otras operaciones que requieren permisos distintos:
 Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.a'])->group(function () {
     Route::get('dashboard/empresas/create', [EmpresasController::class, 'create'])->name('empresas.create');
-    Route::post('dashboard/empresas/store', [EmpresasController::class, 'store'])->name('empresas.store');
+    Route::post('dashboard/empresas/guardar', [EmpresasController::class, 'guardar'])->name('empresas.guardar');
 });
 
 Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.e'])->group(function () {

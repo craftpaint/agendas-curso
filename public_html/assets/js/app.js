@@ -3882,7 +3882,37 @@ $(function () {
         });
     }
 
-    
+    // VISTA DE EMPRESAS
+    $('#create-empresa-file').on('change', function () {
+        const file = this.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('#preview-image').attr('src', e.target.result);
+                $('#preview-container').show();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            $('#preview-image').attr('src', '');
+            $('#preview-container').hide();
+        }
+    });
+
+    // Botón para quitar la imagen seleccionada
+    $('#btn-cancel-image').on('click', function () {
+        $('#create-empresa-file').val('');
+        $('#preview-image').attr('src', '');
+        $('#preview-container').hide();
+    });
+
+    // Formulario para crear una nueva empresa
+    $('#createEmpresaForm').on('submit', function (event) {
+        event.preventDefault();
+        let action = $(this).attr('action');
+        let formData = $(this).serialize();
+        
+    });
+
     var table_paquetes;
     // TABLAS DE PAQUETES
     if ($('.datatables-paquetes').length) {
@@ -4037,7 +4067,7 @@ $(function () {
         $('#buscar-nombre-paquetes').val("").trigger('input');
         $('#filtro-tipo-paquete').val("").trigger('change');
         $('#buscar-valor-paquetes').val("").trigger('input');
-    })
+    });
 
     $('#crear-paquete').on('click', function () {
         $('#modalNuevoPaqueteLabel').text('Crear Paquete');

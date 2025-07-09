@@ -71,10 +71,10 @@
         <div class="modal fade" id="createEmpresaModal" tabindex="-1" aria-labelledby="createEmpresaModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-xl">
                 <div class="modal-content">
-                    <form action="{{ route('empresas.store') }}" method="POST" enctype="multipart/form-data" id="createEmpresaForm">
+                    <form action="{{ url('dashboard/empresas/guardar') }}" method="POST" enctype="multipart/form-data" id="createEmpresaForm">
                         <div class="modal-header">
                             <h5 class="modal-title" id="createEmpresaModalLabel">Crear Empresa</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            <button type="button" class="btn btn-close btn-danger" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                         </div>
                         <div class="modal-body">
                             <div class="row">
@@ -88,12 +88,35 @@
                                     <label for="create-empresa-description" class="form-label">Descripción</label>
                                     <textarea id="create-empresa-description" name="description" class="form-control" rows="3"></textarea>
                                 </div>
+                                <!-- tipo documento empresa -->
+                                <div class="mb-3 col-md-6">
+                                    <label for="create-empresa-document-type" class="form-label">Tipo de Documento</label>
+                                    <select id="create-empresa-document-type" name="document_type" class="form-select" required>
+                                        <option value="NIT">NIT</option>
+                                        <option value="CC">RUT</option>
+                                    </select>
+                                </div>
+                                <!-- Número de Documento -->
+                                <div class="mb-3 col-md-6">
+                                    <label for="create-empresa-document-number" class="form-label">Número de Documento</label>
+                                    <input type="text" id="create-empresa-document-number" name="document_number" class="form-control" required>
+                                </div>
+                                <!-- Plan Empresa -->
+                                <div class="mb-3 col-md-6">
+                                    <label for="create-empresa-plan" class="form-label">Plan de Empresa</label>
+                                    <select id="create-empresa-plan" name="plan" class="form-select" required>
+                                        <option value="free">PREPAGO</option>
+                                        <option value="basic">POSPAGO</option>
+                                    </select>
+                                </div>
                                 <!-- Logo Empresa -->
                                 <div class="mb-3 col-md-12">
-                                    <label class="form-label">Logo Empresa</label>
-                                    <!-- Usamos un input file con ID específico -->
-                                    <input type="file" id="create-empresa-file" name="file">
-                                    <!-- Campo oculto para almacenar la URL del logo subido -->
+                                    <label for="create-empresa-file" class="form-label">Logo Empresa</label>
+                                    <input type="file" id="create-empresa-file" name="file" accept="image/*" class="form-control">
+                                    <div id="preview-container" class="mt-2" style="display:none;">
+                                        <img id="preview-image" src="" alt="Vista previa" style="max-width: 600px; max-height: 500px; border-radius: 8px;">
+                                        <button type="button" id="btn-cancel-image" class="btn btn-sm btn-outline-danger ms-2">Quitar imagen</button>
+                                    </div>
                                     <input type="hidden" name="logo" id="create-empresa-logo">
                                 </div>
                             </div>
@@ -110,155 +133,5 @@
                 </div>
             </div>
         </div>
-
-        <!-- Modal: Editar Empresa -->
-        <div class="modal fade" id="editEmpresaModal" tabindex="-1" aria-labelledby="editEmpresaModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-xl">
-                <div class="modal-content">
-                    <form id="form-edit-empresa" method="POST" action="" enctype="multipart/form-data">
-                        @csrf
-                        @method('POST')
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="editEmpresaModalLabel">Editar Empresa</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row">
-                                <!-- Nombre -->
-                                <div class="mb-3 col-md-6">
-                                    <label for="edit-empresa-name" class="form-label">Nombre</label>
-                                    <input type="text" id="edit-empresa-name" name="name" class="form-control" required>
-                                </div>
-                                <!-- Descripción -->
-                                <div class="mb-3 col-md-6">
-                                    <label for="edit-empresa-description" class="form-label">Descripción</label>
-                                    <textarea id="edit-empresa-description" name="description" class="form-control" rows="3"></textarea>
-                                </div>
-                                <!-- Logo Empresa -->
-                                <div class="mb-3 col-md-12">
-                                    <label class="form-label">Logo Empresa</label>
-                                    <!-- Aquí usamos un input file para FilePond y un campo oculto -->
-                                    <input type="file" id="edit-empresa-file" name="file" class="form-control">
-                                    <input type="hidden" name="logo" id="edit-empresa-logo">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer text-end">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i data-feather="x"></i> Cancelar
-                            </button>
-                            <button type="submit" class="btn btn-primary">
-                                <i data-feather="save"></i> Actualizar Empresa
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
-
-<!-- Inicialización de Dropzone para Crear Empresa -->
-<script>
-    FilePond.registerPlugin(FilePondPluginImagePreview);
-
-    // Inicializar FilePond para el input de crear empresa
-    const inputCreate = document.querySelector('#create-empresa-file');
-    const pondCreate = FilePond.create(inputCreate, {
-        name: 'file',
-        maxFiles: 1,
-        credits: false,
-        labelIdle: 'Arrastra y suelta el logo o <span class="filepond--label-action">clic para seleccionar</span>',
-        server: {
-            process: {
-                url: '{{ route("empresas.uploadLogo") }}',
-                method: 'POST',
-                withCredentials: false,
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                timeout: 7000,
-                onload: (response) => {
-                    // Se espera que la respuesta sea un JSON con filePath.
-                    try {
-                        const data = JSON.parse(response);
-                        document.getElementById("create-empresa-logo").value = data.filePath;
-                    } catch (error) {
-                        console.error("Error parseando respuesta", error);
-                    }
-                    return response;
-                },
-                onerror: (response) => response.data,
-            },
-            revert: null,
-        }
-    });
-
-    // Inicializar FilePond para el input de editar empresa
-    const inputEdit = document.querySelector('#edit-empresa-file');
-    const pondEdit = FilePond.create(inputEdit, {
-        name: 'file',
-        maxFiles: 1,
-        credits: false,
-        labelIdle: 'Arrastra y suelta el logo o <span class="filepond--label-action">clic para seleccionar</span>',
-        server: {
-            process: {
-                url: '{{ route("empresas.uploadLogo") }}',
-                method: 'POST',
-                withCredentials: false,
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                timeout: 7000,
-                onload: (response) => {
-                    try {
-                        const data = JSON.parse(response);
-                        document.getElementById("edit-empresa-logo").value = data.filePath;
-                    } catch (error) {
-                        console.error("Error parseando respuesta", error);
-                    }
-                    return response;
-                },
-                onerror: (response) => response.data,
-            },
-            revert: null,
-        }
-    });
-
-    // Configurar el modal de edición para precargar los datos
-    document.addEventListener('DOMContentLoaded', function() {
-        const editButtons = document.querySelectorAll('.btn-edit-empresa');
-        editButtons.forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                const idEmpresa = this.getAttribute('data-empresa-id');
-                const nombre = this.getAttribute('data-empresa-name');
-                const descripcion = this.getAttribute('data-empresa-description');
-                const logo = this.getAttribute('data-empresa-logo');
-
-                document.getElementById('edit-empresa-name').value = nombre;
-                document.getElementById('edit-empresa-description').value = descripcion;
-                document.getElementById('edit-empresa-logo').value = logo; // Guarda el URL en el campo oculto
-
-                // // Si existe logo, precargarlo en FilePond como mock file:
-                // if (logo) {
-                //     // Primero, eliminamos cualquier archivo previo en pondEdit
-                //     pondEdit.removeFiles();
-                //     var mockFile = {
-                //         name: "Logo actual",
-                //         size: 12345,
-                //         type: "image/png"
-                //     };
-                //     // Simulamos la adición del archivo
-                //     pondEdit.emit("addedfile", mockFile);
-                //     pondEdit.emit("thumbnail", mockFile, logo);
-                //     pondEdit.emit("complete", mockFile);
-                // } else {
-                //     pondEdit.removeFiles();
-                // }
-
-                // Actualiza la acción del formulario de edición
-                document.getElementById('form-edit-empresa').setAttribute('action', "{{ url('dashboard/empresas/update') }}/" + idEmpresa);
-            });
-        });
-    });
-</script>

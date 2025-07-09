@@ -88,13 +88,21 @@ class EmpresasController extends Controller
         $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
+            'document_type' => 'nullable|string',
+            'document_number' => 'nullable|string',
+            'plan' => 'nullable|string',
             'logo'        => 'nullable|string'  // Se espera la URL o path del logo
         ]);
+
+        Log::info('Request data for creating empresa: ', $request->all());
 
         try {
             DB::table('tb_empresa')->insert([
                 'Nombre'    => $request->input('name'),
                 'Descripcion'       => $request->input('description'),
+                'tipo_documento_empresa' => $request->input('document_type'),
+                'documento_empresa' => $request->input('document_number'),
+                'plan_empresa' => $request->input('plan'),
                 'logo'              => $request->input('logo'),
                 'created_at'        => now(),
                 'updated_at'        => now()
