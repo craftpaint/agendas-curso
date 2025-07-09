@@ -1320,7 +1320,7 @@ $(function () {
 
                         // Plantilla de mensaje para copiar
                         let plantilla = `
-                            Buen día señor@ *${data.nombre_cliente + " " + data.apellido_cliente}* me comunico de curso comparendo Ciatran, mi nombre es *${data.agente_callcenter}*. \n
+                            Buen día señor@ *${data.nombre_cliente + " " + data.apellido_cliente}* me comunico de curso comparendo, mi nombre es *${data.agente_callcenter}*. \n
                             ✅ *_Le confirmo su cita_* \n
                             🗓️ *_Fecha:_* ${fecha}
                             🕐 *_Hora:_* ${horario}
