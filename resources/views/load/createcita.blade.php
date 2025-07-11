@@ -62,11 +62,11 @@
                 <div class="CantCupos">
                 </div>
                 <hr>
-                <div class="mb-4 col-6">
+                <div class="mb-4 col-12 col-md-6">
                     <label class="form-label">Nombre <span class="required_flied">*</span></label>
                     <input type="text" class="form-control" name="nombre_cliente" required>
                 </div>
-                <div class="mb-4 col-6">
+                <div class="mb-4 col-12 col-md-6">
                     <label class="form-label">Apellido <span class="required_flied">*</span></label>
                     <input type="text" class="form-control" name="apellido_cliente" required>
                 </div>
@@ -89,7 +89,7 @@
                         <option value="PPT">PPT</option>
                     </select>
                 </div>
-                <div class="mb-4 col-6">
+                <div class="mb-4 col-12 col-md-6">
                     <label class="form-label">Número de documento <span class="required_flied">*</span></label>
                     <input type="text" class="form-control" name="doc_cliente" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                 </div>
@@ -132,7 +132,7 @@
                             <option value="Otro">Otro</option>
                         </select>
                     </div>
-                    <div class="mb-4 col-6">
+                    <div class="mb-4 col-12 col-md-6">
                         <label class="form-label">Placa de vehiculo <span class="required_flied">*</span></label>
                         <input type="text" class="form-control" id="placa_vehiculo" name="placa_vehiculo" required>
                     </div>
