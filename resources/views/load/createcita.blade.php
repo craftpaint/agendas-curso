@@ -78,7 +78,7 @@
                     <label class="form-label">Teléfono <span class="required_flied">*</span></label><br>
                     <input type="tel" class="form-control" id="phoneCliente" name="telefono_cliente" required minlength="10" maxlength="10">
                 </div>
-                <div class="mb-4 col-6">
+                <div class="mb-4 col-12 col-md-6">
                     <label class="form-label">Tipo de documento <span class="required_flied">*</span></label>
                     <select class="select2 form-select" required name="tipo_doc_cliente">
                         <option value="CC">Cedula de ciudadania</option>

@@ -310,6 +310,10 @@ table tbody tr:nth-child(even) {
     width: 20px;
 }
 
+.light-style .tagify__input::before {
+    text-wrap: auto;
+}
+
 /* svg rectangle property */
 .checkbox svg>rect {
     fill: var(--color-gris-oscuro);
