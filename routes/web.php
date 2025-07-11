@@ -400,21 +400,19 @@ Route::middleware(['auth', 'verified', 'permission:empresa.listado.v'])->group(f
 
 // Otras operaciones que requieren permisos distintos:
 Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.a'])->group(function () {
-    Route::get('dashboard/empresas/create', [EmpresasController::class, 'create'])->name('empresas.create');
-    Route::post('dashboard/empresas/guardar', [EmpresasController::class, 'guardar'])->name('empresas.guardar');
+    Route::post('dashboard/empresas/guardar', [EmpresasController::class, 'guardarEmpresa'])->name('empresas.guardarEmpresa');
 });
 
 Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.e'])->group(function () {
-    Route::get('dashboard/empresas/edit/{id}', [EmpresasController::class, 'edit'])->name('empresas.edit');
-    Route::post('dashboard/empresas/update/{id}', [EmpresasController::class, 'update'])->name('empresas.update');
+    Route::post('dashboard/empresas/actualizar/{id}', [EmpresasController::class, 'actualizar'])->name('empresas.actualizar');
 });
 
 Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.d'])->group(function () {
-    Route::delete('dashboard/empresas/destroy/{id}', [EmpresasController::class, 'destroy'])->name('empresas.destroy');
+    Route::post('dashboard/empresas/cambiar_estado/', [EmpresasController::class, 'cambiarEstado'])->name('empresas.cambiarEstado');
 });
 
 Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.a'])
-    ->post('dashboard/empresas/upload-logo', [EmpresasController::class, 'uploadLogo'])->name('empresas.uploadLogo');
+    ->post('dashboard/empresas/guardar-logo', [EmpresasController::class, 'guardarLogo'])->name('empresas.guardarLogo');
 
 Route::controller(PaquetesController::class)->group(function () {
     Route::get('dashboard/paquetes', 'index')

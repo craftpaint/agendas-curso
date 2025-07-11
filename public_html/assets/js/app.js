@@ -3883,6 +3883,7 @@ $(function () {
     }
 
     // VISTA DE EMPRESAS
+    // Previsualización de la imagen seleccionada
     $('#create-empresa-file').on('change', function () {
         const file = this.files[0];
         if (file && file.type.startsWith('image/')) {
@@ -3903,14 +3904,191 @@ $(function () {
         $('#create-empresa-file').val('');
         $('#preview-image').attr('src', '');
         $('#preview-container').hide();
+        $('#logo-url').val('');
     });
 
+    $('#btn-crear-empresa').on('click', function () {
+        $('#createEmpresaModalLabel').text('Crear Empresa');
+        $('#createEmpresaForm').attr('action', url + '/dashboard/empresas/guardar');
+        $('#createEmpresaForm')[0].reset();
+        $('#create-empresa-plan').val('').trigger('change');
+        $('#create-empresa-file').val('');
+        $('#preview-image').attr('src', '');
+        $('#preview-container').hide();
+        $('#createEmpresaModal').modal('show');
+    });
     // Formulario para crear una nueva empresa
     $('#createEmpresaForm').on('submit', function (event) {
         event.preventDefault();
         let action = $(this).attr('action');
-        let formData = $(this).serialize();
+        let form = $(this);
+        let fileInput = $('#create-empresa-file')[0];
+        let file = fileInput.files[0];
+
+        function guardarEmpresa() {
+            let formData = new FormData(form[0]);
+            $.ajax({
+                url: action,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.Success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Exito!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        }).then(() => {
+                            $('#createEmpresaModal').modal('hide');
+                            $('#createEmpresaForm')[0].reset();
+                            $('#preview-image').attr('src', '');
+                            $('#preview-container').hide();
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al enviar los datos de la empresa.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    });
+                }
+            });
+        }
+
+        if (file) {
+            let imgData = new FormData();
+            imgData.append('file', file);
+
+            $.ajax({
+                url: 'empresas/guardar-logo',
+                type: 'POST',
+                data: imgData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.Success) {
+                        $('#logo-url').val(response.Data);
+                        guardarEmpresa();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo subir el logo de la empresa.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    });
+                }
+            });
+        } else {
+            guardarEmpresa();
+        }
+    });
+
+    //Botón para abrir el modal de editar empresa
+    $('.btn-edit-empresa').on('click', function () {
+        const id = $(this).data('empresa-id');
+        const nombre = $(this).data('empresa-nombre');
+        const descripcion = $(this).data('empresa-descripcion');
+        const tipo_documento = $(this).data('empresa-tipo-documento');
+        const numero_documento = $(this).data('empresa-documento');
+        const plan = $(this).data('empresa-plan');
+        const logo = $(this).data('empresa-logo');
+        const plantilla = $(this).data('empresa-plantilla');
+
+        $('#createEmpresaModalLabel').text('Editar Empresa');
+        $('#createEmpresaForm').attr('action', url + '/dashboard/empresas/actualizar/' + id);
+        $('#create-empresa-name').val(nombre);
+        $('#create-empresa-description').val(descripcion);
+        $('#create-empresa-document-type').val(tipo_documento);
+        $('#create-empresa-document-number').val(numero_documento);
+        $('#create-empresa-plan').val(plan);
+        $('#create-empresa-template').val(plantilla);
+
+        if (logo && logo !== '') {
+            $('#preview-image').attr('src', logo.startsWith('http') ? logo : (url + '/' + logo.replace(/^\/+/, '')));
+            $('#preview-container').show();
+            $('#logo-url').val(logo);
+        } else {
+            $('#preview-image').attr('src', '');
+            $('#preview-container').hide();
+            $('#logo-url').val('');
+        }
+
+        $('#createEmpresaModal').modal('show');
+    });
+    
+    // Botón para cambiar de estado de la empresa
+    $('.btn-estado-empresa').on('click', function () {
+        const id = $(this).data('empresa-id');
         
+        $.ajax({
+            url: url + '/dashboard/empresas/cambiar_estado',
+            type: 'POST',
+            data: {
+                id_empresa: id
+            },
+            success: function (response) {
+                if (response.Success) {
+                    location.reload();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cambiar el estado de la empresa.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                    }
+                });
+            }
+        });
     });
 
     var table_paquetes;

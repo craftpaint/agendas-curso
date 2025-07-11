@@ -7,7 +7,7 @@
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <h2 class="mb-0">Empresas</h2>
                 <!-- Botón para abrir el modal de creación -->
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createEmpresaModal">
+                <button type="button" class="btn btn-primary" id="btn-crear-empresa" data-bs-toggle="modal" data-bs-target="#createEmpresaModal">
                     <i class="ti ti-plus"></i> Agregar Empresa
                 </button>
             </div>
@@ -34,26 +34,41 @@
                             </div>
                             <hr>
                             <div>
+                                <p class="mb-1"><strong>{{ $empresa->tipo_documento_empresa . " " . $empresa->documento_empresa }}</strong></p>
+                                <p class="mb-1">Plan: <strong>{{ $empresa->plan_empresa }}</strong></p>
+                                <p class="mb-1">Plantilla: <strong>{{ $empresa->id_plantilla }}</strong></p>
+                                <p class="mb-1">
+                                    Estado:
+                                    @if($empresa->estado)
+                                        <strong class="text-success">Activo</strong>
+                                    @else
+                                        <strong class="text-danger">Inactivo</strong>
+                                    @endif
+                                </p>
                                 <p class="mb-1">Sedes Asociadas: <strong>{{ $empresa->sedes_count }}</strong></p>
                                 <p class="mb-1">Usuarios Asociados: <strong>{{ $empresa->usuarios_count }}</strong></p>
                             </div>
                             <div class="text-end mt-2">
                                 <button type="button" class="btn btn-sm btn-outline-primary btn-edit-empresa"
-                                    data-bs-toggle="modal" data-bs-target="#editEmpresaModal"
                                     data-empresa-id="{{ $empresa->id_empresa }}"
-                                    data-empresa-name="{{ $empresa->Nombre }}"
-                                    data-empresa-description="{{ $empresa->Descripcion }}"
-                                    data-empresa-logo="{{ $empresa->logo }}">
+                                    data-empresa-nombre="{{ $empresa->Nombre }}"
+                                    data-empresa-descripcion="{{ $empresa->Descripcion }}"
+                                    data-empresa-tipo-documento="{{ $empresa->tipo_documento_empresa }}"
+                                    data-empresa-documento="{{ $empresa->documento_empresa }}"
+                                    data-empresa-plan="{{ $empresa->plan_empresa }}"
+                                    data-empresa-logo="{{ $empresa->logo }}"
+                                    data-empresa-plantilla="{{ $empresa->id_plantilla }}">
                                     <i class="ti ti-edit"></i> Editar
                                 </button>
-                                <form action="{{ route('empresas.destroy', $empresa->id_empresa) }}" method="POST" style="display:inline-block;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                                        onclick="return confirm('¿Estás seguro de eliminar esta empresa?');">
-                                        <i class="ti ti-trash"></i> Eliminar
+                                @if($empresa->estado)
+                                    <button class="btn btn-sm btn-outline-danger btn-estado-empresa" data-empresa-id="{{ $empresa->id_empresa }}">
+                                        <i class="ti ti-trash"></i> Inactivar
                                     </button>
-                                </form>
+                                @else
+                                    <button class="btn btn-sm btn-outline-success btn-estado-empresa" data-empresa-id="{{ $empresa->id_empresa }}">
+                                        <i class="ti ti-check"></i> Activar
+                                    </button>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -74,24 +89,24 @@
                     <form action="{{ url('dashboard/empresas/guardar') }}" method="POST" enctype="multipart/form-data" id="createEmpresaForm">
                         <div class="modal-header">
                             <h5 class="modal-title" id="createEmpresaModalLabel">Crear Empresa</h5>
-                            <button type="button" class="btn btn-close btn-danger" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                         </div>
                         <div class="modal-body">
                             <div class="row">
                                 <!-- Nombre -->
                                 <div class="mb-3 col-md-6">
                                     <label for="create-empresa-name" class="form-label">Nombre</label>
-                                    <input type="text" id="create-empresa-name" name="name" class="form-control" required>
+                                    <input type="text" id="create-empresa-name" name="nombre-empresa" class="form-control" required>
                                 </div>
                                 <!-- Descripción -->
                                 <div class="mb-3 col-md-6">
                                     <label for="create-empresa-description" class="form-label">Descripción</label>
-                                    <textarea id="create-empresa-description" name="description" class="form-control" rows="3"></textarea>
+                                    <textarea id="create-empresa-description" name="descripcion-empresa" class="form-control" rows="3"></textarea>
                                 </div>
                                 <!-- tipo documento empresa -->
                                 <div class="mb-3 col-md-6">
                                     <label for="create-empresa-document-type" class="form-label">Tipo de Documento</label>
-                                    <select id="create-empresa-document-type" name="document_type" class="form-select" required>
+                                    <select id="create-empresa-document-type" name="tipo-documento" class="form-select" required>
                                         <option value="NIT">NIT</option>
                                         <option value="CC">RUT</option>
                                     </select>
@@ -99,25 +114,30 @@
                                 <!-- Número de Documento -->
                                 <div class="mb-3 col-md-6">
                                     <label for="create-empresa-document-number" class="form-label">Número de Documento</label>
-                                    <input type="text" id="create-empresa-document-number" name="document_number" class="form-control" required>
+                                    <input type="text" id="create-empresa-document-number" name="numero-documento" class="form-control" required>
                                 </div>
                                 <!-- Plan Empresa -->
                                 <div class="mb-3 col-md-6">
                                     <label for="create-empresa-plan" class="form-label">Plan de Empresa</label>
-                                    <select id="create-empresa-plan" name="plan" class="form-select" required>
-                                        <option value="free">PREPAGO</option>
-                                        <option value="basic">POSPAGO</option>
+                                    <select id="create-empresa-plan" name="plan-empresa" class="form-select" required>
+                                        <option value="PREPAGO">PREPAGO</option>
+                                        <option value="POSPAGO">POSPAGO</option>
                                     </select>
+                                </div>
+                                <!-- plantilla Empresa -->
+                                <div class="mb-3 col-md-6">
+                                    <label for="create-empresa-template" class="form-label">Plantilla Empresa</label>
+                                    <input type="text" id="create-empresa-template" name="plantilla-empresa" class="form-control">
                                 </div>
                                 <!-- Logo Empresa -->
                                 <div class="mb-3 col-md-12">
                                     <label for="create-empresa-file" class="form-label">Logo Empresa</label>
-                                    <input type="file" id="create-empresa-file" name="file" accept="image/*" class="form-control">
+                                    <input type="file" id="create-empresa-file" name="logo-empresa" accept="image/*" class="form-control">
                                     <div id="preview-container" class="mt-2" style="display:none;">
                                         <img id="preview-image" src="" alt="Vista previa" style="max-width: 600px; max-height: 500px; border-radius: 8px;">
                                         <button type="button" id="btn-cancel-image" class="btn btn-sm btn-outline-danger ms-2">Quitar imagen</button>
                                     </div>
-                                    <input type="hidden" name="logo" id="create-empresa-logo">
+                                    <input type="hidden" id="logo-url" name="logo-url" id="create-empresa-logo">
                                 </div>
                             </div>
                         </div>
