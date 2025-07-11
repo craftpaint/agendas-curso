@@ -61,7 +61,7 @@
         }
         if ($user->can('paquete.listado.v')) {
         ?>
-            <li class="menu-item <?= ($page == 'Clientes') ? 'active open' : '' ?>">
+            <li class="menu-item <?= ($page == 'Paquete') ? 'active open' : '' ?>">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon tf-icons ti ti-package"></i>
                     <div>Módulo Paquetes</div>
