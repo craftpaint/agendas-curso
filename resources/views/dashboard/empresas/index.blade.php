@@ -36,7 +36,7 @@
                             <div>
                                 <p class="mb-1"><strong>{{ $empresa->tipo_documento_empresa . " " . $empresa->documento_empresa }}</strong></p>
                                 <p class="mb-1">Plan: <strong>{{ $empresa->plan_empresa }}</strong></p>
-                                <p class="mb-1">Plantilla: <strong>{{ $empresa->id_plantilla }}</strong></p>
+                                <p class="mb-1">Plantilla Correo: <strong>{{ $empresa->id_plantilla }}</strong></p>
                                 <p class="mb-1">
                                     Estado:
                                     @if($empresa->estado)
@@ -98,10 +98,13 @@
                                     <label for="create-empresa-name" class="form-label">Nombre</label>
                                     <input type="text" id="create-empresa-name" name="nombre-empresa" class="form-control" required>
                                 </div>
-                                <!-- Descripción -->
+                                <!-- Plan Empresa -->
                                 <div class="mb-3 col-md-6">
-                                    <label for="create-empresa-description" class="form-label">Descripción</label>
-                                    <textarea id="create-empresa-description" name="descripcion-empresa" class="form-control" rows="3"></textarea>
+                                    <label for="create-empresa-plan" class="form-label">Plan de Empresa</label>
+                                    <select id="create-empresa-plan" name="plan-empresa" class="form-select" required>
+                                        <option value="PREPAGO">PREPAGO</option>
+                                        <option value="POSPAGO">POSPAGO</option>
+                                    </select>
                                 </div>
                                 <!-- tipo documento empresa -->
                                 <div class="mb-3 col-md-6">
@@ -116,28 +119,31 @@
                                     <label for="create-empresa-document-number" class="form-label">Número de Documento</label>
                                     <input type="text" id="create-empresa-document-number" name="numero-documento" class="form-control" required>
                                 </div>
-                                <!-- Plan Empresa -->
-                                <div class="mb-3 col-md-6">
-                                    <label for="create-empresa-plan" class="form-label">Plan de Empresa</label>
-                                    <select id="create-empresa-plan" name="plan-empresa" class="form-select" required>
-                                        <option value="PREPAGO">PREPAGO</option>
-                                        <option value="POSPAGO">POSPAGO</option>
-                                    </select>
-                                </div>
                                 <!-- plantilla Empresa -->
-                                <div class="mb-3 col-md-6">
-                                    <label for="create-empresa-template" class="form-label">Plantilla Empresa</label>
+                                <div class="mb-3 col-md-12">
+                                    <label for="create-empresa-template" class="form-label">ID de plantilla de correo en SendPulse</label>
                                     <input type="text" id="create-empresa-template" name="plantilla-empresa" class="form-control">
                                 </div>
                                 <!-- Logo Empresa -->
-                                <div class="mb-3 col-md-12">
+                                <div class="mb-3 col-md-6">
                                     <label for="create-empresa-file" class="form-label">Logo Empresa</label>
                                     <input type="file" id="create-empresa-file" name="logo-empresa" accept="image/*" class="form-control">
-                                    <div id="preview-container" class="mt-2" style="display:none;">
-                                        <img id="preview-image" src="" alt="Vista previa" style="max-width: 600px; max-height: 500px; border-radius: 8px;">
-                                        <button type="button" id="btn-cancel-image" class="btn btn-sm btn-outline-danger ms-2">Quitar imagen</button>
+                                    <div id="preview-container" class="mt-2 container" style="display:none;">
+                                        <div class="row justify-content-center">
+                                            <div class="col-12">
+                                                <img id="preview-image" src="" class="w-100 img-fluid" alt="Vista previa" style="max-width: 600px; max-height: 500px; border-radius: 8px;">
+                                            </div>
+                                            <div class="col-4">
+                                                <button type="button" id="btn-cancel-image" class="btn btn-sm btn-outline-danger mt-2 mx-auto">Quitar imagen</button>
+                                            </div>
+                                        </div>
                                     </div>
                                     <input type="hidden" id="logo-url" name="logo-url" id="create-empresa-logo">
+                                </div>
+                                <!-- Descripción -->
+                                <div class="mb-3 col-md-6">
+                                    <label for="create-empresa-description" class="form-label">Descripción</label>
+                                    <textarea id="create-empresa-description" name="descripcion-empresa" class="form-control" rows="3"></textarea>
                                 </div>
                             </div>
                         </div>
