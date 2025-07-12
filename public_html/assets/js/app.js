@@ -4091,6 +4091,122 @@ $(function () {
         });
     });
 
+    // VISTA DE DASHBOARD EMRPESAS
+    if ($('#dashboard-empresas').length) {
+        var optionsChartDashboardEmpresasProgressBar = {
+            series: [{
+                name: 'Citas consumidas',
+                data: [70]
+            }, {
+                name: 'Citas faltantes',
+                data: [30]
+            }],
+            chart: {
+                type: 'bar',
+                height: 200,
+                stacked: true,
+                stackType: '100%'
+            },
+            colors: ['#ff9f43', '#ff4c51'],
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    borderRadius: 5,
+                },
+            },
+            stroke: {
+                width: 1,
+                colors: ['#fff']
+            },
+            title: {
+                text: '% de progreso del paquete',
+            },
+            xaxis: {
+                categories: [''],
+                labels: {
+                    show: false
+                },
+                axisTicks: {
+                    show: false
+                },
+                axisBorder: {
+                    show: false
+                }
+            },
+            grid: {
+                show: false,
+                padding: {
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    left: 0
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function (val) {
+                        return val + "%"
+                    }
+                }
+            },
+            fill: {
+                opacity: 1
+            },
+            legend: {
+                position: 'top',
+                horizontalAlign: 'left',
+                offsetX: 0
+            }
+        };
+
+        var ChartDashboardEmpresasProgressBar = new ApexCharts(document.querySelector("#ChartDashboardEmpresasProgressBar"), optionsChartDashboardEmpresasProgressBar);
+        ChartDashboardEmpresasProgressBar.render();
+
+        var optionsChartDashboardEmpresasLineBarMixed = {
+            series: [{
+                name: 'Agendados',
+                type: 'column',
+                data: [100, 150]
+            }, {
+                name: 'Asistidos',
+                type: 'line',
+                data: [60, 100]
+            }],
+            chart: {
+                height: 400,
+                type: 'line',
+            },
+            stroke: {
+                width: [0, 4]
+            },
+            title: {
+                text: 'Citas Agendadas vs Asistidas por Mes',
+            },
+            colors: ['#00d2ff', '#b5ba30'],
+            dataLabels: {
+                enabled: true,
+                enabledOnSeries: [1]
+            },
+            labels: ['Enero', 'Febrero'],
+            yaxis: [{
+                min: 0,
+                max: 150,
+
+            }, {
+                opposite: true,
+                show: false,
+                title: {
+                    text: 'Asistidos'
+                },
+                min: 0,
+                max: 150,
+            }]
+        };
+
+        var ChartDashboardEmpresasLineBarMixed = new ApexCharts(document.querySelector("#ChartDashboardEmpresasLineBarMixed"),  optionsChartDashboardEmpresasLineBarMixed);
+        ChartDashboardEmpresasLineBarMixed.render();
+    }
+
     var table_paquetes;
     // TABLAS DE PAQUETES
     if ($('.datatables-paquetes').length) {
