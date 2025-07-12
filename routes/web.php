@@ -414,6 +414,11 @@ Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.d'])->group(f
 Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.a'])
     ->post('dashboard/empresas/guardar-logo', [EmpresasController::class, 'guardarLogo'])->name('empresas.guardarLogo');
 
+Route::controller(EmpresasController::class)->group(function () {
+    Route::get('dashboard/empresa', 'obtenerDashboardEmpresa')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+});
+// Rutas para Paquetes
 Route::controller(PaquetesController::class)->group(function () {
     Route::get('dashboard/paquetes', 'index')
     ->middleware(['auth', 'verified', 'permission:paquete.listado.v'])

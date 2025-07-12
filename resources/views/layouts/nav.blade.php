@@ -34,6 +34,23 @@
         </li>
 
         <?php
+        if ($user->can('empresa.dashboard.v')) {
+        ?>
+            <li class="menu-item <?= ($page == 'Empresa') ? 'active' : '' ?>">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
+                    <i class="menu-icon tf-icons ti ti-building-skyscraper"></i>
+                    <div>Módulo Empresa</div>
+                </a>
+                <ul class="menu-sub">
+                    <li class="menu-item <?= ($page == 'Empresa' && $subpage == 'Dashboard') ? 'active' : '' ?>">
+                        <a href="{{ url('dashboard/empresa') }}" class="menu-link">
+                            <div>Dashboard</div>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        <?php
+        }
         // Módulo sedes: se muestra si el usuario tiene permiso para ver el listado de sedes (sede.listado.v)
         if (auth()->user()->can('sede.listado.v')) {
         ?>

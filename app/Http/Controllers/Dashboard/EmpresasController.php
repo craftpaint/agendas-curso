@@ -197,4 +197,64 @@ class EmpresasController extends Controller
         }
         return response()->json($response);
     }
+
+    public function obtenerDashboardEmpresa() {
+        $user = Auth::user();
+        $sedeUser = DB::table('tb_sede')->where('id_sede', $user->id_sede)->first();
+        $empresaUser = DB::table('tb_empresa')->where('id_empresa', $sedeUser->id_empresa)->first();
+        $sedesEmpresa = DB::table('tb_sede')->where('id_empresa', $empresaUser->id_empresa)->get();
+        $empresaPaqueteActivo = DB::table('tb_empresa_paquete')
+            ->where('id_empresa', $empresaUser->id_empresa)
+            ->where('estado', 'ACTIVO')
+            ->join('tb_paquete', 'tb_empresa_paquete.id_paquete', '=', 'tb_paquete.id_paquete')
+            ->leftJoin('tb_pago_empresa', 'tb_empresa_paquete.id_empresa_paquete', '=', 'tb_pago_empresa.id_empresa_paquete')
+            ->select(
+                'tb_empresa_paquete.*',
+                'tb_paquete.*',
+                'tb_pago_empresa.*'
+            )
+            ->first();
+        
+        if ($empresaPaqueteActivo) {
+            $empresaPaqueteActivo->citas_faltantes = $empresaPaqueteActivo->numero_citas - $empresaPaqueteActivo->citas_consumidas;
+        }
+
+        $empresaPaquetes = DB::table('tb_empresa_paquete')
+            ->where('id_empresa', $empresaUser->id_empresa)
+            ->join('tb_paquete', 'tb_empresa_paquete.id_paquete', '=', 'tb_paquete.id_paquete')
+            ->leftJoin('tb_pago_empresa', 'tb_empresa_paquete.id_empresa_paquete', '=', 'tb_pago_empresa.id_empresa_paquete')
+            ->select(
+                'tb_empresa_paquete.*',
+                'tb_paquete.*',
+                'tb_pago_empresa.*'
+            )
+            ->get();
+
+        $empresa = [
+            'sede_user' => $sedeUser,
+            'empresa_user' => $empresaUser,
+            'sedes_empresa' => $sedesEmpresa,
+            'empresa_paquete_activo' => $empresaPaqueteActivo,
+            'empresa_paquetes' => $empresaPaquetes,
+        ];
+
+        $data = [
+            'page' => 'Empresa',
+            'subpage' => 'Dashboard',
+            'rol' => $user->getRoleNames()->first(),
+            'user' => $user,
+            'empresa' => $empresa
+        ];
+
+        //Log::info('EMPRESA', $data);
+
+        $alert = AdminHelper::get_count_alert($data['rol'], $user->id_sede);
+        $data['alert'] = $alert;
+
+        echo view('layouts.header', $data);
+        echo view('layouts.nav', $data);
+        echo view('layouts.navigation', $data);
+        echo view('dashboard.empresas.dashboard', $data);
+        echo view('layouts.footer', $data);
+    }
 }

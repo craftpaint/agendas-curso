@@ -6,10 +6,12 @@
             <!-- Encabezado -->
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <h2 class="mb-0">Empresas</h2>
-                <!-- Botón para abrir el modal de creación -->
-                <button type="button" class="btn btn-primary" id="btn-crear-empresa" data-bs-toggle="modal" data-bs-target="#createEmpresaModal">
-                    <i class="ti ti-plus"></i> Agregar Empresa
-                </button>
+                @if ($user->can('empresa.Empresa.a'))
+                    <!-- Botón para abrir el modal de creación -->
+                    <button type="button" class="btn btn-primary" id="btn-crear-empresa" data-bs-toggle="modal" data-bs-target="#createEmpresaModal">
+                        <i class="ti ti-plus"></i> Agregar Empresa
+                    </button>
+                @endif
             </div>
 
             <!-- Listado de Empresas en Cards -->
@@ -49,25 +51,29 @@
                                 <p class="mb-1">Usuarios Asociados: <strong>{{ $empresa->usuarios_count }}</strong></p>
                             </div>
                             <div class="text-end mt-2">
-                                <button type="button" class="btn btn-sm btn-outline-primary btn-edit-empresa"
-                                    data-empresa-id="{{ $empresa->id_empresa }}"
-                                    data-empresa-nombre="{{ $empresa->Nombre }}"
-                                    data-empresa-descripcion="{{ $empresa->Descripcion }}"
-                                    data-empresa-tipo-documento="{{ $empresa->tipo_documento_empresa }}"
-                                    data-empresa-documento="{{ $empresa->documento_empresa }}"
-                                    data-empresa-plan="{{ $empresa->plan_empresa }}"
-                                    data-empresa-logo="{{ $empresa->logo }}"
-                                    data-empresa-plantilla="{{ $empresa->id_plantilla }}">
-                                    <i class="ti ti-edit"></i> Editar
-                                </button>
-                                @if($empresa->estado)
-                                    <button class="btn btn-sm btn-outline-danger btn-estado-empresa" data-empresa-id="{{ $empresa->id_empresa }}">
-                                        <i class="ti ti-trash"></i> Inactivar
+                                @if ($user->can('empresa.Empresa.e'))    
+                                    <button type="button" class="btn btn-sm btn-outline-primary btn-edit-empresa"
+                                        data-empresa-id="{{ $empresa->id_empresa }}"
+                                        data-empresa-nombre="{{ $empresa->Nombre }}"
+                                        data-empresa-descripcion="{{ $empresa->Descripcion }}"
+                                        data-empresa-tipo-documento="{{ $empresa->tipo_documento_empresa }}"
+                                        data-empresa-documento="{{ $empresa->documento_empresa }}"
+                                        data-empresa-plan="{{ $empresa->plan_empresa }}"
+                                        data-empresa-logo="{{ $empresa->logo }}"
+                                        data-empresa-plantilla="{{ $empresa->id_plantilla }}">
+                                        <i class="ti ti-edit"></i> Editar
                                     </button>
-                                @else
-                                    <button class="btn btn-sm btn-outline-success btn-estado-empresa" data-empresa-id="{{ $empresa->id_empresa }}">
-                                        <i class="ti ti-check"></i> Activar
-                                    </button>
+                                @endif
+                                @if ($user->can('empresa.Empresa.d'))
+                                    @if($empresa->estado)
+                                        <button class="btn btn-sm btn-outline-danger btn-estado-empresa" data-empresa-id="{{ $empresa->id_empresa }}">
+                                            <i class="ti ti-trash"></i> Inactivar
+                                        </button>
+                                    @else
+                                        <button class="btn btn-sm btn-outline-success btn-estado-empresa" data-empresa-id="{{ $empresa->id_empresa }}">
+                                            <i class="ti ti-check"></i> Activar
+                                        </button>
+                                    @endif
                                 @endif
                             </div>
                         </div>
