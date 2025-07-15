@@ -3535,7 +3535,7 @@ $(function () {
         function ajustarIndiceMes(offset) {
             return (mesActual - offset + 12) % 12;
         }
-        
+
         $('#filtro-mes-actual').text(meses[fechaActual.getMonth()]);
         $('#filtro-mes-anterior').text(meses[ajustarIndiceMes(1)]);
         $('#filtro-dos-meses-anteriores').text(meses[ajustarIndiceMes(2)]);
@@ -4052,11 +4052,11 @@ $(function () {
 
         $('#createEmpresaModal').modal('show');
     });
-    
+
     // Botón para cambiar de estado de la empresa
     $('.btn-estado-empresa').on('click', function () {
         const id = $(this).data('empresa-id');
-        
+
         $.ajax({
             url: url + '/dashboard/empresas/cambiar_estado',
             type: 'POST',
@@ -4093,20 +4093,57 @@ $(function () {
     });
 
     // VISTA DE DASHBOARD EMRPESAS
-    if ($('#dashboard-empresas').length) {
-        const dashboard = document.getElementById('dashboard-empresas');
-        const citasConsumidas = parseInt(dashboard.dataset.citasConsumidas) || 0;
-        const citasFaltantes = parseInt(dashboard.dataset.citasFaltantes) || 0;
-        const citasAgendadasPorMesActual = JSON.parse(dashboard.dataset.citasAgendadasMesActual || '[]');
-        const citasAsistidasPorMesActual = JSON.parse(dashboard.dataset.citasAsistidasMesActual || '[]');
+    function obtenerDatosProgressBarDashboardEmpresa(endpoint, chart) {
+        $.ajax({
+            url: url + endpoint,
+            type: 'POST',
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        chart.updateSeries([
+                            {
+                                data: [response.Data.citas_consumidas]
+                            },
+                            {
+                                data: [response.Data.citas_faltantes]
+                            }
+                        ]);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de la barra de progreso.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
 
+    if ($('#dashboard-empresas').length) {
+        // BARRA DE PROGRESO DE CONSUMO DE PAQUETE ACTIVO
         var optionsChartDashboardEmpresasProgressBar = {
             series: [{
                 name: 'Citas consumidas',
-                data: [citasConsumidas]
+                data: []
             }, {
                 name: 'Citas faltantes',
-                data: [citasFaltantes]
+                data: []
             }],
             chart: {
                 type: 'bar',
@@ -4169,15 +4206,18 @@ $(function () {
         var ChartDashboardEmpresasProgressBar = new ApexCharts(document.querySelector("#ChartDashboardEmpresasProgressBar"), optionsChartDashboardEmpresasProgressBar);
         ChartDashboardEmpresasProgressBar.render();
 
+        obtenerDatosProgressBarDashboardEmpresa('/dashboard/empresa/obtener_datos_barra_progreso', ChartDashboardEmpresasProgressBar);
+
+        // GRAFICA MIXED DE LAS CITAS EXISTENTES VS LAS ASISTIDAS
         var optionsChartDashboardEmpresasLineBarMixed = {
             series: [{
                 name: 'Agendados',
                 type: 'column',
-                data: [citasAgendadasPorMesActual]
+                data: []
             }, {
                 name: 'Asistidos',
                 type: 'line',
-                data: [citasAsistidasPorMesActual]
+                data: []
             }],
             chart: {
                 height: 500,
@@ -4187,7 +4227,7 @@ $(function () {
                 width: [0, 4]
             },
             title: {
-                text: 'Citas Agendadas vs Asistidas por Mes',
+                text: 'Citas Agendadas vs Asistidas del mes actual',
             },
             colors: ['#00d2ff', '#b5ba30'],
             dataLabels: {
@@ -4210,12 +4250,88 @@ $(function () {
             }]
         };
 
-        var ChartDashboardEmpresasLineBarMixed = new ApexCharts(document.querySelector("#ChartDashboardEmpresasLineBarMixed"),  optionsChartDashboardEmpresasLineBarMixed);
+        var ChartDashboardEmpresasLineBarMixed = new ApexCharts(document.querySelector("#ChartDashboardEmpresasLineBarMixed"), optionsChartDashboardEmpresasLineBarMixed);
         ChartDashboardEmpresasLineBarMixed.render();
 
+        // RADIAL PROGRESS BAR DEL HISTORIAL DE PAQUETES
+        const chartsConfig = [
+            {
+                id: "chart1",
+                title: "Paquete 1",
+                value: 67
+            },
+            {
+                id: "chart2",
+                title: "Paquete 2",
+                value: 45
+            },
+            {
+                id: "chart3",
+                title: "Paquete 3",
+                value: 85
+            }
+        ];
+
+        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorial');
+
+        chartsConfig.forEach(config => {
+            // Crear contenedor individual para cada gráfico
+            const chartContainer = document.createElement('div');
+            chartContainer.id = config.id;
+            container.appendChild(chartContainer);
+
+            // Crear opciones del gráfico
+            const chartOptions = {
+                series: [config.value],
+                chart: {
+                    height: 150,
+                    type: 'radialBar'
+                },
+                plotOptions: {
+                    radialBar: {
+                        startAngle: -135,
+                        endAngle: 135,
+                        dataLabels: {
+                            name: {
+                                fontSize: '14px',
+                                offsetY: 90
+                            },
+                            value: {
+                                offsetY: 50,
+                                fontSize: '18px',
+                                formatter: function (val) {
+                                    return val + "%";
+                                }
+                            }
+                        }
+                    }
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shade: 'dark',
+                        shadeIntensity: 0.15,
+                        inverseColors: false,
+                        stops: [0, 50, 65, 91]
+                    }
+                },
+                stroke: {
+                    dashArray: 4
+                },
+                labels: [config.title],
+                colors: ['#556EE6']
+            };
+
+            // Crear y renderizar gráfico
+            const chart = new ApexCharts(
+                document.querySelector(`#${config.id}`),
+                chartOptions
+            );
+            chart.render();
+        })
     }
 
-    $('#empresa-select-dashboard').on('change', function() {
+    $('#empresa-select-dashboard').on('change', function () {
         var empresaId = $(this).val();
 
         if (empresaId) {
@@ -4244,7 +4360,7 @@ $(function () {
             ajax: {
                 url: url + '/dashboard/paquetes/obtener_paquetes',
                 type: 'POST',
-                data: function(d) {
+                data: function (d) {
                     d.filtro_nombre = filtroNombre;
                     d.filtro_valor = filtroValor;
                     d.filtro_tipo = filtroTipo;
@@ -4277,9 +4393,9 @@ $(function () {
                     targets: 5,
                     render: function (data) {
                         if (data.deleted_at == null) {
-                           return `<span class="badge bg-label-success">ACTIVO</span>`; 
+                            return `<span class="badge bg-label-success">ACTIVO</span>`;
                         } else {
-                            return `<span class="badge bg-label-danger">INACTIVO</span>`; 
+                            return `<span class="badge bg-label-danger">INACTIVO</span>`;
                         }
                     }
                 },
@@ -4320,7 +4436,7 @@ $(function () {
                     $(row).css('background-color', 'rgba(255, 224, 224, 0.5)');
                 }
             },
-            drawCallback: function(settings) {
+            drawCallback: function (settings) {
                 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
                 tooltipTriggerList.map(function (tooltipTriggerEl) {
                     return new bootstrap.Tooltip(tooltipTriggerEl);
@@ -4343,7 +4459,7 @@ $(function () {
             success: function () {
                 // Destruir todos los tooltips activos antes de recargar la tabla
                 var tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-                tooltips.forEach(function(el) {
+                tooltips.forEach(function (el) {
                     var instance = bootstrap.Tooltip.getInstance(el);
                     if (instance) {
                         instance.dispose();
@@ -4440,7 +4556,7 @@ $(function () {
                     });
                 }
             },
-            error: function() {
+            error: function () {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
