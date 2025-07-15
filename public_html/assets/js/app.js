@@ -3917,6 +3917,7 @@ $(function () {
         $('#preview-container').hide();
         $('#createEmpresaModal').modal('show');
     });
+
     // Formulario para crear una nueva empresa
     $('#createEmpresaForm').on('submit', function (event) {
         event.preventDefault();
@@ -4093,13 +4094,19 @@ $(function () {
 
     // VISTA DE DASHBOARD EMRPESAS
     if ($('#dashboard-empresas').length) {
+        const dashboard = document.getElementById('dashboard-empresas');
+        const citasConsumidas = parseInt(dashboard.dataset.citasConsumidas) || 0;
+        const citasFaltantes = parseInt(dashboard.dataset.citasFaltantes) || 0;
+        const citasAgendadasPorMesActual = JSON.parse(dashboard.dataset.citasAgendadasMesActual || '[]');
+        const citasAsistidasPorMesActual = JSON.parse(dashboard.dataset.citasAsistidasMesActual || '[]');
+
         var optionsChartDashboardEmpresasProgressBar = {
             series: [{
                 name: 'Citas consumidas',
-                data: [70]
+                data: [citasConsumidas]
             }, {
                 name: 'Citas faltantes',
-                data: [30]
+                data: [citasFaltantes]
             }],
             chart: {
                 type: 'bar',
@@ -4145,7 +4152,7 @@ $(function () {
             tooltip: {
                 y: {
                     formatter: function (val) {
-                        return val + "%"
+                        return val + " Citas"
                     }
                 }
             },
@@ -4166,14 +4173,14 @@ $(function () {
             series: [{
                 name: 'Agendados',
                 type: 'column',
-                data: [100, 150]
+                data: [citasAgendadasPorMesActual]
             }, {
                 name: 'Asistidos',
                 type: 'line',
-                data: [60, 100]
+                data: [citasAsistidasPorMesActual]
             }],
             chart: {
-                height: 400,
+                height: 500,
                 type: 'line',
             },
             stroke: {
@@ -4187,7 +4194,7 @@ $(function () {
                 enabled: true,
                 enabledOnSeries: [1]
             },
-            labels: ['Enero', 'Febrero'],
+            labels: [],
             yaxis: [{
                 min: 0,
                 max: 150,
@@ -4205,10 +4212,20 @@ $(function () {
 
         var ChartDashboardEmpresasLineBarMixed = new ApexCharts(document.querySelector("#ChartDashboardEmpresasLineBarMixed"),  optionsChartDashboardEmpresasLineBarMixed);
         ChartDashboardEmpresasLineBarMixed.render();
+
     }
 
-    var table_paquetes;
+    $('#empresa-select-dashboard').on('change', function() {
+        var empresaId = $(this).val();
+
+        if (empresaId) {
+            window.location.href = url + '/dashboard/empresa?id_empresa=' + empresaId;
+        }
+    });
+
     // TABLAS DE PAQUETES
+    var table_paquetes;
+
     if ($('.datatables-paquetes').length) {
         table_paquetes = $('.datatables-paquetes').DataTable({
             ordering: true,
