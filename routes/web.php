@@ -419,6 +419,8 @@ Route::controller(EmpresasController::class)->group(function () {
         ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
     Route::post('dashboard/empresa/obtener_datos_barra_progreso', 'obtenerDatosProgressBarDasboardEmpresa')
         ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+    Route::post('dashboard/empresa/obtener_datos_linea_mezclada', 'obtenerDatosLineBarMixedDashboardEmpresa')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
 });
 // Rutas para Paquetes
 Route::controller(PaquetesController::class)->group(function () {

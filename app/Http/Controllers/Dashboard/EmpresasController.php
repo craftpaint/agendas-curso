@@ -307,7 +307,7 @@ class EmpresasController extends Controller
             'Status' => 500,
             'Message' => 'Ocurrió un error al consultar los datos para la barra del paquete.',
             'Success' => false,
-            'Data' => []
+            'Data' => null
         ];
 
         try {

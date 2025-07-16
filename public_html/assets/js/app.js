@@ -4135,6 +4135,48 @@ $(function () {
         });
     }
 
+    function obtenerDatosLineBarMixedDashboardEmpresa(endpoint, chart) {
+        $.ajax({
+            url: url + endpoint,
+            type: 'POST',
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        chart.updateSeries([
+                            {
+                                data: [response.Data.citasAgendadasPorMesActual]
+                            },
+                            {
+                                data: [response.Data.citasAsistidasPorMesActual]
+                            }
+                        ]);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de la barra de progreso.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
     if ($('#dashboard-empresas').length) {
         // BARRA DE PROGRESO DE CONSUMO DE PAQUETE ACTIVO
         var optionsChartDashboardEmpresasProgressBar = {
@@ -4252,6 +4294,8 @@ $(function () {
 
         var ChartDashboardEmpresasLineBarMixed = new ApexCharts(document.querySelector("#ChartDashboardEmpresasLineBarMixed"), optionsChartDashboardEmpresasLineBarMixed);
         ChartDashboardEmpresasLineBarMixed.render();
+
+        obtenerDatosLineBarMixedDashboardEmpresa('/dashboard/empresa/obtener_datos_linea_mezclada', ChartDashboardEmpresasLineBarMixed)
 
         // RADIAL PROGRESS BAR DEL HISTORIAL DE PAQUETES
         const chartsConfig = [
