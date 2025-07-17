@@ -754,6 +754,7 @@ class CitasController extends Controller
                     $updateData['id_vehiculo'] = $id_vehiculo;
                 }
 
+                PaqueteHelper::validarCambioEstado($id_cita, $id_estado_verificado);
                 // Realizar la actualización
                 DB::table('tb_cita')
                     ->where('id_cita', $id_cita)
@@ -872,14 +873,15 @@ class CitasController extends Controller
                 $id_estado_verificado = $request->input('id_estado');
                 $id_cita = $request->input('id_cita');
 
+                PaqueteHelper::validarCambioEstado($id_cita, $id_estado_verificado);
+
                 DB::table('tb_cita')
                     ->where('id_cita', $id_cita)
                     ->update([
                         'id_estado_verificado' => $id_estado_verificado,
                         'updated_at' => Carbon::now()
                     ]);
-                
-                PaqueteHelper::validarDescuentoCitaPaqueteEmpresa($id_cita, $id_estado_verificado);
+
                     
                 $nombre_estado = DB::table('tb_estado')
                     ->where('id_estado', $id_estado_verificado)
