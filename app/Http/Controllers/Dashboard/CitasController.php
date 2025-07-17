@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\AdminHelper;
+use App\Helpers\PaqueteHelper;
 use App\Models\User;
 use Carbon\Carbon;
 
@@ -387,7 +388,7 @@ class CitasController extends Controller
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
-                'text' => 'Error al guardar la sede'
+                'text' => 'Error al guardar la cita'
             ];
             try {
                 $user = Auth::user();
@@ -402,6 +403,7 @@ class CitasController extends Controller
                 $id_servicio_liquidador = $request->request->get('id_servicio_liquidador');
                 $codigo_comparendo = $request->request->get('codigo_comparendo');
                 $desc_cita = $request->request->get('desc_cita');
+                $empresa_paquete = PaqueteHelper::obtenerPaqueteActivoEmpresa($id_sede);
 
                 // Obtener nombre de la sede
                 $sede = DB::table('tb_sede')->where('id_sede', $id_sede)->first();
@@ -506,7 +508,8 @@ class CitasController extends Controller
                     'origen' => 'Curso Comparendo',
                     'tipo_dispositivo' => $tipo_dispositivo,
                     'created_at' => $now,
-                    'updated_at' => $now
+                    'updated_at' => $now,
+                    'id_empresa_paquete' => $empresa_paquete
                 ];
 
                 if ($id_vehiculo) {
@@ -875,7 +878,9 @@ class CitasController extends Controller
                         'id_estado_verificado' => $id_estado_verificado,
                         'updated_at' => Carbon::now()
                     ]);
-
+                
+                PaqueteHelper::validarDescuentoCitaPaqueteEmpresa($id_cita, $id_estado_verificado);
+                    
                 $nombre_estado = DB::table('tb_estado')
                     ->where('id_estado', $id_estado_verificado)
                     ->value('nombre_estado');
