@@ -31,6 +31,7 @@ class PaqueteHelper {
         }
     }
 
+    // Se valida si el paquete es PREPAGO O POSPAGO, para realizar acciones de descuento o no
     public static function validarCambioEstado ($id_cita, $id_estado_nuevo) {
         $cita = DB::table('tb_cita')
             ->select('tb_cita.*')
@@ -69,11 +70,13 @@ class PaqueteHelper {
 
                     if ($estado->nombre_estado == "Asistió") {
                         $nuevo_valor += 1;
-                    } else if ($estado->nombre_estado == "No Asistió") {
+
+                    } else if ($estado->nombre_estado == "No Asistió" && $nuevo_valor > 0) {
+                        self::validarReactivacionPaquete($empresa_paquete->id_empresa_paquete);
                         $nuevo_valor -= 1;
                     }
 
-                    // Se consulta actualiza la empresa paquete con el nuevo valor
+                    // Se actualiza la empresa paquete con el nuevo valor
                     DB::table('tb_empresa_paquete')
                         ->where('id_empresa_paquete', $empresa_paquete->id_empresa_paquete)
                         ->update([
@@ -82,14 +85,63 @@ class PaqueteHelper {
                         ]);
                     
                     // Se valida el paquete actual de la empresa
-                    self::validarPaqueteEmpresa($empresa_paquete->id_empresa_paquete);
+                    $paquete_cita = DB::table('tb_paquete')
+                        ->select('tb_paquete.*')
+                        ->join('tb_empresa_paquete', 'tb_paquete.id_paquete', '=', 'tb_empresa_paquete.id_paquete')
+                        ->join('tb_cita', 'tb_empresa_paquete.id_empresa_paquete', '=', 'tb_cita.id_empresa_paquete')
+                        ->where('tb_cita.id_cita', $id_cita)
+                        ->first();
+                    
+                    if ($paquete_cita->tipo_paquete == "PREPAGO") {
+                        self::validarPaqueteEmpresaPrepago($empresa_paquete->id_empresa_paquete);
+                    }
                 }
             }
         }
     }
 
-    // Se valida si el paquete ya fue consumido
-    private static function validarPaqueteEmpresa($id_empresa_paquete) {
+    //Se valida si el paquete debe ser reactivado al momento de colocar en No Asistió en una cita
+    private static function validarReactivacionPaquete($id_empresa_paquete) {
+        $empresa_paquete = DB::table('tb_empresa_paquete')
+            ->select('tb_empresa_paquete.*')
+            ->where('id_empresa_paquete', $id_empresa_paquete)
+            ->first();
+        
+        $paquete = DB::table('tb_paquete') 
+            ->select('tb_paquete.*')
+            ->join('tb_empresa_paquete', 'tb_paquete.id_paquete', '=', 'tb_empresa_paquete.id_paquete')
+            ->where('tb_empresa_paquete.id_empresa_paquete', $id_empresa_paquete)
+            ->first();
+
+        $empresa = DB::table('tb_empresa')
+            ->select('tb_empresa.*')
+            ->join('tb_empresa_paquete', 'tb_empresa.id_empresa', '=', 'tb_empresa_paquete.id_empresa')
+            ->where('tb_empresa_paquete.id_empresa_paquete', $id_empresa_paquete)
+            ->first();
+        
+        if ($empresa_paquete->citas_consumidas >= $paquete->numero_citas && $empresa_paquete->estado == 'CONSUMIDO') {
+            //Busca el paquete activo actualmente y lo pone en PENDIENTE
+            DB::table('tb_empresa_paquete')
+                ->where('tb_empresa_paquete.id_empresa', $empresa->id_empresa)
+                ->where('tb_empresa_paquete.estado', 'ACTIVO')
+                ->update([
+                    'estado' => 'PENDIENTE',
+                    'updated_at' => Carbon::now()
+                ]);
+
+            // Vuelve a activar el paquete al que se le hará el descuento
+            DB::table('tb_empresa_paquete')
+                ->where('id_empresa_paquete', $id_empresa_paquete)
+                ->update([
+                    'estado' => 'ACTIVO',
+                    'fecha_fin' => null,
+                    'updated_at' => Carbon::now()
+                ]);
+        }
+    }
+
+    // Se valida si el paquete ya fue consumido para paquetes PREPAGO
+    private static function validarPaqueteEmpresaPrepago($id_empresa_paquete) {
         $empresa_paquete = DB::table('tb_empresa_paquete')
             ->select('tb_empresa_paquete.*')
             ->where('id_empresa_paquete', $id_empresa_paquete)
@@ -130,6 +182,7 @@ class PaqueteHelper {
             } else {
                 // En caso de no encontrar un paquete pendiente, inactiva todas las sedes de la empresa
                 self::inactivarSedesEmpresa($empresa_paquete->id_empresa);
+                self::reasignacionPaqueteTemporal($empresa_paquete);
             }
         }
     }
@@ -141,6 +194,43 @@ class PaqueteHelper {
             ->update([
                 'estado_sede' => 'Inactivo',
                 'updated_at' => Carbon::now()
+            ]);
+    }
+
+    private static function reasignacionPaqueteTemporal($empresa_paquete) {
+        // Se consultan los datos necesarios 
+        $estadoAsistio = DB::table('tb_estado')
+            ->select('tb_estado.*')
+            ->where('tb_estado.nombre_estado', 'Asistió')
+            ->first();
+        
+        $estadoNoAsistio = DB::table('tb_estado')
+            ->select('tb_estado.*')
+            ->where('tb_estado.nombre_estado', 'No Asistió')
+            ->first();
+        
+        $paqueteTemporal = DB::table('tb_paquete')
+            ->select('tb_paquete.*')
+            ->where('tb_paquete.tipo_paquete', 'AUXILIAR')
+            ->first();
+        
+        // Se realiza la inserción del paquete empresa para asignar el nuevo paquete Auxiliar
+        $data = [
+            'id_empresa' => $empresa_paquete->id_empresa,
+            'id_paquete' => $paqueteTemporal->id_paquete,
+            'fecha_inicio' => Carbon::now(),
+            'estado' => 'ACTIVO'
+        ];
+
+        $idEmpresaPaqueteTemporal = DB::table('tb_empresa_paquete')->insertGetId($data);
+
+        // Actualizamos las citas pendientes
+        DB::table('tb_cita')
+            ->where('tb_cita.id_empresa_paquete', $empresa_paquete->id_empresa_paquete)
+            ->whereNot('tb_cita.id_estado_verificado', $estadoAsistio->id_estado)
+            ->whereNot('tb_cita.id_estado_verificado', $estadoNoAsistio->id_estado)
+            ->update([
+                'tb_cita.id_empresa_paquete' => $idEmpresaPaqueteTemporal
             ]);
     }
 }
