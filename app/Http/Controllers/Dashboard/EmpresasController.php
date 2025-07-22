@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\AdminHelper;
+use App\Helpers\EmpresaHelper;
 
 
 class EmpresasController extends Controller
@@ -394,6 +395,37 @@ class EmpresasController extends Controller
         } catch (\Throwable $e) {
             Log::error($e->getMessage());
             $response['Message'] = "Error al consultar los datos para la barra de lineas.";
+        }
+        return response()->json($response);
+    }
+
+    public function validarExistenciaEmpresa(Request $request) {
+        $response = [
+            'Status' => 500,
+            'Message' => "Ocurrió un error al verificar la empresa",
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            $tipo_documento = $request->input('tipo_documento');
+            $documento_empresa = $request->input('documento_empresa');
+
+            $data = EmpresaHelper::validarExistenciaEmpresa($tipo_documento, $documento_empresa);
+            $response = [
+                'Status' => 200,
+                'Success' => true,
+                'Data' => $data
+            ];
+
+            if ($data) {
+                $response['Message'] = "La empresa ha sido consultada exitosamente.";
+            } else {
+                $response['Message'] = "No existen datos de la empresa consultada.";
+            }
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            $response['Message'] = "Error al consultar la empresa.";
         }
         return response()->json($response);
     }

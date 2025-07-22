@@ -228,6 +228,7 @@ class PaqueteHelper {
             ]);
     }
 
+    // Se crea el paquete temporal cuando no se encuentran más paquetes pedientes por su activación
     private static function creacionPaqueteTemporal($empresa_paquete, $id_cita) {
         // Se consultan los datos necesarios 
         $estadoAsistio = DB::table('tb_estado')
@@ -272,6 +273,7 @@ class PaqueteHelper {
         self::reasignacionCitasEmpresaPaquete($empresa_paquete->id_empresa_paquete, $idEmpresaPaqueteTemporal);
     }
 
+    // Se realiza la reasignación de las citas, según el paquete entrante y el paquete cambiante
     private static function reasignacionCitasEmpresaPaquete($id_empresa_paquete, $id_empresa_paquete_cambiar) {
         // Se consultan los datos necesarios 
         $estadoAsistio = DB::table('tb_estado')
