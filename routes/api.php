@@ -26,4 +26,5 @@ Route::controller(LoadController::class)->group(function () {
 
 Route::controller(EmpresasController::class)->group(function () {
     Route::post('verificar-empresa', 'validarExistenciaEmpresa');
+    Route::post('registrar-empresa-paquete', 'registrarEmpresaPaquete');
 });

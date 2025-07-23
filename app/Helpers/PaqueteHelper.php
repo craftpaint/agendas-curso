@@ -295,4 +295,32 @@ class PaqueteHelper {
                 'tb_cita.id_empresa_paquete' => $id_empresa_paquete_cambiar
             ]);
     }
+
+    public static function validacionActivacionPaqueteComprado($id_empresa_paquete) {
+        $empresa_paquete_comprado = DB::table('tb_empresa_paquete')
+            ->select('tb_empresa_paquete.*')
+            ->where('tb_empresa_paquete.id_empresa_paquete', $id_empresa_paquete)
+            ->first();
+        
+        // Si no encontró el paquete empresa, retorna false
+        if (!$empresa_paquete_comprado) {
+            return false;
+        }
+
+        // Revisa si ha tenido paquetes anteriormente comprados
+        $paquetesExistentes = DB::table('tb_empresa_paquete')
+            ->where('tb_empresa_paquete.id_empresa', $empresa_paquete_comprado->id_empresa)
+            ->count();
+        
+        if ($paquetesExistentes > 0) {
+
+        } else {
+            DB::table('tb_empresa_paquete')
+                ->where('tb_empresa_paquete.id_empresa_paquete', $id_empresa_paquete)
+                ->update([
+                    'tb_empresa_paquete.estado' => 'ACTIVO',
+                    'updated_at' => Carbon::now()
+                ]);
+        }
+    }
 }

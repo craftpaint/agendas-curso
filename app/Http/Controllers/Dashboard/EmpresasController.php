@@ -429,4 +429,61 @@ class EmpresasController extends Controller
         }
         return response()->json($response);
     }
+
+    public function registrarEmpresaPaquete(Request $request) {
+        $response = [
+            'Status' => 500,
+            'Message' => "Ocurrió un error al verificar la empresa",
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            $data_empresa = $request->input('data_empresa');
+            $paquete_seleccionado = $request->input('paquete_seleccionado');
+
+            $data = EmpresaHelper::registrarEmpresaPaquete($data_empresa, $paquete_seleccionado);
+            $response = [
+                'Status' => 200,
+                'Success' => true,
+                'Data' => $data
+            ];
+
+            if ($data) {
+                $response['Message'] = "Se han registrado la empresa y el paquete exitosamente.";
+            }
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            $response['Message'] = "Error al registrar el paquete y la empresa seleccionado.";
+        }
+        return response()->json($response);
+    }
+
+    public function handleWebhook(Request $request) {
+        $response = [
+            'Status' => 500,
+            'Message' => "Ocurrió un error al recibir los datos de Wompi.",
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            $header = $request->header('x-event-checksum');
+            $body = $request->getContent();
+
+            $data = EmpresaHelper::handleWebhook($header, $body);
+
+            if ($data) {
+                $response['Status'] = 200;
+                $response['Message'] = "Los datos han sido procesados exitosamente.";
+                $response['Success'] = true;
+                $response['Data'] = $data;
+            } else {
+                $response['Message'] = "No se pudo procesar correctamente los datos de Wompi.";
+            }
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            $response['Message'] = "Error al procesar los datos recibidos de Wompi.";
+        }
+    }
 }
