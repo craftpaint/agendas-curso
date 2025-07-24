@@ -37,7 +37,7 @@ class EmpresaHelper {
         $data_empresa_paquete = [
             'id_empresa' => $empresaExistente->id_empresa,
             'id_paquete' => $paquete_seleccionado,
-            'estado' => 'PENDIENTE'
+            'estado' => 'PENDIENTE PAGO'
         ];
 
         // Se crea la relación en EMPRESA_PAQUETE con el paquete seleccionado
@@ -160,10 +160,12 @@ class EmpresaHelper {
                 $matches = [];
                 $id_empresa_paquete = null;
 
-                if (preg_match('/PAQUETE-[A-Z]+-(\\d+)-/', $reference, $matches)) {
-                    $id_empresa_paquete = $matches[2];
-                } elseif (preg_match('/PAQUETE-(\\d+)-/', $reference, $matches)) {
-                    $id_empresa_paquete = $matches[2];
+                // Método robusto usando explode
+                $parts = explode('-', $reference);
+                if (count($parts) >= 5) {
+                    $id_empresa_paquete = $parts[3]; // Índice 3 es id_empresa_paquete
+                } else {
+                    Log::error('Formato de referencia inválido: ' . $reference);
                 }
 
                 // Convertir sent_at a formato datetime compatible con MySQL
