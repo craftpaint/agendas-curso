@@ -1328,7 +1328,7 @@ $(function () {
                             📍 *_Dirección:_* ${data.direccion_sede} \n
                             Por favor indicar que va por parte de Curso comparendo, *llegar 40 minutos* antes de la hora agendada para realizar el procedimiento. \n
                             Es obligatorio llevar su cédula. \n
-                            Tan pronto salga del curso nos confirma, para registrar su asistencia. Recuerde consular su comparendo en la pagina del Simit, este debe estar notificado.
+                            Tan pronto salga del curso nos confirma, para registrar su asistencia. Recuerde consultar su comparendo en la pagina del Simit, este debe estar notificado.
                         `;
                         plantilla = plantilla.replace(/^[ \t]+/gm, '');
 
