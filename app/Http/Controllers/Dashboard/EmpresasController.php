@@ -408,7 +408,7 @@ class EmpresasController extends Controller
         ];
 
         try {
-            $tipo_documento = $request->input('tipo_documento');
+            $tipo_documento = $request->input('tipo_documento_empresa');
             $documento_empresa = $request->input('documento_empresa');
 
             $data = EmpresaHelper::validarExistenciaEmpresa($tipo_documento, $documento_empresa);
