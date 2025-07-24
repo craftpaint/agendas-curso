@@ -196,6 +196,7 @@ class EmpresaHelper {
                             'estado_verificado_pago_wompi' => $transaction['status'] ?? null,
                             'checksum_wompi' => $checksumHeader,
                             'fecha_notificacion_wompi' => $fechaNotificacion,
+                            'metadata' => $data,
                             'updated_at' => Carbon::now()
                         ]
                     );
