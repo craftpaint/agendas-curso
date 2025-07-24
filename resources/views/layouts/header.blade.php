@@ -130,6 +130,11 @@
         // Permisos para la gestión de Permisos
         var canManagePermissions = <?= json_encode($user->can('permissions.administrar.v')); ?>;
         // Si prefieres separar en ver, crear, editar, eliminar, puedes crear variables similares.
+
+        // Permisos para el módulo de paquetes
+        var canAddPaquetes = <?= json_encode($user->can('paquete.listado.a')); ?>;
+        var canEditPaquetes = <?= json_encode($user->can('paquete.listado.e')); ?>;
+        var canDeletePaquetes = <?= json_encode($user->can('paquete.listado.d')); ?>;
     </script>
 
 </head>

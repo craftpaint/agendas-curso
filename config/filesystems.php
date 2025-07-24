@@ -45,8 +45,8 @@ return [
         ],
         'public_html' => [
             'driver' => 'local',
-            'root' => storage_path('app/public_html'),
-            'url' => env('APP_URL') . '/storage',
+            'root' => base_path('public_html'),
+            'url' => env('APP_URL') . '/public_html',
             'visibility' => 'public',
             'throw' => false,
         ],

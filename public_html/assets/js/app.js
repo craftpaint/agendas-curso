@@ -60,6 +60,11 @@ $(function () {
     let tipoCita = '';
     let filtroAgente = '';
 
+    //Filtros de paquetes
+    let filtroNombre = '';
+    let filtroTipo = '';
+    let filtroValor = '';
+
     let MATERIAL3 = {
         primary: getComputedStyle(document.documentElement).getPropertyValue('--color-azul-500').trim(),
         secondary: getComputedStyle(document.documentElement).getPropertyValue('--color-verde').trim(),
@@ -3530,7 +3535,7 @@ $(function () {
         function ajustarIndiceMes(offset) {
             return (mesActual - offset + 12) % 12;
         }
-        
+
         $('#filtro-mes-actual').text(meses[fechaActual.getMonth()]);
         $('#filtro-mes-anterior').text(meses[ajustarIndiceMes(1)]);
         $('#filtro-dos-meses-anteriores').text(meses[ajustarIndiceMes(2)]);
@@ -3876,5 +3881,733 @@ $(function () {
             }
         });
     }
+
+    // VISTA DE EMPRESAS
+    // Previsualización de la imagen seleccionada
+    $('#create-empresa-file').on('change', function () {
+        const file = this.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('#preview-image').attr('src', e.target.result);
+                $('#preview-container').show();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            $('#preview-image').attr('src', '');
+            $('#preview-container').hide();
+        }
+    });
+
+    // Botón para quitar la imagen seleccionada
+    $('#btn-cancel-image').on('click', function () {
+        $('#create-empresa-file').val('');
+        $('#preview-image').attr('src', '');
+        $('#preview-container').hide();
+        $('#logo-url').val('');
+    });
+
+    $('#btn-crear-empresa').on('click', function () {
+        $('#createEmpresaModalLabel').text('Crear Empresa');
+        $('#createEmpresaForm').attr('action', url + '/dashboard/empresas/guardar');
+        $('#createEmpresaForm')[0].reset();
+        $('#create-empresa-plan').val('').trigger('change');
+        $('#create-empresa-file').val('');
+        $('#preview-image').attr('src', '');
+        $('#preview-container').hide();
+        $('#createEmpresaModal').modal('show');
+    });
+
+    // Formulario para crear una nueva empresa
+    $('#createEmpresaForm').on('submit', function (event) {
+        event.preventDefault();
+        let action = $(this).attr('action');
+        let form = $(this);
+        let fileInput = $('#create-empresa-file')[0];
+        let file = fileInput.files[0];
+
+        function guardarEmpresa() {
+            let formData = new FormData(form[0]);
+            $.ajax({
+                url: action,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.Success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Exito!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        }).then(() => {
+                            $('#createEmpresaModal').modal('hide');
+                            $('#createEmpresaForm')[0].reset();
+                            $('#preview-image').attr('src', '');
+                            $('#preview-container').hide();
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al enviar los datos de la empresa.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    });
+                }
+            });
+        }
+
+        if (file) {
+            let imgData = new FormData();
+            imgData.append('file', file);
+
+            $.ajax({
+                url: 'empresas/guardar-logo',
+                type: 'POST',
+                data: imgData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.Success) {
+                        $('#logo-url').val(response.Data);
+                        guardarEmpresa();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo subir el logo de la empresa.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    });
+                }
+            });
+        } else {
+            guardarEmpresa();
+        }
+    });
+
+    //Botón para abrir el modal de editar empresa
+    $('.btn-edit-empresa').on('click', function () {
+        const id = $(this).data('empresa-id');
+        const nombre = $(this).data('empresa-nombre');
+        const descripcion = $(this).data('empresa-descripcion');
+        const tipo_documento = $(this).data('empresa-tipo-documento');
+        const numero_documento = $(this).data('empresa-documento');
+        const plan = $(this).data('empresa-plan');
+        const logo = $(this).data('empresa-logo');
+        const plantilla = $(this).data('empresa-plantilla');
+
+        $('#createEmpresaModalLabel').text('Editar Empresa');
+        $('#createEmpresaForm').attr('action', url + '/dashboard/empresas/actualizar/' + id);
+        $('#create-empresa-name').val(nombre);
+        $('#create-empresa-description').val(descripcion);
+        $('#create-empresa-document-type').val(tipo_documento);
+        $('#create-empresa-document-number').val(numero_documento);
+        $('#create-empresa-plan').val(plan);
+        $('#create-empresa-template').val(plantilla);
+
+        if (logo && logo !== '') {
+            $('#preview-image').attr('src', logo.startsWith('http') ? logo : (url + '/' + logo.replace(/^\/+/, '')));
+            $('#preview-container').show();
+            $('#logo-url').val(logo);
+        } else {
+            $('#preview-image').attr('src', '');
+            $('#preview-container').hide();
+            $('#logo-url').val('');
+        }
+
+        $('#createEmpresaModal').modal('show');
+    });
+
+    // Botón para cambiar de estado de la empresa
+    $('.btn-estado-empresa').on('click', function () {
+        const id = $(this).data('empresa-id');
+
+        $.ajax({
+            url: url + '/dashboard/empresas/cambiar_estado',
+            type: 'POST',
+            data: {
+                id_empresa: id
+            },
+            success: function (response) {
+                if (response.Success) {
+                    location.reload();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cambiar el estado de la empresa.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                    }
+                });
+            }
+        });
+    });
+
+    // VISTA DE DASHBOARD EMRPESAS
+    function obtenerDatosProgressBarDashboardEmpresa(endpoint, chart) {
+        $.ajax({
+            url: url + endpoint,
+            type: 'POST',
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        chart.updateSeries([
+                            {
+                                data: [response.Data.citas_consumidas]
+                            },
+                            {
+                                data: [response.Data.citas_faltantes]
+                            }
+                        ]);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de la barra de progreso.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function obtenerDatosLineBarMixedDashboardEmpresa(endpoint, chart) {
+        $.ajax({
+            url: url + endpoint,
+            type: 'POST',
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        chart.updateSeries([
+                            {
+                                data: [response.Data.citasAgendadasPorMesActual]
+                            },
+                            {
+                                data: [response.Data.citasAsistidasPorMesActual]
+                            }
+                        ]);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de la barra de progreso.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    if ($('#dashboard-empresas').length) {
+        // BARRA DE PROGRESO DE CONSUMO DE PAQUETE ACTIVO
+        var optionsChartDashboardEmpresasProgressBar = {
+            series: [{
+                name: 'Citas consumidas',
+                data: []
+            }, {
+                name: 'Citas faltantes',
+                data: []
+            }],
+            chart: {
+                type: 'bar',
+                height: 200,
+                stacked: true,
+                stackType: '100%'
+            },
+            colors: ['#ff9f43', '#ff4c51'],
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    borderRadius: 5,
+                },
+            },
+            stroke: {
+                width: 1,
+                colors: ['#fff']
+            },
+            title: {
+                text: '% de progreso del paquete',
+            },
+            xaxis: {
+                categories: [''],
+                labels: {
+                    show: false
+                },
+                axisTicks: {
+                    show: false
+                },
+                axisBorder: {
+                    show: false
+                }
+            },
+            grid: {
+                show: false,
+                padding: {
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    left: 0
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function (val) {
+                        return val + " Citas"
+                    }
+                }
+            },
+            fill: {
+                opacity: 1
+            },
+            legend: {
+                position: 'top',
+                horizontalAlign: 'left',
+                offsetX: 0
+            }
+        };
+
+        var ChartDashboardEmpresasProgressBar = new ApexCharts(document.querySelector("#ChartDashboardEmpresasProgressBar"), optionsChartDashboardEmpresasProgressBar);
+        ChartDashboardEmpresasProgressBar.render();
+
+        obtenerDatosProgressBarDashboardEmpresa('/dashboard/empresa/obtener_datos_barra_progreso', ChartDashboardEmpresasProgressBar);
+
+        // GRAFICA MIXED DE LAS CITAS EXISTENTES VS LAS ASISTIDAS
+        var optionsChartDashboardEmpresasLineBarMixed = {
+            series: [{
+                name: 'Agendados',
+                type: 'column',
+                data: []
+            }, {
+                name: 'Asistidos',
+                type: 'line',
+                data: []
+            }],
+            chart: {
+                height: 500,
+                type: 'line',
+            },
+            stroke: {
+                width: [0, 4]
+            },
+            title: {
+                text: 'Citas Agendadas vs Asistidas del mes actual',
+            },
+            colors: ['#00d2ff', '#b5ba30'],
+            dataLabels: {
+                enabled: true,
+                enabledOnSeries: [1]
+            },
+            labels: [],
+            yaxis: [{
+                min: 0,
+                max: 150,
+
+            }, {
+                opposite: true,
+                show: false,
+                title: {
+                    text: 'Asistidos'
+                },
+                min: 0,
+                max: 150,
+            }]
+        };
+
+        var ChartDashboardEmpresasLineBarMixed = new ApexCharts(document.querySelector("#ChartDashboardEmpresasLineBarMixed"), optionsChartDashboardEmpresasLineBarMixed);
+        ChartDashboardEmpresasLineBarMixed.render();
+
+        obtenerDatosLineBarMixedDashboardEmpresa('/dashboard/empresa/obtener_datos_linea_mezclada', ChartDashboardEmpresasLineBarMixed)
+
+        // RADIAL PROGRESS BAR DEL HISTORIAL DE PAQUETES
+        const chartsConfig = [
+            {
+                id: "chart1",
+                title: "Paquete 1",
+                value: 67
+            },
+            {
+                id: "chart2",
+                title: "Paquete 2",
+                value: 45
+            },
+            {
+                id: "chart3",
+                title: "Paquete 3",
+                value: 85
+            }
+        ];
+
+        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorial');
+
+        chartsConfig.forEach(config => {
+            // Crear contenedor individual para cada gráfico
+            const chartContainer = document.createElement('div');
+            chartContainer.id = config.id;
+            container.appendChild(chartContainer);
+
+            // Crear opciones del gráfico
+            const chartOptions = {
+                series: [config.value],
+                chart: {
+                    height: 150,
+                    type: 'radialBar'
+                },
+                plotOptions: {
+                    radialBar: {
+                        startAngle: -135,
+                        endAngle: 135,
+                        dataLabels: {
+                            name: {
+                                fontSize: '14px',
+                                offsetY: 90
+                            },
+                            value: {
+                                offsetY: 50,
+                                fontSize: '18px',
+                                formatter: function (val) {
+                                    return val + "%";
+                                }
+                            }
+                        }
+                    }
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shade: 'dark',
+                        shadeIntensity: 0.15,
+                        inverseColors: false,
+                        stops: [0, 50, 65, 91]
+                    }
+                },
+                stroke: {
+                    dashArray: 4
+                },
+                labels: [config.title],
+                colors: ['#556EE6']
+            };
+
+            // Crear y renderizar gráfico
+            const chart = new ApexCharts(
+                document.querySelector(`#${config.id}`),
+                chartOptions
+            );
+            chart.render();
+        })
+    }
+
+    $('#empresa-select-dashboard').on('change', function () {
+        var empresaId = $(this).val();
+
+        if (empresaId) {
+            window.location.href = url + '/dashboard/empresa?id_empresa=' + empresaId;
+        }
+    });
+
+    // TABLAS DE PAQUETES
+    var table_paquetes;
+
+    if ($('.datatables-paquetes').length) {
+        table_paquetes = $('.datatables-paquetes').DataTable({
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            searching: false,
+            info: true,
+            pageLength: 10,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
+                info: "Mostrando _START_ a _END_ de _MAX_ registros",
+                infoEmpty: "No hay datos disponibles",
+                infoFiltered: "(filtrados de un total de _MAX_ registros)"
+            },
+            dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+            ajax: {
+                url: url + '/dashboard/paquetes/obtener_paquetes',
+                type: 'POST',
+                data: function (d) {
+                    d.filtro_nombre = filtroNombre;
+                    d.filtro_valor = filtroValor;
+                    d.filtro_tipo = filtroTipo;
+                },
+                dataSrc: function (json) {
+                    // Se extraen los datos para la información de la tabla
+                    json.draw = json.Data.draw;
+                    json.recordsTotal = json.Data.recordsTotal;
+                    json.recordsFiltered = json.Data.recordsFiltered;
+
+                    // Se retorna los datos de los paquetes
+                    return json.Data.paquetes;
+                }
+            },
+            columns: [
+                { data: 'nombre_paquete' },
+                { data: 'descripcion_paquete' },
+                { data: 'numero_citas' },
+                { data: 'valor' },
+                { data: 'tipo_paquete' },
+                { data: null },
+                { data: null, visible: (canEditPaquetes || canDeletePaquetes) ? true : false }
+            ],
+            columnDefs: [
+                {
+                    targets: '_all',
+                    className: 'dt-center'
+                },
+                {
+                    targets: 5,
+                    render: function (data) {
+                        if (data.deleted_at == null) {
+                            return `<span class="badge bg-label-success">ACTIVO</span>`;
+                        } else {
+                            return `<span class="badge bg-label-danger">INACTIVO</span>`;
+                        }
+                    }
+                },
+                {
+                    targets: 6,
+                    orderable: false,
+                    render: function (data) {
+                        return `
+                            ${(canEditPaquetes) ? `
+                                <button class="btn btn-icon btn-label-info waves-effect btn-editar-paquete" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-info" title="Editar"
+                                    data-id-paquete="${data.id_paquete}"
+                                    data-nombre-paquete="${data.nombre_paquete}"
+                                    data-descripcion-paquete="${data.descripcion_paquete}"
+                                    data-tipo-paquete="${data.tipo_paquete}"
+                                    data-numero-citas="${data.numero_citas}"
+                                    data-valor="${data.valor}">
+                                    <i class="tf-icons ti ti-pencil-cog ti-md"></i>
+                                </button>` : ''}
+                            ${(canDeletePaquetes) ? `
+                                ${(data.deleted_at == null) ? `
+                                    <button type="button" class="btn btn-icon btn-label-danger waves-effect cambio_estado_paquete" data-id_paquete="${data.id_paquete}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-danger" title="Desactivar">
+                                        <i class="tf-icons ti ti-box-off ti-md"></i>
+                                    </button>
+                                ` : `
+                                    <button type="button" class="btn btn-icon btn-label-success waves-effect cambio_estado_paquete" data-id_paquete="${data.id_paquete}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-success" title="Activar">
+                                        <i class="tf-icons ti ti-package ti-md"></i>
+                                    </button>
+                                `}
+                            `: ''}
+                        `;
+                    }
+                }
+            ],
+            createdRow: function (row, data) {
+                if (data.deleted_at == null) {
+                    $(row).css('background-color', 'rgba(225, 247, 222, 0.5)');
+                } else {
+                    $(row).css('background-color', 'rgba(255, 224, 224, 0.5)');
+                }
+            },
+            drawCallback: function (settings) {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            },
+            pagingType: "simple"
+        });
+    }
+
+    // Cambio de estado de paquete
+    $('.datatables-paquetes').on('click', '.cambio_estado_paquete', function () {
+        let id_paquete = $(this).data('id_paquete');
+
+        $.ajax({
+            url: url + '/dashboard/paquetes/cambio_estado',
+            type: 'POST',
+            data: {
+                id_paquete: id_paquete
+            },
+            success: function () {
+                // Destruir todos los tooltips activos antes de recargar la tabla
+                var tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                tooltips.forEach(function (el) {
+                    var instance = bootstrap.Tooltip.getInstance(el);
+                    if (instance) {
+                        instance.dispose();
+                    }
+                });
+
+                table_paquetes.ajax.reload();
+            }
+        });
+    });
+
+    // Eventos para los filtros de paquetes
+    $('#buscar-nombre-paquetes').on('keyup', function () {
+        filtroNombre = $(this).val();
+        table_paquetes.ajax.reload();
+    });
+
+    $('#filtro-tipo-paquete').on('change', function () {
+        filtroTipo = $(this).val();
+        table_paquetes.ajax.reload();
+    });
+
+    $('#buscar-valor-paquetes').on('keyup', function () {
+        filtroValor = $(this).val();
+        table_paquetes.ajax.reload();
+    });
+
+    $('#filtro-reiniciar').on('click', function () {
+        filtroNombre = '';
+        filtroTipo = '';
+        filtroValor = '';
+        $('#buscar-nombre-paquetes').val("").trigger('input');
+        $('#filtro-tipo-paquete').val("").trigger('change');
+        $('#buscar-valor-paquetes').val("").trigger('input');
+    });
+
+    $('#crear-paquete').on('click', function () {
+        $('#modalNuevoPaqueteLabel').text('Crear Paquete');
+        $('#form-nuevo-paquete').attr('action', url + '/dashboard/paquetes/guardar');
+        $('#form-nuevo-paquete')[0].reset();
+        $('#tipo-paquete').val('').trigger('change');
+        $('#modalNuevoPaquete').modal('show');
+    });
+
+    $('.datatables-paquetes').on('click', '.btn-editar-paquete', function () {
+        const id = $(this).data('id-paquete');
+        const nombre = $(this).data('nombre-paquete');
+        const descripcion = $(this).data('descripcion-paquete');
+        const numeroCitas = $(this).data('numero-citas');
+        const tipo = $(this).data('tipo-paquete');
+        const valor = $(this).data('valor');
+
+        $('#modalNuevoPaqueteLabel').text('Editar Paquete');
+        $('#form-nuevo-paquete').attr('action', url + '/dashboard/paquetes/actualizar/' + id);
+        $('#nombre-paquete').val(nombre);
+        $('#descripcion-paquete').val(descripcion);
+        $('#numero-citas-paquete').val(numeroCitas);
+        $('#valor-paquete').val(valor);
+        $('#tipo-paquete').val(tipo);
+
+        $('#modalNuevoPaquete').modal('show');
+    });
+
+    //Formulario para crear un nuevo paquete
+    $('#form-nuevo-paquete').on('submit', function (event) {
+        event.preventDefault();
+        let action = $(this).attr('action');
+        let formData = $(this).serialize();
+
+        $.ajax({
+            url: action,
+            type: 'POST',
+            data: formData,
+            success: function (response) {
+                if (response.Success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Exito!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    }).then(() => {
+                        table_paquetes.ajax.reload();
+                        $('#modalNuevoPaquete').modal('hide');
+                        $('#form-nuevo-paquete')[0].reset();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al enviar los datos.'
+                });
+            }
+        });
+    });
 });
 
