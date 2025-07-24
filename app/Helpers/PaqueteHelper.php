@@ -313,7 +313,54 @@ class PaqueteHelper {
             ->count();
         
         if ($paquetesExistentes > 0) {
-
+            // Se consulta el paquete de tipo AUXILIAR
+            $paqueteTemporal = DB::table('tb_paquete')
+                ->select('tb_paquete.*')
+                ->where('tb_paquete.tipo_paquete', 'AUXILIAR')
+                ->first();
+            
+            // Se valida primero si existen paquetes NO AUXILIARES pero que estén en estado PENDIENTE
+            $paquetesPendientes = DB::table('tb_empresa_paquete')
+                ->where('tb_empresa_paquete.id_paquete', $paqueteTemporal->id_paquete)
+                ->whereNot('tb_empresa_paquete.estado', 'PENDIENTE')
+                ->count();
+            
+            if ($paquetesPendientes > 0) {
+                // Si tiene paquetes pendientes pone en PENDIENTE el paquete comprado
+                DB::table('tb_empresa_paquete')
+                    ->where('tb_empresa_paquete.id_empresa_paquete', $id_empresa_paquete)
+                    ->update([
+                        'tb_empresa_paquete.estado' => 'PENDIENTE',
+                        'updated_at' => Carbon::now()
+                    ]);
+                return true;
+            } else {
+                // Activa el paquete comprado 
+                DB::table('tb_empresa_paquete')
+                    ->where('tb_empresa_paquete.id_empresa_paquete', $id_empresa_paquete)
+                    ->update([
+                        'tb_empresa_paquete.estado' => 'ACTIVO',
+                        'updated_at' => Carbon::now()
+                    ]);
+                
+                // Se inactiva el paquete TEMPORAL, ya que se activa el comprado
+                DB::table('tb_empresa_paquete')
+                    ->where('tb_empresa_paquete.id_empresa', $empresa_paquete_comprado->id_empresa)
+                    ->where('tb_emrpesa_paquete.id_paquete', $paqueteTemporal->id_paquete)
+                    ->update([
+                        'tb_empresa_paquete.estado' => 'INACTIVO',
+                        'updated_at' => Carbon::now()
+                    ]);
+                
+                // Se busca el empresa-paquete TEMPORAL, para realizar la reasignación
+                $empresa_paquete_temporal = DB::table('tb_empresa_paquete')
+                    ->where('tb_empresa_paquete.id_empresa', $empresa_paquete_comprado->id_empresa)
+                    ->where('tb_emrpesa_paquete.id_paquete', $paqueteTemporal->id_paquete)
+                    ->first();
+                
+                self::reasignacionCitasEmpresaPaquete($empresa_paquete_temporal->id_empresa_paquete, $id_empresa_paquete);
+                return true;
+            }
         } else {
             DB::table('tb_empresa_paquete')
                 ->where('tb_empresa_paquete.id_empresa_paquete', $id_empresa_paquete)
@@ -321,6 +368,7 @@ class PaqueteHelper {
                     'tb_empresa_paquete.estado' => 'ACTIVO',
                     'updated_at' => Carbon::now()
                 ]);
+            return true;
         }
     }
 }

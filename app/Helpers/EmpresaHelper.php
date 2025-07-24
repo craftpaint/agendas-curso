@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Crypt;
 use Carbon\Carbon;
+use App\Helpers\PaqueteHelper;
 
 class EmpresaHelper {
     public static function validarExistenciaEmpresa ($tipo_documento, $documento_empresa) {
@@ -198,7 +199,7 @@ class EmpresaHelper {
                     );
 
                     // VALIDA SI DEBE ACTIVAR EL PAQUETE DIRECTAMENTE O DEBE ESTAR EN ESPERA Y OTROS PROCESOS MÁS
-
+                    return PaqueteHelper::validacionActivacionPaqueteComprado($id_empresa_paquete);
                 } else {
                     Log::error('No se pudo extraer id_cita de la referencia: ' . $reference);
                 }
