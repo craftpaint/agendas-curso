@@ -204,6 +204,14 @@ class EmpresaHelper {
                     if ($transaction['status'] == "APPROVED") {
                         // VALIDA SI DEBE ACTIVAR EL PAQUETE DIRECTAMENTE O DEBE ESTAR EN ESPERA Y OTROS PROCESOS MÁS
                         return PaqueteHelper::validacionActivacionPaqueteComprado($id_empresa_paquete);
+                    } else {
+                        // Se coloca el paquete en estado NO PAGO
+                        DB::table('tb_empresa_paquete')
+                            ->where('tb_empresa_paquete.id_empresa_paquete', $id_empresa_paquete)
+                            ->update([
+                                'tb_empresa_paquete.estado' => 'NO PAGO',
+                                'updated_at' => Carbon::now()
+                            ]);
                     }
                 } else {
                     Log::error('No se pudo extraer id_cita de la referencia: ' . $reference);
