@@ -354,7 +354,7 @@ class PaqueteHelper {
                 // Se inactiva el paquete TEMPORAL, ya que se activa el comprado
                 DB::table('tb_empresa_paquete')
                     ->where('tb_empresa_paquete.id_empresa', $empresa_paquete_comprado->id_empresa)
-                    ->where('tb_emrpesa_paquete.id_paquete', $paqueteTemporal->id_paquete)
+                    ->where('tb_empresa_paquete.id_paquete', $paqueteTemporal->id_paquete)
                     ->update([
                         'tb_empresa_paquete.estado' => 'INACTIVO',
                         'updated_at' => Carbon::now()
@@ -363,7 +363,7 @@ class PaqueteHelper {
                 // Se busca el empresa-paquete TEMPORAL, para realizar la reasignación
                 $empresa_paquete_temporal = DB::table('tb_empresa_paquete')
                     ->where('tb_empresa_paquete.id_empresa', $empresa_paquete_comprado->id_empresa)
-                    ->where('tb_emrpesa_paquete.id_paquete', $paqueteTemporal->id_paquete)
+                    ->where('tb_empresa_paquete.id_paquete', $paqueteTemporal->id_paquete)
                     ->first();
                 
                 self::reasignacionCitasEmpresaPaquete($empresa_paquete_temporal->id_empresa_paquete, $id_empresa_paquete);
