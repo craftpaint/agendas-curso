@@ -198,8 +198,10 @@ class EmpresaHelper {
                         ]
                     );
 
-                    // VALIDA SI DEBE ACTIVAR EL PAQUETE DIRECTAMENTE O DEBE ESTAR EN ESPERA Y OTROS PROCESOS MÁS
-                    return PaqueteHelper::validacionActivacionPaqueteComprado($id_empresa_paquete);
+                    if ($transaction['status'] == "APPROVED") {
+                        // VALIDA SI DEBE ACTIVAR EL PAQUETE DIRECTAMENTE O DEBE ESTAR EN ESPERA Y OTROS PROCESOS MÁS
+                        return PaqueteHelper::validacionActivacionPaqueteComprado($id_empresa_paquete);
+                    }
                 } else {
                     Log::error('No se pudo extraer id_cita de la referencia: ' . $reference);
                 }
