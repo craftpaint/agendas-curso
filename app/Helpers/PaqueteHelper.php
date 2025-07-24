@@ -268,6 +268,14 @@ class PaqueteHelper {
             $idEmpresaPaqueteTemporal = DB::table('tb_empresa_paquete')->insertGetId($data);
         } else {
            $idEmpresaPaqueteTemporal = $empresaPaqueteTemporalExistente->id_empresa_paquete;
+
+           // Se coloca en activo el paquete AUXILIAR
+           DB::table('tb_empresa_paquete')
+                ->where('tb_empresa_paquete.id_empresa_paquete', $idEmpresaPaqueteTemporal)
+                ->update([
+                    'tb_empresa_paquete.estado' => 'ACTIVO',
+                    'updated_at' => Carbon::now()
+                ]);
         }
             
         self::reasignacionCitasEmpresaPaquete($empresa_paquete->id_empresa_paquete, $idEmpresaPaqueteTemporal);
