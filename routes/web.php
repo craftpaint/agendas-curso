@@ -414,6 +414,8 @@ Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.d'])->group(f
 Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.a'])
     ->post('dashboard/empresas/guardar-logo', [EmpresasController::class, 'guardarLogo'])->name('empresas.guardarLogo');
 
+
+
 Route::controller(EmpresasController::class)->group(function () {
     Route::get('dashboard/empresa', 'obtenerDashboardEmpresa')
         ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
@@ -422,6 +424,11 @@ Route::controller(EmpresasController::class)->group(function () {
     Route::post('dashboard/empresa/obtener_datos_linea_mezclada', 'obtenerDatosLineBarMixedDashboardEmpresa')
         ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
 });
+
+Route::controller(EmpresasController::class)->group(function () {
+    Route::post('webhook/wompi', 'handleWebhook');
+});
+
 // Rutas para Paquetes
 Route::controller(PaquetesController::class)->group(function () {
     Route::get('dashboard/paquetes', 'index')
