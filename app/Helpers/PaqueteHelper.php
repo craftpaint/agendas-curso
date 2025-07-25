@@ -321,7 +321,7 @@ class PaqueteHelper {
             ->where('tb_empresa_paquete.id_empresa', $empresa_paquete_comprado->id_empresa)
             ->count();
         
-        Log::info("PAQUETES EXISTENTES", ['CANTIDAD: ' => $paquetesExistentes]);
+        Log::info("PAQUETES EXISTENTES", ['CANTIDAD ' => $paquetesExistentes]);
 
         if ($paquetesExistentes > 0) {
             Log::info("TIENE PAQUETES EXISTENTES");
@@ -332,14 +332,18 @@ class PaqueteHelper {
                 ->where('tb_paquete.tipo_paquete', 'AUXILIAR')
                 ->first();
             
+            Log::info("PAQUETE TEMPORAL", ['DATA' => $paqueteTemporal]);
+
             // Se valida primero si existen paquetes NO AUXILIARES pero que estén en estado PENDIENTE
             $paquetesEmpresaDisponibles = DB::table('tb_empresa_paquete')
                 ->whereNot('tb_empresa_paquete.id_paquete', $paqueteTemporal->id_paquete)
-                ->where('tb_empresa_paquete.estado', 'PENDIENTE')
-                ->where('tb_empresa_paquete.estado', 'ACTIVO')
+                ->where(function($query) {
+                    $query->where('tb_empresa_paquete.estado', 'PENDIENTE')
+                        ->orWhere('tb_empresa_paquete.estado', 'ACTIVO');
+                })
                 ->count();
             
-            Log::info("PAQUETES DISPONIBLES", ['CANTIDAD: ' => $paquetesEmpresaDisponibles]);
+            Log::info("PAQUETES DISPONIBLES", ['CANTIDAD ' => $paquetesEmpresaDisponibles]);
 
             if ($paquetesEmpresaDisponibles > 0) {
                 Log::info("TIENE PAQUETES DISPONIBLES");
