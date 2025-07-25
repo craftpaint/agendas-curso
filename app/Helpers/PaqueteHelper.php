@@ -312,7 +312,6 @@ class PaqueteHelper {
         
         // Si no encontró el paquete empresa, retorna false
         if (!$empresa_paquete_comprado) {
-            Log::info("NO ENCONTRÓ EL PAQUETE COMPRADO");
             return false;
         }
 
@@ -320,19 +319,14 @@ class PaqueteHelper {
         $paquetesExistentes = DB::table('tb_empresa_paquete')
             ->where('tb_empresa_paquete.id_empresa', $empresa_paquete_comprado->id_empresa)
             ->count();
-        
-        Log::info("PAQUETES EXISTENTES", ['CANTIDAD ' => $paquetesExistentes]);
 
         if ($paquetesExistentes > 0) {
-            Log::info("TIENE PAQUETES EXISTENTES");
 
             // Se consulta el paquete de tipo AUXILIAR
             $paqueteTemporal = DB::table('tb_paquete')
                 ->select('tb_paquete.*')
                 ->where('tb_paquete.tipo_paquete', 'AUXILIAR')
                 ->first();
-            
-            Log::info("PAQUETE TEMPORAL", ['DATA' => $paqueteTemporal]);
 
             // Se valida primero si existen paquetes NO AUXILIARES pero que estén en estado PENDIENTE
             $paquetesEmpresaDisponibles = DB::table('tb_empresa_paquete')
@@ -342,11 +336,8 @@ class PaqueteHelper {
                         ->orWhere('tb_empresa_paquete.estado', 'ACTIVO');
                 })
                 ->count();
-            
-            Log::info("PAQUETES DISPONIBLES", ['CANTIDAD ' => $paquetesEmpresaDisponibles]);
 
             if ($paquetesEmpresaDisponibles > 0) {
-                Log::info("TIENE PAQUETES DISPONIBLES");
 
                 // Si tiene paquetes pendientes o activos pone en PENDIENTE el paquete comprado
                 DB::table('tb_empresa_paquete')
@@ -356,8 +347,6 @@ class PaqueteHelper {
                         'updated_at' => Carbon::now()
                     ]);
 
-                Log::info("COLOCO EN PENDIENTE EL PAQUETE COMPRADO");
-
                 return true;
             } else {
                 // Activa el paquete comprado 
@@ -365,10 +354,9 @@ class PaqueteHelper {
                     ->where('tb_empresa_paquete.id_empresa_paquete', $id_empresa_paquete)
                     ->update([
                         'tb_empresa_paquete.estado' => 'ACTIVO',
+                        'tb_empresa_paquete.fecha_inicio' => Carbon::now(),
                         'updated_at' => Carbon::now()
                     ]);
-                
-                Log::info("ACTIVO EL PAQUETE COMPRADO");
 
                 // Se inactiva el paquete TEMPORAL, ya que se activa el comprado
                 DB::table('tb_empresa_paquete')
@@ -378,8 +366,6 @@ class PaqueteHelper {
                         'tb_empresa_paquete.estado' => 'INACTIVO',
                         'updated_at' => Carbon::now()
                     ]);
-                
-                Log::info("INACTIVO EL PAQUETE TEMPORAL");
 
                 // Se busca el empresa-paquete TEMPORAL, para realizar la reasignación
                 $empresa_paquete_temporal = DB::table('tb_empresa_paquete')
@@ -402,16 +388,13 @@ class PaqueteHelper {
                         'tb_empresa_paquete.citas_consumidas' => 0,
                         'updated_at' => Carbon::now()
                     ]);
-                Log::info("REALIZÓ EL CAMBIO AL VALOR DE LAS CITAS CONSUMIDAS");
 
                 self::reasignacionCitasEmpresaPaquete($empresa_paquete_temporal->id_empresa_paquete, $id_empresa_paquete);
                 self::reactivarSedesEmpresa($empresa_paquete_comprado->id_empresa);
 
-                Log::info("REALIZÓ LA REASIGNACIÓN Y LA REACTIVACIÓN");
                 return true;
             }
         } else {
-            Log::info("NO TIENE PAQUETES EXISTENTES");
             DB::table('tb_empresa_paquete')
                 ->where('tb_empresa_paquete.id_empresa_paquete', $id_empresa_paquete)
                 ->update([
@@ -419,8 +402,6 @@ class PaqueteHelper {
                     'updated_at' => Carbon::now()
                 ]);
             return true;
-
-            Log::info("ACTIVO EL PAQUETE DIRECTAMENTE");
         }
     }
 
