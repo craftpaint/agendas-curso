@@ -91,7 +91,7 @@ class EmpresaHelper {
         $id_paquete_encriptado = Crypt::encryptString($paquete->id_paquete);
 
         // Se agrega la URL de retorno
-        $url_retorno = env('PAGE_GRACIAS_URL') . $id_paquete_encriptado;
+        $url_retorno = env('PAGE_GRACIAS_URL');
 
         return [
             'public-key' => $publicKey,
