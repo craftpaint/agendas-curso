@@ -419,6 +419,12 @@ Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.a'])
 Route::controller(EmpresasController::class)->group(function () {
     Route::get('dashboard/empresa', 'obtenerDashboardEmpresa')
         ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+    Route::get('dashboard/empresa/consultar_todas_empresas/', 'consultarTodasEmpresas')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+    Route::get('dashboard/empresa/consultar_empresa/{id}', 'consultarEmpresa')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+    Route::get('dashboard/empresa/consultar_empresa_por_sede/{id}', 'consultarEmpresaPorSede')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
     Route::post('dashboard/empresa/obtener_datos_barra_progreso', 'obtenerDatosProgressBarDasboardEmpresa')
         ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
     Route::post('dashboard/empresa/obtener_datos_linea_mezclada', 'obtenerDatosLineBarMixedDashboardEmpresa')

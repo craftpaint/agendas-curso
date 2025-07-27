@@ -53,6 +53,9 @@
         rol = '<?= $rol ?>'
     </script>
     <script>
+        sede = '<?= $user->id_sede ?>'
+    </script>
+    <script>
         // Permisos para el módulo Sedes
         var canViewSedes = <?= json_encode($user->can('sede.listado.v')); ?>;
         var canAddSedes = <?= json_encode($user->can('sede.sede.a')); ?>;

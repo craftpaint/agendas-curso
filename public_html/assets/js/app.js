@@ -4092,14 +4092,146 @@ $(function () {
         });
     });
 
-    // VISTA DE DASHBOARD EMRPESAS
-    function obtenerDatosProgressBarDashboardEmpresa(endpoint, chart) {
+    // VISTA DE DASHBOARD EMPRESAS
+    function consultarTodasEmpresas() {
         $.ajax({
-            url: url + endpoint,
-            type: 'POST',
+            url: url + '/dashboard/empresa/consultar_todas_empresas',
+            type: 'GET',
             success: function (response) {
                 if (response.Success) {
                     if (response.Data) {
+                        $('#empresa-select-dashboard option:not(:first)').remove();
+                        response.Data.forEach(empresa => {
+                            $('#empresa-select-dashboard').append(
+                                $('<option>', {
+                                    value: empresa.id_empresa,
+                                    text: empresa.Nombre,
+                                })
+                            );
+                        });
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de las empresas.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function consultarEmpresaUsuario(id_sede = sede) {
+        $.ajax({
+            url: url + '/dashboard/empresa/consultar_empresa_por_sede/' + id_sede,
+            type: 'GET',
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        $('#logo-empresa-dashboard').attr('src', `${url}/${response.Data.logo}`);
+                        $('#nombre-empresa-dashboard').html(`Nombre: <strong>${response.Data.Nombre}</strong>`);
+                        $('#documento-empresa-dashboard').html(`Documento: <strong>${response.Data.tipo_documento_empresa} ${response.Data.documento_empresa}</strong>`);
+                        $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de la empresa.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function consultarEmpresa(id_empresa) {
+        $.ajax({
+            url: url + '/dashboard/empresa/consultar_empresa/' + id_empresa,
+            type: 'GET',
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        $('#logo-empresa-dashboard').attr('src', `${url}/${response.Data.logo}`);
+                        $('#nombre-empresa-dashboard').html(`Nombre: <strong>${response.Data.Nombre}</strong>`);
+                        $('#documento-empresa-dashboard').html(`Documento: <strong>${response.Data.tipo_documento_empresa} ${response.Data.documento_empresa}</strong>`);
+                        $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de la empresa.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function obtenerDatosProgressBarDashboardEmpresa(endpoint, chart, id_empresa = null) {
+        $.ajax({
+            url: url + endpoint,
+            type: 'POST',
+            data: {
+                id_empresa: id_empresa
+            },
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        console.log("DATOS DE BARRA DE PROGRESO", response.Data);
+                        $('#nombre-paquete-activo-dashboard-empresa').html(`Nombre: <strong>${response.Data.nombre_paquete}</strong>`);
+                        $('#numero-citas-paquete-activo-dashboard-empresa').html(`Número de citas: <strong>${response.Data.numero_citas}</strong>`);
+                        $('#estado-paquete-activo-dashboard-empresa').html(`Estado: <strong>${response.Data.estado}</strong>`);
+                        $('#citas-consumidas-paquete-activo-dashboard-empresa').html(`<strong>${response.Data.citas_consumidas}</strong>`);
+                        $('#citas-faltantes-paquete-activo-dashboard-empresa').html(`<strong>${response.Data.citas_faltantes}</strong>`);
+                        $('#citas-confirmadas-paquete-activo-dashboard-empresa').text(`${response.Data.citasConfirmadas}`);
+                        $('#citas-erradas-paquete-activo-dashboard-empresa').text(`${response.Data.citasErradas}`);
+                        $('#citas-validacion-paquete-activo-dashboard-empresa').text(`${response.Data.citasEnValidacion}`);
+                        $('#citas-pendientes-paquete-activo-dashboard-empresa').text(`${response.Data.citasPendientes}`);
                         chart.updateSeries([
                             {
                                 data: [response.Data.citas_consumidas]
@@ -4108,6 +4240,60 @@ $(function () {
                                 data: [response.Data.citas_faltantes]
                             }
                         ]);
+
+                        const citas_restantes = response.Data.numero_citas - response.Data.citas_consumidas;
+                        // PARA LAS ÚLTIMAS 15 CITAS
+                        if (rol == "Admin Empresa") {
+                            if (citas_restantes <= 15 && citas_restantes > 0) {
+                                Swal.fire({
+                                    html: `
+                                    <div class="text-center">
+                                        <a href="https://curso-comparendo.com/" target="blank">
+                                            <img src="${url}/assets/img/paquetes/aviso_paquetes.jpg" class="img-fluid mb-3">
+                                        </a>
+                                    </div>
+                                `,
+                                    showCloseButton: true,
+                                    showConfirmButton: false,
+                                    width: '800px'
+                                });
+                            }
+                        }
+                    } else {
+                        // PARA CUANDO NO TIENE UN PAQUETE ACTIVO
+                        if (rol == "Admin Empresa") {
+                            Swal.fire({
+                                html: `
+                                <div class="text-center">
+                                    <a href="https://curso-comparendo.com/" target="blank">
+                                        <img src="${url}/assets/img/paquetes/fin_paquetes.jpg" class="img-fluid mb-3">
+                                    </a>
+                                </div>
+                                `,
+                                showCloseButton: false,
+                                showConfirmButton: false,
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                allowEnterKey: false,
+                                width: '800px',
+                                backdrop: 'rgba(0,0,0,0.8)',
+                                showClass: {
+                                    popup: 'animate__animated animate__fadeIn'
+                                },
+                                willOpen: () => {
+                                    $('body').css('overflow', 'hidden');
+                                    $('.swal2-container').css('pointer-events', 'auto');
+                                },
+                                didOpen: () => {
+                                    $(document).on('click', '.swal2-popup', function (e) {
+                                        e.stopPropagation();
+                                    });
+                                },
+                                willClose: () => {
+                                    return false;
+                                }
+                            });
+                        }
                     }
                 } else {
                     Swal.fire({
@@ -4135,21 +4321,29 @@ $(function () {
         });
     }
 
-    function obtenerDatosLineBarMixedDashboardEmpresa(endpoint, chart) {
+    function obtenerDatosLineBarMixedDashboardEmpresa(endpoint, chart, id_empresa) {
         $.ajax({
             url: url + endpoint,
             type: 'POST',
+            data: {
+                id_empresa: id_empresa
+            },
             success: function (response) {
                 if (response.Success) {
                     if (response.Data) {
                         chart.updateSeries([
                             {
-                                data: [response.Data.citasAgendadasPorMesActual]
+                                data: response.Data.citasAgendadasPorMesActual
                             },
                             {
-                                data: [response.Data.citasAsistidasPorMesActual]
+                                data: response.Data.citasAsistidasPorMesActual
                             }
                         ]);
+                        chart.updateOptions({
+                            yaxis: [{
+                                max: response.Data.numero_citas
+                            }]
+                        })
                     }
                 } else {
                     Swal.fire({
@@ -4248,8 +4442,6 @@ $(function () {
         var ChartDashboardEmpresasProgressBar = new ApexCharts(document.querySelector("#ChartDashboardEmpresasProgressBar"), optionsChartDashboardEmpresasProgressBar);
         ChartDashboardEmpresasProgressBar.render();
 
-        obtenerDatosProgressBarDashboardEmpresa('/dashboard/empresa/obtener_datos_barra_progreso', ChartDashboardEmpresasProgressBar);
-
         // GRAFICA MIXED DE LAS CITAS EXISTENTES VS LAS ASISTIDAS
         var optionsChartDashboardEmpresasLineBarMixed = {
             series: [{
@@ -4295,9 +4487,8 @@ $(function () {
         var ChartDashboardEmpresasLineBarMixed = new ApexCharts(document.querySelector("#ChartDashboardEmpresasLineBarMixed"), optionsChartDashboardEmpresasLineBarMixed);
         ChartDashboardEmpresasLineBarMixed.render();
 
-        obtenerDatosLineBarMixedDashboardEmpresa('/dashboard/empresa/obtener_datos_linea_mezclada', ChartDashboardEmpresasLineBarMixed)
-
         // RADIAL PROGRESS BAR DEL HISTORIAL DE PAQUETES
+        /*
         const chartsConfig = [
             {
                 id: "chart1",
@@ -4372,15 +4563,40 @@ $(function () {
                 chartOptions
             );
             chart.render();
-        })
+        }); */
+
+        // Datos de las empresas para el select
+        if (rol == 'superadmin' || rol == 'admin') {
+            consultarTodasEmpresas();
+        }
+
+        // Se hacen todas las consultas de la vista
+        consultarEmpresaUsuario();
+        obtenerDatosProgressBarDashboardEmpresa('/dashboard/empresa/obtener_datos_barra_progreso', ChartDashboardEmpresasProgressBar);
+        obtenerDatosLineBarMixedDashboardEmpresa('/dashboard/empresa/obtener_datos_linea_mezclada', ChartDashboardEmpresasLineBarMixed);
     }
 
     $('#empresa-select-dashboard').on('change', function () {
-        var empresaId = $(this).val();
+        // Se limpian los datos del dashboard
+        $('#logo-empresa-dashboard').attr('src', ``);
+        $('#nombre-empresa-dashboard').html(``);
+        $('#documento-empresa-dashboard').html(``);
+        $('#plan-empresa-dashboard').html(``);
+        $('#nombre-paquete-activo-dashboard-empresa').html(``);
+        $('#numero-citas-paquete-activo-dashboard-empresa').html(``);
+        $('#estado-paquete-activo-dashboard-empresa').html(``);
+        $('#citas-consumidas-paquete-activo-dashboard-empresa').html(``);
+        $('#citas-faltantes-paquete-activo-dashboard-empresa').html(``);
+        $('#citas-confirmadas-paquete-activo-dashboard-empresa').text(``);
+        $('#citas-erradas-paquete-activo-dashboard-empresa').text(``);
+        $('#citas-validacion-paquete-activo-dashboard-empresa').text(``);
+        $('#citas-pendientes-paquete-activo-dashboard-empresa').text(``);
 
-        if (empresaId) {
-            window.location.href = url + '/dashboard/empresa?id_empresa=' + empresaId;
-        }
+        // Se consulta la nueva empresa
+        const empresaSeleccionada = $(this).val();
+        consultarEmpresa(empresaSeleccionada);
+        obtenerDatosProgressBarDashboardEmpresa('/dashboard/empresa/obtener_datos_barra_progreso', ChartDashboardEmpresasProgressBar, empresaSeleccionada);
+        obtenerDatosLineBarMixedDashboardEmpresa('/dashboard/empresa/obtener_datos_linea_mezclada', ChartDashboardEmpresasLineBarMixed, empresaSeleccionada);
     });
 
     // TABLAS DE PAQUETES
