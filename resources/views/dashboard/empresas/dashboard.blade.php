@@ -21,18 +21,9 @@
                         <div class="card-body">
                             <h3 class="card-title mb-4 text-success"><i class="ti ti-box fs-1 me-2"></i> Paquete Activo
                             </h3>
-                            <h5 class="card-text mb-4">
-                                Nombre:
-                                <strong></strong>
-                            </h5>
-                            <h5 class="card-text mb-4">
-                                Número de citas:
-                                <strong></strong>
-                            </h5>
-                            <h5 class="card-text mb-4">
-                                Estado:
-                                <strong></strong>
-                            </h5>
+                            <h5 class="card-text mb-4" id="nombre-paquete-activo-dashboard-empresa"></h5>
+                            <h5 class="card-text mb-4" id="numero-citas-paquete-activo-dashboard-empresa"></h5>
+                            <h5 class="card-text mb-4" id="estado-paquete-activo-dashboard-empresa"></h5>
                         </div>
                     </div>
                 </div>
@@ -42,9 +33,7 @@
                         <div class="card-body d-flex flex-column">
                             <h4 class="card-title text-warning"><i class="ti ti-package-export fs-1 me-2"></i> Citas
                                 Consumidas</h4>
-                            <h1 class="card-text mb-1 text-center display-1">
-                                <strong></strong>
-                            </h1>
+                            <h1 class="card-text mb-1 text-center display-1" id="citas-consumidas-paquete-activo-dashboard-empresa"></h1>
                         </div>
                     </div>
                 </div>
@@ -54,26 +43,18 @@
                         <div class="card-body d-flex flex-column">
                             <h3 class="card-title text-danger"><i class="ti ti-packages fs-1 me-2"></i> Citas Faltantes
                             </h3>
-                            <h1 class="card-text mb-1 text-center display-1">
-                                <strong></strong>
-                            </h1>
+                            <h1 class="card-text mb-1 text-center display-1" id="citas-faltantes-paquete-activo-dashboard-empresa"></h1>
                         </div>
                     </div>
                 </div>
                 <div class="mb-3 col-md-3 d-flex">
                     <div class="card w-100">
                         <div class="card-body">
-                            <h3 class="card-title text-primary"><i class="ti ti-building-skyscraper fs-1 me-2"></i>
-                                Información</h3>
-                            <p class="card-text mb-1">
-                                Nombre: <strong></strong>
-                            </p>
-                            <p class="card-text mb-1">
-                                Documento: <strong></strong>
-                            </p>
-                            <p class="card-text mb-1">
-                                Plan: <strong></strong>
-                            </p>
+                            <h3 class="card-title text-primary"><i class="ti ti-building-skyscraper fs-1 me-2"></i>Información</h3>
+                            <img id="logo-empresa-dashboard" src="" alt="Logo" class="rounded me-2 mb-2" style="max-height: 70px;">
+                            <p class="card-text mb-1" id="nombre-empresa-dashboard"></p>
+                            <p class="card-text mb-1" id="documento-empresa-dashboard"></p>
+                            <p class="card-text mb-1" id="plan-empresa-dashboard"></p>
                         </div>
                     </div>
                 </div>
@@ -85,42 +66,13 @@
                         <div class="card-body">
                             <div id="ChartDashboardEmpresasProgressBar"></div>
                             <div class="row">
-                                <div class="col-md-6">
-                                    <h5><i class="ti ti-progress-check text-info"></i> Agendados:
-                                        <strong></strong>
-                                    </h5>
-                                    <h5><i class="ti ti-x text-danger"></i> Cancelados:
-                                        <strong></strong>
-                                    </h5>
-                                    <h5><i class="ti ti-user-check text-success"></i> Asistidos:
-                                        <strong></strong>
-                                    </h5>
-                                    <h5><i class="ti ti-heart-handshake text-info"></i> Confirmado:
-                                        <strong></strong>
-                                    </h5>
-                                    <h5><i class="ti ti-user-cancel text-danger"></i> No asistió:
-                                        <strong></strong>
-                                    </h5>
+                                <div class="col-md-6 mt-5">
+                                    <h5><i class="ti ti-progress-check text-success"></i> Confirmados: <strong id="citas-confirmadas-paquete-activo-dashboard-empresa"></strong></h5>
+                                    <h5><i class="ti ti-x text-danger"></i> Errados: <strong id="citas-validacion-paquete-activo-dashboard-empresa"></strong></h5>
                                 </div>
-                                <div class="col-md-6">
-                                    <h5><i class="ti ti-device-mobile-off text-danger"></i> No contesta:
-                                        <strong></strong>
-                                    </h5>
-                                    <h5><i class="ti ti-copy text-info"></i> Duplicado:
-                                        <strong></strong>
-                                    </h5>
-                                    <h5><i class="ti ti-building text-success"></i> Asistido sede:
-                                        <strong></strong>
-                                    </h5>
-                                    <h5><i class="ti ti-writing text-warning"></i> En seguimiento:
-                                        <strong></strong>
-                                    </h5>
-                                    <h5><i class="ti ti-calendar-clock text-info"></i> Reprogramadas:
-                                        <strong></strong>
-                                    </h5>
-                                    <h5><i class="ti ti-device-desktop-off text-danger"></i> No simit:
-                                        <strong></strong>
-                                    </h5>
+                                <div class="col-md-6 mt-5">
+                                    <h5><i class="ti ti-search text-info"></i> En validación: <strong id="citas-erradas-paquete-activo-dashboard-empresa"></strong></h5>
+                                    <h5><i class="ti ti-bell text-warning"></i> Pendientes: <strong id="citas-pendientes-paquete-activo-dashboard-empresa"></strong></h5>
                                 </div>
                             </div>
                         </div>
@@ -136,9 +88,10 @@
                     </div>
                 </div>
             </div>
+            <!--
             <div class="mt-3">
                 <div class="row">
-                    <!-- Columna 1 - Historial de paquetes -->
+                    <!-- Columna 1 - Historial de paquetes 
                     <div class="col-md-7">
                         <div class="card h-100">
                             <div class="card-body">
@@ -157,6 +110,21 @@
                     </div>
                 </div>
             </div>
+            -->
         </div>
     </div>
+</div>
+
+<!-- ESTE ES EL MODAL PARA LA IMAGEN DE AVISO DE LOS PAQUETES -->
+<div class="modal fade" id="imagenAviso" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content bg-transparent border-0">
+      <div class="modal-header border-0">
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center p-0">
+        <img id="modalImagen" src="" alt="Aviso paquetes" class="img-fluid rounded">
+      </div>
+    </div>
+  </div>
 </div>

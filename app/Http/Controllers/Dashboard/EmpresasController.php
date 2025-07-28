@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\AdminHelper;
 use App\Helpers\EmpresaHelper;
+use App\Helpers\EstadisticasHelper;
 
 
 class EmpresasController extends Controller
@@ -223,87 +224,35 @@ class EmpresasController extends Controller
     }
 
     public function obtenerDatosProgressBarDasboardEmpresa(Request $request) {
-        $user = Auth::user();
         $response = [
             'Status' => 500,
-            'Message' => 'Ocurrió un error al consultar los datos para la barra del paquete.',
+            'Message' => 'Ocurrió un error al consultar los datos para la barra de progreso del paquete.',
             'Success' => false,
             'Data' => null
         ];
 
         try {
-            if ($request && $request->has('id_empresa')) {
-                $empresaUser = DB::table('tb_empresa')->where('id_empresa', $request->input('id_empresa'))->first();
-            } else {
-                $sedeUser = DB::table('tb_sede')->where('id_sede', $user->id_sede)->first();
-                $empresaUser = DB::table('tb_empresa')->where('id_empresa', $sedeUser->id_empresa)->first();
-            }
+            $id_empresa = $request->input('id_empresa');
+            $data = EstadisticasHelper::obtenerDatosProgressBarDashboardEmpresa($id_empresa);
 
-            //Se busca si existe un paquete activo relacionado a la empresa
-            $empresaPaqueteActivo = DB::table('tb_empresa_paquete')
-                ->where('id_empresa', $empresaUser->id_empresa)
-                ->where('estado', 'ACTIVO')
-                ->join('tb_paquete', 'tb_empresa_paquete.id_paquete', '=', 'tb_paquete.id_paquete')
-                ->leftJoin('tb_pago_empresa', 'tb_empresa_paquete.id_empresa_paquete', '=', 'tb_pago_empresa.id_empresa_paquete')
-                ->select(
-                    'tb_empresa_paquete.*',
-                    'tb_paquete.*',
-                    'tb_pago_empresa.*'
-                )
-                ->first();
-            
-            if ($empresaPaqueteActivo) {
-                $empresaPaqueteActivo->citas_faltantes = $empresaPaqueteActivo->numero_citas - $empresaPaqueteActivo->citas_consumidas;
-
-                // Se realiza el calculo de las citas según el paquete activo
-                // Se obtienen las citas con estado de liquidador confirmado
-                $empresaPaqueteActivo->citasConfirmadas = DB::table('tb_cita')
-                    ->join('tb_liquidador', 'tb_cita.id_cita', '=', 'tb_liquidador.id_cita')
-                    ->where('id_empresa_paquete', $empresaPaqueteActivo->id_empresa_paquete)
-                    ->where('tb_liquidador.estado_liquidador', 'Confirmado')
-                    ->count();
-
-                // Se obtienen las citas con estado de liquidador errado
-                $empresaPaqueteActivo->citasErradas = DB::table('tb_cita')
-                    ->join('tb_liquidador', 'tb_cita.id_cita', '=', 'tb_liquidador.id_cita')
-                    ->where('id_empresa_paquete', $empresaPaqueteActivo->id_empresa_paquete)
-                    ->where('tb_liquidador.estado_liquidador', 'Errado')
-                    ->count();
-                
-                // Se obtienen las citas con estado de liquidador pendiente
-                $empresaPaqueteActivo->citasPendientes = DB::table('tb_cita')
-                    ->join('tb_liquidador', 'tb_cita.id_cita', '=', 'tb_liquidador.id_cita')
-                    ->where('id_empresa_paquete', $empresaPaqueteActivo->id_empresa_paquete)
-                    ->where('tb_liquidador.estado_liquidador', 'Pendiente')
-                    ->count();
-
-                // Se obtienen las citas con estado de liquidador En validación
-                $empresaPaqueteActivo->citasEnValidacion = DB::table('tb_cita')
-                    ->join('tb_liquidador', 'tb_cita.id_cita', '=', 'tb_liquidador.id_cita')
-                    ->where('id_empresa_paquete', $empresaPaqueteActivo->id_empresa_paquete)
-                    ->where('tb_liquidador.estado_liquidador', 'En validación')
-                    ->count();
-                
-                $response = [
-                    'Status' => 200,
-                    'Message' => 'El paquete ha sido consultado exitosamente.',
-                    'Success' => true,
-                    'Data' => $empresaPaqueteActivo
-                ];
+            if ($data) {
+                $response['Status'] = 200;
+                $response['Message'] = "Los datos han sido cargados exitosamente.";
+                $response['Success'] = true;
+                $response['Data'] = $data;
             } else {
                 $response['Status'] = 200;
                 $response['Success'] = true;
-                $response['Message'] = "La empresa no posee un paquete activo actualmente.";
+                $response['Message'] = "La empresa no posee un paquete activo para consultar los datos.";
             }
         } catch (\Throwable $e) {
             Log::error($e->getMessage());
-            $response['Message'] = "Error al consultar los datos para la barra de progreso.";
+            $response['Message'] = "Error al consultar los datos de la barra de progreso de la empresa.";
         }
         return response()->json($response);
     }
 
     public function obtenerDatosLineBarMixedDashboardEmpresa(Request $request) {
-        $user = Auth::user();
         $response = [
             'Status' => 500,
             'Message' => 'Ocurrió un error al consultar los datos para la barra del paquete.',
@@ -312,85 +261,18 @@ class EmpresasController extends Controller
         ];
 
         try {
-            if ($request && $request->has('id_empresa')) {
-                $empresaUser = DB::table('tb_empresa')->where('id_empresa', $request->input('id_empresa'))->first();
-            } else {
-                $sedeUser = DB::table('tb_sede')->where('id_sede', $user->id_sede)->first();
-                $empresaUser = DB::table('tb_empresa')->where('id_empresa', $sedeUser->id_empresa)->first();
-            }
+            $id_empresa = $request->input('id_empresa');
+            $data = EstadisticasHelper::obtenerDatosLineBarMixedDashboardEmpresa($id_empresa);
 
-            //Se busca si existe un paquete activo relacionado a la empresa
-            $empresaPaqueteActivo = DB::table('tb_empresa_paquete')
-                ->where('id_empresa', $empresaUser->id_empresa)
-                ->where('estado', 'ACTIVO')
-                ->join('tb_paquete', 'tb_empresa_paquete.id_paquete', '=', 'tb_paquete.id_paquete')
-                ->leftJoin('tb_pago_empresa', 'tb_empresa_paquete.id_empresa_paquete', '=', 'tb_pago_empresa.id_empresa_paquete')
-                ->select(
-                    'tb_empresa_paquete.*',
-                    'tb_paquete.*',
-                    'tb_pago_empresa.*'
-                )
-                ->first();
-            
-            if ($empresaPaqueteActivo) {
-                // Se obtienen las citas existentes por mes actual para el paquete activo.
-                $citasPorDiaAgendadas = DB::table('tb_cita')
-                    ->select(DB::raw('DAY(reserva_cita) as dia, COUNT(*) as total_citas'))
-                    ->where('id_empresa_paquete', $empresaPaqueteActivo->id_empresa_paquete)
-                    ->whereBetween('reserva_cita', [
-                        now()->startOfMonth()->format('Y-m-d H:i:s'),
-                        now()->endOfMonth()->format('Y-m-d H:i:s')
-                    ])
-                    ->groupBy(DB::raw('DAY(reserva_cita)'))
-                    ->orderBy('dia')
-                    ->get()
-                    ->mapWithKeys(function ($item) {
-                        return [$item->dia => $item->total_citas];
-                    });
-
-                // Completa los días faltantes
-                $diasMes = range(1, now()->daysInMonth);
-                $citasCompletasAgendadas = array_fill_keys($diasMes, 0);
-                
-                foreach ($citasPorDiaAgendadas as $dia => $total) {
-                    $citasCompletasAgendadas[$dia] = $total;
-                }
-
-                // Se guarda el valor resultante
-                $empresaPaqueteActivo->citasAgendadasPorMesActual = array_values($citasCompletasAgendadas);
-
-                // Se obtienen las citas asistidas por mes actual para el paquete activo.
-                $citasPorDiaAsistidas = DB::table('tb_cita')
-                    ->select(DB::raw('DAY(reserva_cita) as dia, COUNT(*) as total_citas'))
-                    ->join('tb_estado', 'tb_cita.id_estado_verificado', '=', 'tb_estado.id_estado')
-                    ->where('id_empresa_paquete', $empresaPaqueteActivo->id_empresa_paquete)
-                    ->where('tb_estado.nombre_estado', 'Asistió')
-                    ->whereBetween('reserva_cita', [
-                        now()->startOfMonth()->format('Y-m-d H:i:s'),
-                        now()->endOfMonth()->format('Y-m-d H:i:s')
-                    ])
-                    ->groupBy(DB::raw('DAY(reserva_cita)'))
-                    ->orderBy('dia')
-                    ->get()
-                    ->mapWithKeys(function ($item) {
-                        return [$item->dia => $item->total_citas];
-                    });
-                
-                // Completa los días faltantes
-                $diasMes = range(1, now()->daysInMonth);
-                $citasCompletasAsistidas = array_fill_keys($diasMes, 0);
-                
-                foreach ($citasPorDiaAsistidas as $dia => $total) {
-                    $citasCompletasAsistidas[$dia] = $total;
-                }
-
-                // Se guarda el valor resultante
-                $empresaPaqueteActivo->citasAsistidasPorMesActual = array_values($citasCompletasAsistidas);
-
+            if ($data) {
+                $response['Status'] = 200;
+                $response['Message'] = "Los datos han sido cargados exitosamente.";
+                $response['Success'] = true;
+                $response['Data'] = $data;
             } else {
                 $response['Status'] = 200;
                 $response['Success'] = true;
-                $response['Message'] = "La empresa no posee un paquete activo actualmente.";
+                $response['Message'] = "La empresa no posee un paquete activo para consultar los datos.";
             }
         } catch (\Throwable $e) {
             Log::error($e->getMessage());
@@ -485,5 +367,84 @@ class EmpresasController extends Controller
             Log::error($e->getMessage());
             $response['Message'] = "Error al procesar los datos recibidos de Wompi.";
         }
+        return response()->json($response);
+    }
+
+    public function consultarEmpresaPorSede($id) {
+        $response = [
+            'Status' => 500,
+            'Message' => "Ocurrió un error al consultar la empresa por sede.",
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            $data = EmpresaHelper::consultarEmpresaPorSede($id);
+
+            if ($data) {
+                $response['Status'] = 200;
+                $response['Message'] = "Los datos han sido cargados exitosamente.";
+                $response['Success'] = true;
+                $response['Data'] = $data;
+            } else {
+                $response['Message'] = "No se encontró la empresa.";
+            }
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            $response['Message'] = "Error al consultar la empresa por la sede.";
+        }
+        return response()->json($response);
+    }
+
+    public function consultarTodasEmpresas() {
+        $response = [
+            'Status' => 500,
+            'Message' => "Ocurrió un error al consultar la empresa.",
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            $data = EmpresaHelper::consultarTodasEmpresas();
+
+            if ($data) {
+                $response['Status'] = 200;
+                $response['Message'] = "Los datos han sido cargados exitosamente.";
+                $response['Success'] = true;
+                $response['Data'] = $data;
+            } else {
+                $response['Message'] = "No se encontró las empresas.";
+            }
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            $response['Message'] = "Error al consultar la empresa.";
+        }
+        return response()->json($response);
+    }
+
+    public function consultarEmpresa($id) {
+        $response = [
+            'Status' => 500,
+            'Message' => "Ocurrió un error al consultar la empresa.",
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            $data = EmpresaHelper::consultarEmpresa($id);
+
+            if ($data) {
+                $response['Status'] = 200;
+                $response['Message'] = "Los datos han sido cargados exitosamente.";
+                $response['Success'] = true;
+                $response['Data'] = $data;
+            } else {
+                $response['Message'] = "No se encontró la empresa.";
+            }
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            $response['Message'] = "Error al consultar la empresa.";
+        }
+        return response()->json($response);
     }
 }

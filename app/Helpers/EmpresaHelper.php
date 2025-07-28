@@ -222,4 +222,31 @@ class EmpresaHelper {
         }
         return true;
     }
+
+    public static function consultarEmpresaPorSede($id_sede) {
+        $empresa = DB::table('tb_empresa')
+            ->select('tb_empresa.*')
+            ->join('tb_sede', 'tb_empresa.id_empresa', '=', 'tb_sede.id_empresa')
+            ->where('tb_sede.id_sede', $id_sede)
+            ->first();
+        
+        return $empresa;
+    }
+
+    public static function consultarTodasEmpresas() {
+        $empresas = DB::table('tb_empresa')
+            ->select('tb_empresa.*')
+            ->get();
+
+        return $empresas;
+    }
+
+    public static function consultarEmpresa($id_empresa) {
+        $empresa = DB::table('tb_empresa')
+            ->select('tb_empresa.*')
+            ->where('tb_empresa.id_empresa', $id_empresa)
+            ->first();
+        
+        return $empresa;
+    }
 }
