@@ -4222,7 +4222,6 @@ $(function () {
             success: function (response) {
                 if (response.Success) {
                     if (response.Data) {
-                        console.log("DATOS DE BARRA DE PROGRESO", response.Data);
                         $('#nombre-paquete-activo-dashboard-empresa').html(`Nombre: <strong>${response.Data.nombre_paquete}</strong>`);
                         $('#numero-citas-paquete-activo-dashboard-empresa').html(`Número de citas: <strong>${response.Data.numero_citas}</strong>`);
                         $('#estado-paquete-activo-dashboard-empresa').html(`Estado: <strong>${response.Data.estado}</strong>`);
