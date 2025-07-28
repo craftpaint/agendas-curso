@@ -281,6 +281,35 @@ class EmpresasController extends Controller
         return response()->json($response);
     }
 
+    public function obtenerDatosHistorialPaquetes(Request $request) {
+        $response = [
+            'Status' => 500,
+            'Message' => 'Ocurrió un error al consultar los datos del historial de paquete.',
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            $id_empresa = $request->input('id_empresa');
+            $data = EstadisticasHelper::obtenerDatosHistorialPaquetes($id_empresa);
+
+            if ($data) {
+                $response['Status'] = 200;
+                $response['Message'] = "Los datos han sido cargados exitosamente.";
+                $response['Success'] = true;
+                $response['Data'] = $data;
+            } else {
+                $response['Status'] = 200;
+                $response['Success'] = true;
+                $response['Message'] = "La empresa no posee paquetes comprados hasta la fecha.";
+            }
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            $response['Message'] = "Error al consultar el historial de paquetes.";
+        }
+        return response()->json($response);
+    }
+
     public function validarExistenciaEmpresa(Request $request) {
         $response = [
             'Status' => 500,

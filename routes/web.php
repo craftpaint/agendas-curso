@@ -429,6 +429,8 @@ Route::controller(EmpresasController::class)->group(function () {
         ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
     Route::post('dashboard/empresa/obtener_datos_linea_mezclada', 'obtenerDatosLineBarMixedDashboardEmpresa')
         ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+    Route::post('dashboard/empresa/obtener_datos_historial_paquetes', 'obtenerDatosHistorialPaquetes')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
 });
 
 Route::controller(EmpresasController::class)->group(function () {
