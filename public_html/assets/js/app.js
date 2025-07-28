@@ -695,6 +695,7 @@ $(function () {
     //FIN: SEDES------------------------------------------------------------------------
     //INICIO: CLIENTES------------------------------------------------------------------------
     if ($('.datatables-clientes').length) {
+        validarPaqueteActivo();
         let table_clientes = $('.datatables-clientes').DataTable({
             ordering: false,
             processing: true,
@@ -788,6 +789,7 @@ $(function () {
     }
     //Vehiculos
     if ($('.datatables-vehiculos').length) {
+        validarPaqueteActivo();
         let table_vehiculos = $('.datatables-vehiculos').DataTable({
             ordering: false,
             processing: true,
@@ -1227,6 +1229,7 @@ $(function () {
     var table_citas;
     //TABLAS DE CITAS
     if ($('.datatables-citas').length) {
+        validarPaqueteActivo();
         tipoCita = $('#tipo_cita').val();
         table_citas = $('.datatables-citas').DataTable({
             ordering: true,
@@ -1820,6 +1823,7 @@ $(function () {
     }
     //USUARIOS
     if ($('.datatables-usuarios').length) {
+        validarPaqueteActivo();
         table_usuarios = $('.datatables-usuarios').DataTable({
             lengthChange: false,
             searching: false,
@@ -3038,6 +3042,7 @@ $(function () {
 
     //TABLAS DE CITAS
     if ($('.datatables-citas-liquidador').length) {
+        validarPaqueteActivo();
         tipoCita = $('#tipo_cita').val();
         let table = $('.datatables-citas-liquidador').DataTable({
             ordering: true,
@@ -3545,6 +3550,7 @@ $(function () {
 
     //TABLA DE SERVICIO LIQUIDADOR DE CITAS
     if ($('.datatables-servicios-liquidador').length) {
+        validarPaqueteActivo();
         table_estados = $('.datatables-servicios-liquidador').DataTable({
             lengthChange: false,
             searching: false,
@@ -3720,6 +3726,7 @@ $(function () {
 
     // Escucha el evento change en los checkboxes de la tabla
     $('.datatables-citas-liquidador').on('change', '.check-cita', function () {
+        validarPaqueteActivo();
         // Obtener todos los checkboxes seleccionados
         let seleccionados = $('.check-cita:checked');
         let contador = seleccionados.length;
@@ -4146,7 +4153,9 @@ $(function () {
                         $('#logo-empresa-dashboard').attr('src', `${url}/${response.Data.logo}`);
                         $('#nombre-empresa-dashboard').html(`Nombre: <strong>${response.Data.Nombre}</strong>`);
                         $('#documento-empresa-dashboard').html(`Documento: <strong>${response.Data.tipo_documento_empresa} ${response.Data.documento_empresa}</strong>`);
-                        $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
+                       if (rol == 'superadmin' || rol == 'admin') {
+                            $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
+                        }
                     }
                 } else {
                     Swal.fire({
@@ -4184,7 +4193,9 @@ $(function () {
                         $('#logo-empresa-dashboard').attr('src', `${url}/${response.Data.logo}`);
                         $('#nombre-empresa-dashboard').html(`Nombre: <strong>${response.Data.Nombre}</strong>`);
                         $('#documento-empresa-dashboard').html(`Documento: <strong>${response.Data.tipo_documento_empresa} ${response.Data.documento_empresa}</strong>`);
-                        $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
+                        if (rol == 'superadmin' || rol == 'admin') {
+                            $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
+                        }
                     }
                 } else {
                     Swal.fire({
@@ -4247,7 +4258,7 @@ $(function () {
                                 Swal.fire({
                                     html: `
                                     <div class="text-center">
-                                        <a href="https://curso-comparendo.com/" target="blank">
+                                        <a href="${page_wp_principal}" target="blank">
                                             <img src="${url}/assets/img/paquetes/aviso_paquetes.jpg" class="img-fluid mb-3">
                                         </a>
                                     </div>
@@ -4256,15 +4267,47 @@ $(function () {
                                     showConfirmButton: false,
                                     width: '800px'
                                 });
+                            } else if (citas_restantes == 0 || response.Data.tipo_paquete == "AUXILIAR") {
+                                Swal.fire({
+                                    html: `
+                                    <div class="text-center">
+                                        <a href="${page_wp_principal}" target="blank">
+                                            <img src="${url}/assets/img/paquetes/fin_paquetes.jpg" class="img-fluid mb-3">
+                                        </a>
+                                    </div>
+                                    `,
+                                    showCloseButton: false,
+                                    showConfirmButton: false,
+                                    allowOutsideClick: false,
+                                    allowEscapeKey: false,
+                                    allowEnterKey: false,
+                                    width: '800px',
+                                    backdrop: 'rgba(0,0,0,0.8)',
+                                    showClass: {
+                                        popup: 'animate__animated animate__fadeIn'
+                                    },
+                                    willOpen: () => {
+                                        $('body').css('overflow', 'hidden');
+                                        $('.swal2-container').css('pointer-events', 'auto');
+                                    },
+                                    didOpen: () => {
+                                        $(document).on('click', '.swal2-popup', function (e) {
+                                            e.stopPropagation();
+                                        });
+                                    },
+                                    willClose: () => {
+                                        return false;
+                                    }
+                                });
                             }
                         }
                     } else {
                         // PARA CUANDO NO TIENE UN PAQUETE ACTIVO
-                        if (rol == "Admin Empresa") {
+                        if ((rol == "Admin Empresa" && response.Data.tipo_paquete == "AUXILIAR") || (rol == "Admin Empresa")) {
                             Swal.fire({
                                 html: `
                                 <div class="text-center">
-                                    <a href="https://curso-comparendo.com/" target="blank">
+                                    <a href="${page_wp_principal}" target="blank">
                                         <img src="${url}/assets/img/paquetes/fin_paquetes.jpg" class="img-fluid mb-3">
                                     </a>
                                 </div>
@@ -4343,6 +4386,115 @@ $(function () {
                                 max: response.Data.numero_citas
                             }]
                         })
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de la barra de progreso.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function validarPaqueteActivo (id_empresa = null) {
+        $.ajax({
+            url: url + '/dashboard/empresa/obtener_datos_barra_progreso',
+            type: 'POST',
+            data: {
+                id_empresa: id_empresa
+            },
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        const citas_restantes = response.Data.numero_citas - response.Data.citas_consumidas;
+                        // CUANDO NO TIENE UN PAQUETE ACTIVO
+                        if (rol == "Admin Empresa") {
+                            if (citas_restantes == 0 || response.Data.tipo_paquete == "AUXILIAR") {
+                                Swal.fire({
+                                    html: `
+                                    <div class="text-center">
+                                        <a href="${page_wp_principal}" target="blank">
+                                            <img src="${url}/assets/img/paquetes/fin_paquetes.jpg" class="img-fluid mb-3">
+                                        </a>
+                                    </div>
+                                    `,
+                                    showCloseButton: false,
+                                    showConfirmButton: false,
+                                    allowOutsideClick: false,
+                                    allowEscapeKey: false,
+                                    allowEnterKey: false,
+                                    width: '800px',
+                                    backdrop: 'rgba(0,0,0,0.8)',
+                                    showClass: {
+                                        popup: 'animate__animated animate__fadeIn'
+                                    },
+                                    willOpen: () => {
+                                        $('body').css('overflow', 'hidden');
+                                        $('.swal2-container').css('pointer-events', 'auto');
+                                    },
+                                    didOpen: () => {
+                                        $(document).on('click', '.swal2-popup', function (e) {
+                                            e.stopPropagation();
+                                        });
+                                    },
+                                    willClose: () => {
+                                        return false;
+                                    }
+                                });
+                            }
+                        }
+                    } else {
+                        // PARA CUANDO NO TIENE UN PAQUETE ACTIVO
+                        if ((rol == "Admin Empresa" && response.Data.tipo_paquete == "AUXILIAR") || (rol == "Admin Empresa")) {
+                            Swal.fire({
+                                html: `
+                                <div class="text-center">
+                                    <a href="${page_wp_principal}" target="blank">
+                                        <img src="${url}/assets/img/paquetes/fin_paquetes.jpg" class="img-fluid mb-3">
+                                    </a>
+                                </div>
+                                `,
+                                showCloseButton: false,
+                                showConfirmButton: false,
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                allowEnterKey: false,
+                                width: '800px',
+                                backdrop: 'rgba(0,0,0,0.8)',
+                                showClass: {
+                                    popup: 'animate__animated animate__fadeIn'
+                                },
+                                willOpen: () => {
+                                    $('body').css('overflow', 'hidden');
+                                    $('.swal2-container').css('pointer-events', 'auto');
+                                },
+                                didOpen: () => {
+                                    $(document).on('click', '.swal2-popup', function (e) {
+                                        e.stopPropagation();
+                                    });
+                                },
+                                willClose: () => {
+                                    return false;
+                                }
+                            });
+                        }
                     }
                 } else {
                     Swal.fire({
