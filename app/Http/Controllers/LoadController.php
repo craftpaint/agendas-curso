@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\AdminHelper;
+use App\Helpers\PaqueteHelper;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
@@ -24,8 +25,7 @@ class LoadController extends Controller
         $this->sendPulse = $sendPulse;
     }
 
-    public function index(Request $request)
-    {
+    public function index(Request $request) {
 
         // Capturar TODOS los parámetros de la URL
         $urlParams = $request->query->all();
@@ -38,8 +38,7 @@ class LoadController extends Controller
         $data = [];
         echo view('load/index', $data);
     }
-    public function createcita($id_sede, Request $request)
-    {
+    public function createcita($id_sede, Request $request) {
         // Capturar TODOS los parámetros de la URL
         $urlParams = $request->query->all();
 
@@ -58,8 +57,8 @@ class LoadController extends Controller
         ];
         echo view('load/createcita', $data);
     }
-    public function savecita(Request $request)
-    {
+
+    public function savecita(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -80,6 +79,7 @@ class LoadController extends Controller
                 $reserva_cita = $request->request->get('reserva_cita');
                 $servicio_liquidador = $request->request->get('servicio_liquidador');
                 $codigo_comparendo = $request->request->get('codigo_comparendo');
+                $empresa_paquete = PaqueteHelper::obtenerPaqueteActivoEmpresa($id_sede);
                 // log::info($codigo_comparendo);
 
                 // Obtener nombre de la sede
@@ -183,7 +183,8 @@ class LoadController extends Controller
                     'url_variables' => json_encode($urlVariablesArray),
                     'tipo_dispositivo' => $tipo_dispositivo,
                     'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now()
+                    'updated_at' => Carbon::now(),
+                    'id_empresa_paquete' => $empresa_paquete
                 ];
 
                 if ($citas_agendadas) {

@@ -1,0 +1,130 @@
+<div class="layout-page" id="dashboard-empresas">
+    <!-- Content wrapper -->
+    <div class="content-wrapper">
+        <!-- Content -->
+        @if ($rol == 'superadmin' || $rol == 'admin')
+            <div class="container-xxl flex-grow-1 container-p-y">
+                <div class="row">
+                    <div class="col-md-12">
+                        <select name="empresa" id="empresa-select-dashboard" class="form-select">
+                            <option value="">Seleccione una empresa</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        @endif
+        <div class="container-xxl flex-grow-1 container-p-y">
+            <div class="row d-flex align-items-stretch">
+                <!-- info paquetes -->
+                <div class="mb-3 col-md-3 d-flex">
+                    <div class="card w-100">
+                        <div class="card-body">
+                            <h3 class="card-title mb-4 text-success"><i class="ti ti-box fs-1 me-2"></i> Paquete Activo
+                            </h3>
+                            <h5 class="card-text mb-4" id="nombre-paquete-activo-dashboard-empresa"></h5>
+                            <h5 class="card-text mb-4" id="numero-citas-paquete-activo-dashboard-empresa"></h5>
+                            <h5 class="card-text mb-4" id="estado-paquete-activo-dashboard-empresa"></h5>
+                        </div>
+                    </div>
+                </div>
+                <!-- info citas-consumidas -->
+                <div class="mb-3 col-md-3 d-flex">
+                    <div class="card w-100">
+                        <div class="card-body d-flex flex-column">
+                            <h4 class="card-title text-warning"><i class="ti ti-package-export fs-1 me-2"></i> Citas
+                                Consumidas</h4>
+                            <h1 class="card-text mb-1 text-center display-1" id="citas-consumidas-paquete-activo-dashboard-empresa"></h1>
+                        </div>
+                    </div>
+                </div>
+                <!-- info citas-faltantes -->
+                <div class="mb-3 col-md-3 d-flex">
+                    <div class="card w-100">
+                        <div class="card-body d-flex flex-column">
+                            <h3 class="card-title text-danger"><i class="ti ti-packages fs-1 me-2"></i> Citas Faltantes
+                            </h3>
+                            <h1 class="card-text mb-1 text-center display-1" id="citas-faltantes-paquete-activo-dashboard-empresa"></h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3 col-md-3 d-flex">
+                    <div class="card w-100">
+                        <div class="card-body">
+                            <h3 class="card-title text-primary"><i class="ti ti-building-skyscraper fs-1 me-2"></i>Información</h3>
+                            <img id="logo-empresa-dashboard" src="" alt="Logo" class="rounded me-2 mb-2" style="max-height: 70px;">
+                            <p class="card-text mb-1" id="nombre-empresa-dashboard"></p>
+                            <p class="card-text mb-1" id="documento-empresa-dashboard"></p>
+                            <p class="card-text mb-1" id="plan-empresa-dashboard"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <!-- Columna 1 - Gráfico de barras -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div id="ChartDashboardEmpresasProgressBar"></div>
+                            <div class="row">
+                                <div class="col-md-6 mt-5">
+                                    <h5><i class="ti ti-progress-check text-success"></i> Confirmados: <strong id="citas-confirmadas-paquete-activo-dashboard-empresa"></strong></h5>
+                                    <h5><i class="ti ti-x text-danger"></i> Errados: <strong id="citas-validacion-paquete-activo-dashboard-empresa"></strong></h5>
+                                </div>
+                                <div class="col-md-6 mt-5">
+                                    <h5><i class="ti ti-search text-info"></i> En validación: <strong id="citas-erradas-paquete-activo-dashboard-empresa"></strong></h5>
+                                    <h5><i class="ti ti-bell text-warning"></i> Pendientes: <strong id="citas-pendientes-paquete-activo-dashboard-empresa"></strong></h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna 2 - Gráfico mixto -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div id="ChartDashboardEmpresasLineBarMixed"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--
+            <div class="mt-3">
+                <div class="row">
+                    <!-- Columna 1 - Historial de paquetes 
+                    <div class="col-md-7">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h4><i class="ti ti-history text-primary fs-1 me-2"></i> Historial de paquetes</h4>
+                                <div id="ChartRadialProgressDashboardEmpresasHistorial"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h4><i class="ti ti-clipboard-list text-warning fs-1 me-2"></i> Paquetes pendientes de activación</h4>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            -->
+        </div>
+    </div>
+</div>
+
+<!-- ESTE ES EL MODAL PARA LA IMAGEN DE AVISO DE LOS PAQUETES -->
+<div class="modal fade" id="imagenAviso" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content bg-transparent border-0">
+      <div class="modal-header border-0">
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center p-0">
+        <img id="modalImagen" src="" alt="Aviso paquetes" class="img-fluid rounded">
+      </div>
+    </div>
+  </div>
+</div>
