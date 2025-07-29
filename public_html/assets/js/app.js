@@ -4270,7 +4270,7 @@ $(function () {
         });
     }
 
-    function obtenerDatosLineBarMixedDashboardEmpresa(endpoint, chart, id_empresa) {
+    function obtenerDatosLineBarMixedDashboardEmpresa(endpoint, chart, id_empresa = null) {
         $.ajax({
             url: url + endpoint,
             type: 'POST',
@@ -4317,6 +4317,155 @@ $(function () {
                     }
                 });
             }
+        });
+    }
+
+    function actualizarGraficosHistorial(datos) {
+        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorial');
+
+        // Limpiar contenedor
+        container.innerHTML = '';
+
+        // Crear un gráfico por cada paquete
+        datos.forEach((paquete, index) => {
+            const chartId = `chart${index + 1}`;
+
+            // Crear contenedor para el gráfico
+            const chartContainer = document.createElement('div');
+            chartContainer.id = chartId;
+            chartContainer.className = 'py-auto h-50';
+            container.appendChild(chartContainer);
+
+            // Configuración del gráfico
+            const chartOptions = {
+                series: [paquete.porcentaje],
+                chart: {
+                    height: 130,
+                    type: 'radialBar'
+                },
+                plotOptions: {
+                    radialBar: {
+                        startAngle: -135,
+                        endAngle: 135,
+                        dataLabels: {
+                            name: {
+                                fontSize: '14px',
+                                offsetY: 90
+                            },
+                            value: {
+                                offsetY: 50,
+                                fontSize: '18px',
+                                formatter: (val) => `${val}%`
+                            }
+                        }
+                    }
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shade: 'dark',
+                        shadeIntensity: 0.15,
+                        inverseColors: false,
+                        stops: [0, 50, 65, 91]
+                    }
+                },
+                stroke: {
+                    dashArray: 4
+                },
+                labels: [''],
+                colors: ['#b5ba30']
+            };
+
+            // Renderizar gráfico
+            const chart = new ApexCharts(document.querySelector(`#${chartId}`), chartOptions);
+            chart.render();
+        });
+    }
+
+    function actualizarInfoHistorial(datos) {
+        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorialInfo');
+
+        // Limpiar contenedor
+        container.innerHTML = '';
+
+        //Crea la informmación para cada paquete
+        datos.forEach((paquete, index) => {
+            const infoId = `info${index + 1}`;
+
+            const infoContainer = document.createElement('div');
+            infoContainer.id = infoId;
+            infoContainer.className = 'mb-5';
+            container.appendChild(infoContainer);
+            paquete.fecha_inicio = paquete.fecha_inicio.split(' ')[0];
+
+            if (!paquete.fecha_fin) {
+                paquete.fecha_fin = "ACTIVO";
+            } else {
+                paquete.fecha_fin = paquete.fecha_fin.split(' ')[0];
+            }
+
+            infoContainer.innerHTML = `
+                <h5 class="text-info pt-5 mb-2">Nombre: <strong class="text-dark">${paquete.nombre_paquete}</strong></h5>
+                <h6 class="text-info mb-2"><strong>${paquete.fecha_inicio} - ${paquete.fecha_fin}</strong></h6>
+                <h6 class="text-info mb-2">Número de citas: <strong class="text-dark">${paquete.numero_citas}</strong></h6>
+                <h6 class="text-info mb-5">Precio: <strong class="text-dark">${paquete.valor}</strong></h6>
+            `;
+        });
+    }
+
+    function actualizarBotonesHistorial(datos) {
+        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorialBoton');
+
+        // Limpiar contenedor
+        container.innerHTML = '';
+
+        datos.forEach((paquete, index) => {
+            const botonId = `boton${index + 1}`;
+
+            const botonContainer = document.createElement('div');
+            botonContainer.id = botonId;
+            botonContainer.className = 'mt-5';
+            container.appendChild(botonContainer);
+
+            botonContainer.innerHTML = `
+                <button class="btn btn-icon btn-lg waves-effect btn-detalles-paquete w-100 text-center" 
+                    data-bs-toggle="tooltip" 
+                    data-bs-placement="top" 
+                    data-bs-custom-class="tooltip-info" 
+                    title="Editar"
+                    data-id-empresa-paquete="${paquete.id_empresa_paquete}">
+                    <i class="ti ti-checkup-list me-2 text-info" style="font-size:50px"></i>
+                </button>
+            `;
+        });
+    }
+
+    function obtenerDatosHistorialPaquetes(endpoint, id_empresa = null) {
+        $.ajax({
+            url: url + endpoint,
+            type: 'POST',
+            data: {
+                id_empresa: id_empresa
+            },
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        actualizarGraficosHistorial(response.Data);
+                        actualizarInfoHistorial(response.Data);
+                        actualizarBotonesHistorial(response.Data);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
         });
     }
 
@@ -4512,84 +4661,6 @@ $(function () {
         var ChartDashboardEmpresasLineBarMixed = new ApexCharts(document.querySelector("#ChartDashboardEmpresasLineBarMixed"), optionsChartDashboardEmpresasLineBarMixed);
         ChartDashboardEmpresasLineBarMixed.render();
 
-        // RADIAL PROGRESS BAR DEL HISTORIAL DE PAQUETES
-        /*
-        const chartsConfig = [
-            {
-                id: "chart1",
-                title: "Paquete 1",
-                value: 67
-            },
-            {
-                id: "chart2",
-                title: "Paquete 2",
-                value: 45
-            },
-            {
-                id: "chart3",
-                title: "Paquete 3",
-                value: 85
-            }
-        ];
-
-        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorial');
-
-        chartsConfig.forEach(config => {
-            // Crear contenedor individual para cada gráfico
-            const chartContainer = document.createElement('div');
-            chartContainer.id = config.id;
-            container.appendChild(chartContainer);
-
-            // Crear opciones del gráfico
-            const chartOptions = {
-                series: [config.value],
-                chart: {
-                    height: 150,
-                    type: 'radialBar'
-                },
-                plotOptions: {
-                    radialBar: {
-                        startAngle: -135,
-                        endAngle: 135,
-                        dataLabels: {
-                            name: {
-                                fontSize: '14px',
-                                offsetY: 90
-                            },
-                            value: {
-                                offsetY: 50,
-                                fontSize: '18px',
-                                formatter: function (val) {
-                                    return val + "%";
-                                }
-                            }
-                        }
-                    }
-                },
-                fill: {
-                    type: 'gradient',
-                    gradient: {
-                        shade: 'dark',
-                        shadeIntensity: 0.15,
-                        inverseColors: false,
-                        stops: [0, 50, 65, 91]
-                    }
-                },
-                stroke: {
-                    dashArray: 4
-                },
-                labels: [config.title],
-                colors: ['#556EE6']
-            };
-
-            // Crear y renderizar gráfico
-            const chart = new ApexCharts(
-                document.querySelector(`#${config.id}`),
-                chartOptions
-            );
-            chart.render();
-        }); */
-
         // Datos de las empresas para el select
         if (rol == 'superadmin' || rol == 'admin') {
             consultarTodasEmpresas();
@@ -4599,6 +4670,7 @@ $(function () {
         consultarEmpresaUsuario();
         obtenerDatosProgressBarDashboardEmpresa('/dashboard/empresa/obtener_datos_barra_progreso', ChartDashboardEmpresasProgressBar);
         obtenerDatosLineBarMixedDashboardEmpresa('/dashboard/empresa/obtener_datos_linea_mezclada', ChartDashboardEmpresasLineBarMixed);
+        obtenerDatosHistorialPaquetes('/dashboard/empresa/obtener_datos_historial_paquetes');
     }
 
     $('#empresa-select-dashboard').on('change', function () {
@@ -4622,6 +4694,7 @@ $(function () {
         consultarEmpresa(empresaSeleccionada);
         obtenerDatosProgressBarDashboardEmpresa('/dashboard/empresa/obtener_datos_barra_progreso', ChartDashboardEmpresasProgressBar, empresaSeleccionada);
         obtenerDatosLineBarMixedDashboardEmpresa('/dashboard/empresa/obtener_datos_linea_mezclada', ChartDashboardEmpresasLineBarMixed, empresaSeleccionada);
+        obtenerDatosHistorialPaquetes('/dashboard/empresa/obtener_datos_historial_paquetes', empresaSeleccionada);
     });
 
     // TABLAS DE PAQUETES

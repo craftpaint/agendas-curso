@@ -293,7 +293,7 @@ class EmpresasController extends Controller
             $id_empresa = $request->input('id_empresa');
             $data = EstadisticasHelper::obtenerDatosHistorialPaquetes($id_empresa);
 
-            if ($data) {
+            if ($data !== null && $data->isNotEmpty()) {
                 $response['Status'] = 200;
                 $response['Message'] = "Los datos han sido cargados exitosamente.";
                 $response['Success'] = true;
@@ -306,6 +306,35 @@ class EmpresasController extends Controller
         } catch (\Throwable $e) {
             Log::error($e->getMessage());
             $response['Message'] = "Error al consultar el historial de paquetes.";
+        }
+        return response()->json($response);
+    }
+
+    public function obtenerDatosPaquetesPendientes(Request $request) {
+        $response = [
+            'Status' => 500,
+            'Message' => 'Ocurrió un error al consultar los datos de los paquetes pendientes.',
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            $id_empresa = $request->input('id_empresa');
+            $data = EstadisticasHelper::obtenerDatosPaquetesPendientes($id_empresa);
+
+            if ($data !== null && $data->isNotEmpty()) {
+                $response['Status'] = 200;
+                $response['Message'] = "Los datos han sido cargados exitosamente.";
+                $response['Success'] = true;
+                $response['Data'] = $data;
+            } else {
+                $response['Status'] = 200;
+                $response['Success'] = true;
+                $response['Message'] = "La empresa no posee paquetes pendientes comprados hasta la fecha.";
+            }
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            $response['Message'] = "Error al consultar los paquetes pendientes comprados.";
         }
         return response()->json($response);
     }

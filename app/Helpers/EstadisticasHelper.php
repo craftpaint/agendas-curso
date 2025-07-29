@@ -172,9 +172,13 @@ class EstadisticasHelper {
             )
             ->join('tb_paquete', 'tb_empresa_paquete.id_paquete', '=', 'tb_paquete.id_paquete')
             ->where('tb_empresa_paquete.id_empresa', $empresaUser->id_empresa)
-            ->whereNot('tb_empresa_paquete.estado', 'PENDIENTE PAGO')
+            ->whereNot(function($query) {
+                $query->where('tb_empresa_paquete.estado', 'PENDIENTE PAGO')
+                    ->orWhere('tb_empresa_paquete.estado', 'PENDIENTE');
+            })
             ->whereNot('tb_paquete.tipo_paquete', 'AUXILIAR')
             ->orderBy('fecha_inicio', 'desc')
+            ->take(3)
             ->get();
         
         if ($empresaPaquetes) {
@@ -182,6 +186,35 @@ class EstadisticasHelper {
                 $empresaPaquete->porcentaje = ($empresaPaquete->citas_consumidas / $empresaPaquete->numero_citas) * 100;
             }
             return $empresaPaquetes;
+        } else {
+            return null;
+        }
+    }
+
+    public static function obtenerDatosPaquetesPendientes($id_empresa = null) {
+        $user = Auth::user();
+
+        if ($id_empresa) {
+            $empresaUser = DB::table('tb_empresa')->where('id_empresa', $id_empresa)->first();
+        } else {
+            $sedeUser = DB::table('tb_sede')->where('id_sede', $user->id_sede)->first();
+            $empresaUser = DB::table('tb_empresa')->where('id_empresa', $sedeUser->id_empresa)->first();
+        }
+
+        $empresaPaquetesPendientes = DB::table('tb_empresa_paquete')
+            ->select(
+                'tb_empresa_paquete.*',          
+                'tb_paquete.*'
+            )
+            ->join('tb_paquete', 'tb_empresa_paquete.id_paquete', '=', 'tb_paquete.id_paquete')
+            ->where('tb_empresa_paquete.id_empresa', $empresaUser->id_empresa)
+            ->where('tb_empresa_paquete.estado', 'PENDIENTE')
+            ->whereNot('tb_paquete.tipo_paquete', 'AUXILIAR')
+            ->orderBy('fecha_inicio', 'desc')
+            ->get();
+        
+        if ($empresaPaquetesPendientes) {
+            return $empresaPaquetesPendientes;
         } else {
             return null;
         }
