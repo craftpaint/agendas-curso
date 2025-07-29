@@ -19,7 +19,7 @@
                 <div class="mb-3 col-md-3 d-flex">
                     <div class="card w-100">
                         <div class="card-body">
-                            <h3 class="card-title mb-4 text-success"><i class="ti ti-box fs-1 me-2"></i> Paquete Activo
+                            <h3 class="card-title mb-4 "><i class="ti ti-box fs-1 me-2"></i> Paquete Activo
                             </h3>
                             <h5 class="card-text mb-4" id="nombre-paquete-activo-dashboard-empresa"></h5>
                             <h5 class="card-text mb-4" id="numero-citas-paquete-activo-dashboard-empresa"></h5>
@@ -31,7 +31,7 @@
                 <div class="mb-3 col-md-3 d-flex">
                     <div class="card w-100">
                         <div class="card-body d-flex flex-column">
-                            <h4 class="card-title text-warning"><i class="ti ti-package-export fs-1 me-2"></i> Citas
+                            <h4 class="card-title text-info"><i class="ti ti-package-export fs-1 me-2"></i> Citas
                                 Consumidas</h4>
                             <h1 class="card-text mb-1 text-center display-1" id="citas-consumidas-paquete-activo-dashboard-empresa"></h1>
                         </div>
@@ -41,7 +41,7 @@
                 <div class="mb-3 col-md-3 d-flex">
                     <div class="card w-100">
                         <div class="card-body d-flex flex-column">
-                            <h3 class="card-title text-danger"><i class="ti ti-packages fs-1 me-2"></i> Citas Faltantes
+                            <h3 class="card-title verde"><i class="ti ti-packages fs-1 me-2"></i> Citas Faltantes
                             </h3>
                             <h1 class="card-text mb-1 text-center display-1" id="citas-faltantes-paquete-activo-dashboard-empresa"></h1>
                         </div>
@@ -50,8 +50,8 @@
                 <div class="mb-3 col-md-3 d-flex">
                     <div class="card w-100">
                         <div class="card-body">
-                            <h3 class="card-title text-primary"><i class="ti ti-building-skyscraper fs-1 me-2"></i>Información</h3>
-                            <img id="logo-empresa-dashboard" src="" alt="Logo" class="rounded me-2 mb-2" style="max-height: 70px;">
+                            <h3 class="card-title "><i class="ti ti-building-skyscraper fs-1 me-2"></i>Información</h3>
+                            <img id="logo-empresa-dashboard" src="" alt="Logo" class="rounded me-2 mb-2 img-fluid" style="max-height: 70px;">
                             <p class="card-text mb-1" id="nombre-empresa-dashboard"></p>
                             <p class="card-text mb-1" id="documento-empresa-dashboard"></p>
                             <p class="card-text mb-1" id="plan-empresa-dashboard"></p>
@@ -71,8 +71,8 @@
                                     <h5><i class="ti ti-x text-danger"></i> Errados: <strong id="citas-validacion-paquete-activo-dashboard-empresa"></strong></h5>
                                 </div>
                                 <div class="col-md-6 mt-5">
+                                    <h5><i class="ti ti-bell text-warning"></i> Asistidos: <strong id="citas-pendientes-paquete-activo-dashboard-empresa"></strong></h5>
                                     <h5><i class="ti ti-search text-info"></i> En validación: <strong id="citas-erradas-paquete-activo-dashboard-empresa"></strong></h5>
-                                    <h5><i class="ti ti-bell text-warning"></i> Pendientes: <strong id="citas-pendientes-paquete-activo-dashboard-empresa"></strong></h5>
                                 </div>
                             </div>
                         </div>

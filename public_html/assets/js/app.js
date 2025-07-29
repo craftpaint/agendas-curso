@@ -695,7 +695,6 @@ $(function () {
     //FIN: SEDES------------------------------------------------------------------------
     //INICIO: CLIENTES------------------------------------------------------------------------
     if ($('.datatables-clientes').length) {
-        validarPaqueteActivo();
         let table_clientes = $('.datatables-clientes').DataTable({
             ordering: false,
             processing: true,
@@ -789,7 +788,6 @@ $(function () {
     }
     //Vehiculos
     if ($('.datatables-vehiculos').length) {
-        validarPaqueteActivo();
         let table_vehiculos = $('.datatables-vehiculos').DataTable({
             ordering: false,
             processing: true,
@@ -1229,7 +1227,6 @@ $(function () {
     var table_citas;
     //TABLAS DE CITAS
     if ($('.datatables-citas').length) {
-        validarPaqueteActivo();
         tipoCita = $('#tipo_cita').val();
         table_citas = $('.datatables-citas').DataTable({
             ordering: true,
@@ -1823,7 +1820,6 @@ $(function () {
     }
     //USUARIOS
     if ($('.datatables-usuarios').length) {
-        validarPaqueteActivo();
         table_usuarios = $('.datatables-usuarios').DataTable({
             lengthChange: false,
             searching: false,
@@ -3042,7 +3038,6 @@ $(function () {
 
     //TABLAS DE CITAS
     if ($('.datatables-citas-liquidador').length) {
-        validarPaqueteActivo();
         tipoCita = $('#tipo_cita').val();
         let table = $('.datatables-citas-liquidador').DataTable({
             ordering: true,
@@ -3550,7 +3545,6 @@ $(function () {
 
     //TABLA DE SERVICIO LIQUIDADOR DE CITAS
     if ($('.datatables-servicios-liquidador').length) {
-        validarPaqueteActivo();
         table_estados = $('.datatables-servicios-liquidador').DataTable({
             lengthChange: false,
             searching: false,
@@ -3726,7 +3720,6 @@ $(function () {
 
     // Escucha el evento change en los checkboxes de la tabla
     $('.datatables-citas-liquidador').on('change', '.check-cita', function () {
-        validarPaqueteActivo();
         // Obtener todos los checkboxes seleccionados
         let seleccionados = $('.check-cita:checked');
         let contador = seleccionados.length;
@@ -4250,92 +4243,6 @@ $(function () {
                                 data: [response.Data.citas_faltantes]
                             }
                         ]);
-
-                        const citas_restantes = response.Data.numero_citas - response.Data.citas_consumidas;
-                        // PARA LAS ÚLTIMAS 15 CITAS
-                        if (rol == "Admin Empresa") {
-                            if (citas_restantes <= 15 && citas_restantes > 0) {
-                                Swal.fire({
-                                    html: `
-                                    <div class="text-center">
-                                        <a href="${page_wp_principal}" target="blank">
-                                            <img src="${url}/assets/img/paquetes/aviso_paquetes.jpg" class="img-fluid mb-3">
-                                        </a>
-                                    </div>
-                                `,
-                                    showCloseButton: true,
-                                    showConfirmButton: false,
-                                    width: '800px'
-                                });
-                            } else if (citas_restantes == 0 || response.Data.tipo_paquete == "AUXILIAR") {
-                                Swal.fire({
-                                    html: `
-                                    <div class="text-center">
-                                        <a href="${page_wp_principal}" target="blank">
-                                            <img src="${url}/assets/img/paquetes/fin_paquetes.jpg" class="img-fluid mb-3">
-                                        </a>
-                                    </div>
-                                    `,
-                                    showCloseButton: false,
-                                    showConfirmButton: false,
-                                    allowOutsideClick: false,
-                                    allowEscapeKey: false,
-                                    allowEnterKey: false,
-                                    width: '800px',
-                                    backdrop: 'rgba(0,0,0,0.8)',
-                                    showClass: {
-                                        popup: 'animate__animated animate__fadeIn'
-                                    },
-                                    willOpen: () => {
-                                        $('body').css('overflow', 'hidden');
-                                        $('.swal2-container').css('pointer-events', 'auto');
-                                    },
-                                    didOpen: () => {
-                                        $(document).on('click', '.swal2-popup', function (e) {
-                                            e.stopPropagation();
-                                        });
-                                    },
-                                    willClose: () => {
-                                        return false;
-                                    }
-                                });
-                            }
-                        }
-                    } else {
-                        // PARA CUANDO NO TIENE UN PAQUETE ACTIVO
-                        if ((rol == "Admin Empresa" && response.Data.tipo_paquete == "AUXILIAR") || (rol == "Admin Empresa")) {
-                            Swal.fire({
-                                html: `
-                                <div class="text-center">
-                                    <a href="${page_wp_principal}" target="blank">
-                                        <img src="${url}/assets/img/paquetes/fin_paquetes.jpg" class="img-fluid mb-3">
-                                    </a>
-                                </div>
-                                `,
-                                showCloseButton: false,
-                                showConfirmButton: false,
-                                allowOutsideClick: false,
-                                allowEscapeKey: false,
-                                allowEnterKey: false,
-                                width: '800px',
-                                backdrop: 'rgba(0,0,0,0.8)',
-                                showClass: {
-                                    popup: 'animate__animated animate__fadeIn'
-                                },
-                                willOpen: () => {
-                                    $('body').css('overflow', 'hidden');
-                                    $('.swal2-container').css('pointer-events', 'auto');
-                                },
-                                didOpen: () => {
-                                    $(document).on('click', '.swal2-popup', function (e) {
-                                        e.stopPropagation();
-                                    });
-                                },
-                                willClose: () => {
-                                    return false;
-                                }
-                            });
-                        }
                     }
                 } else {
                     Swal.fire({
@@ -4426,74 +4333,36 @@ $(function () {
                         const citas_restantes = response.Data.numero_citas - response.Data.citas_consumidas;
                         // CUANDO NO TIENE UN PAQUETE ACTIVO
                         if (rol == "Admin Empresa") {
-                            if (citas_restantes == 0 || response.Data.tipo_paquete == "AUXILIAR") {
-                                Swal.fire({
-                                    html: `
-                                    <div class="text-center">
-                                        <a href="${page_wp_principal}" target="blank">
-                                            <img src="${url}/assets/img/paquetes/fin_paquetes.jpg" class="img-fluid mb-3">
-                                        </a>
-                                    </div>
-                                    `,
-                                    showCloseButton: false,
-                                    showConfirmButton: false,
-                                    allowOutsideClick: false,
-                                    allowEscapeKey: false,
-                                    allowEnterKey: false,
-                                    width: '800px',
-                                    backdrop: 'rgba(0,0,0,0.8)',
-                                    showClass: {
-                                        popup: 'animate__animated animate__fadeIn'
-                                    },
-                                    willOpen: () => {
-                                        $('body').css('overflow', 'hidden');
-                                        $('.swal2-container').css('pointer-events', 'auto');
-                                    },
-                                    didOpen: () => {
-                                        $(document).on('click', '.swal2-popup', function (e) {
-                                            e.stopPropagation();
-                                        });
-                                    },
-                                    willClose: () => {
-                                        return false;
-                                    }
+                            if (citas_restantes <= 15 && citas_restantes > 0) {
+                                $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/aviso_paquetes.jpg`);
+                                $('#aviso-url').attr('href', `${page_wp_aliados}`);
+                                $('#popupPaquetes').modal({
+                                    backdrop: 'static',
+                                    keyboard: false
                                 });
+                                $('#popupPaquetes').modal('show');
+                            } else if (citas_restantes == 0 || response.Data.tipo_paquete == "AUXILIAR") {
+                                $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/fin_paquetes.jpg`);
+                                $('#aviso-url').attr('href', `${page_wp_aliados}`);
+                                 $('#popupPaquetes').find('.btn-close').hide();
+                                $('#popupPaquetes').modal({
+                                    backdrop: 'static',
+                                    keyboard: false
+                                });
+                                $('#popupPaquetes').modal('show');
                             }
                         }
                     } else {
                         // PARA CUANDO NO TIENE UN PAQUETE ACTIVO
                         if ((rol == "Admin Empresa" && response.Data.tipo_paquete == "AUXILIAR") || (rol == "Admin Empresa")) {
-                            Swal.fire({
-                                html: `
-                                <div class="text-center">
-                                    <a href="${page_wp_principal}" target="blank">
-                                        <img src="${url}/assets/img/paquetes/fin_paquetes.jpg" class="img-fluid mb-3">
-                                    </a>
-                                </div>
-                                `,
-                                showCloseButton: false,
-                                showConfirmButton: false,
-                                allowOutsideClick: false,
-                                allowEscapeKey: false,
-                                allowEnterKey: false,
-                                width: '800px',
-                                backdrop: 'rgba(0,0,0,0.8)',
-                                showClass: {
-                                    popup: 'animate__animated animate__fadeIn'
-                                },
-                                willOpen: () => {
-                                    $('body').css('overflow', 'hidden');
-                                    $('.swal2-container').css('pointer-events', 'auto');
-                                },
-                                didOpen: () => {
-                                    $(document).on('click', '.swal2-popup', function (e) {
-                                        e.stopPropagation();
-                                    });
-                                },
-                                willClose: () => {
-                                    return false;
-                                }
-                            });
+                            $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/fin_paquetes.jpg`);
+                            $('#aviso-url').attr('href', `${page_wp_aliados}`);
+                            $('#popupPaquetes').find('.btn-close').hide();
+                            $('#popupPaquetes').modal({
+                                    backdrop: 'static',
+                                    keyboard: false
+                                });
+                            $('#popupPaquetes').modal('show');
                         }
                     }
                 } else {
@@ -4522,6 +4391,11 @@ $(function () {
         });
     }
 
+    // SE VALIDA EL POP-UP DE PAQUETES
+    if ($('#popupPaquetes').length) {
+        validarPaqueteActivo();
+    }
+
     if ($('#dashboard-empresas').length) {
         // BARRA DE PROGRESO DE CONSUMO DE PAQUETE ACTIVO
         var optionsChartDashboardEmpresasProgressBar = {
@@ -4538,7 +4412,7 @@ $(function () {
                 stacked: true,
                 stackType: '100%'
             },
-            colors: ['#ff9f43', '#ff4c51'],
+            colors: ['#00d2ff', '#b5ba30'],
             plotOptions: {
                 bar: {
                     horizontal: true,
@@ -4614,7 +4488,7 @@ $(function () {
             title: {
                 text: 'Citas Agendadas vs Asistidas del mes actual',
             },
-            colors: ['#00d2ff', '#b5ba30'],
+            colors: ['#cecece', '#00d2ff'],
             dataLabels: {
                 enabled: true,
                 enabledOnSeries: [1]

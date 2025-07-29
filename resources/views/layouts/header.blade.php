@@ -54,7 +54,7 @@
     </script>
     <script>
         sede = '<?= $user->id_sede ?>'
-        page_wp_principal = `<?= env('PAGE_WP_PRINCIPAL') ?>`
+        page_wp_aliados = `<?= env('PAGE_WP_ALIADOS') ?>`
     </script>
     <script>
         // Permisos para el módulo Sedes
