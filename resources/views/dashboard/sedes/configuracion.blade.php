@@ -90,6 +90,76 @@
                             </div>
                         </div>
                     </div>
+                    @if (Auth::user()->can('sede.Ciudades.v'))
+                    <div class="accordion-item card">
+                        <h2 class="accordion-header d-flex align-items-center">
+                            <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionWithIcon-4" aria-expanded="false">
+                                <i class="me-2 ti ti-map-2"></i>
+                                Ciudades
+                            </button>
+                        </h2>
+                        <div id="accordionWithIcon-4" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <div class="p-4 d-flex align-items-center justify-content-end">
+                                    <a href="#" class="add_ciudad btn btn-primary"> <i class="me-2 ti ti-map-plus"></i>Crear ciudad</a>
+                                </div>
+                                <div class="p-4 content_ciudad_add" style="display:none">
+                                    <form class="send_form mb-4" action="{{url('dashboard/sedes/add_ciudad')}}">
+                                        <div class="content_form_horarios row ">
+                                            <div class="col-12 col-md-4">
+                                                <label class="form-label">Nombre de la ciudad <span class="required_flied">*</span></label>
+                                                <input required class="form-control" type="text" name="nombre_ciudad">
+                                            </div>
+                                            <div class="col-12 col-md-3">
+                                                <label class="form-label">Latitud <span class="required_flied">*</span></label>
+                                                <input required class="form-control" type="text" name="latitud_ciudad">
+                                            </div>
+                                            <div class="col-12 col-md-3">
+                                                <label class="form-label">Longitud <span class="required_flied">*</span></label>
+                                                <input required class="form-control" type="text" name="longitud_ciudad">
+                                            </div>
+                                            <div class="col-12 col-md-2">
+                                                <label class="form-label">Nivel de zoom <span class="required_flied">*</span></label>
+                                                <input required class="form-control" type="number" name="nivel_zoom_ciudad">
+                                            </div>
+                                            <div class="col-12 text-end my-2">
+                                                <button type="submit" class="btn btn-primary">Agregar ciudad</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="p-4 content_ciudad_edit" style="display:none">
+                                    <form class="send_form mb-4 col-12" action="{{url('dashboard/sedes/save_ciudad')}}">
+                                        <div class="content_form_horarios row ">
+                                            <input type="hidden" name="id_ciudad">
+                                            <div class="col-12 col-md-4">
+                                                <label class="form-label">Nombre de la ciudad <span class="required_flied">*</span></label>
+                                                <input required class="form-control" type="text" name="nombre_ciudad">
+                                            </div>
+                                            <div class="col-12 col-md-3">
+                                                <label class="form-label">Latitud <span class="required_flied">*</span></label>
+                                                <input required class="form-control" type="text" name="latitud_ciudad">
+                                            </div>
+                                            <div class="col-12 col-md-3">
+                                                <label class="form-label">Longitud <span class="required_flied">*</span></label>
+                                                <input required class="form-control" type="text" name="longitud_ciudad">
+                                            </div>
+                                            <div class="col-12 col-md-2">
+                                                <label class="form-label">Nivel de zoom <span class="required_flied">*</span></label>
+                                                <input required class="form-control" type="number" name="nivel_zoom_ciudad">
+                                            </div>
+                                            <div class="col-12 text-end my-2">
+                                                <button type="submit" class="btn btn-primary">Actualizar ciudad</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <label class="form-label">Ciudades registradas</label>
+                                <table class="datatables-ciudades table"></table>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

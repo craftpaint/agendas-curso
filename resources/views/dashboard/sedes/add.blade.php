@@ -43,6 +43,31 @@
                                     ?>
                                 </select>
                             </div>
+                            <div class="mb-4 col-md-6">
+                                <label class="form-label">Horario abreviado <span class="required_flied">*</span></label>
+                                <input required class="form-control" type="text" name="horario_sede">
+                            </div>
+                            <div class="mb-4 col-md-6">
+                                <label class="form-label">Latitud <span class="required_flied">*</span></label>
+                                <input required class="form-control" type="text" name="latitud_sede">
+                            </div>
+                            <div class="mb-4 col-md-6">
+                                <label class="form-label">Longitud <span class="required_flied">*</span></label>
+                                <input required class="form-control" type="text" name="longitud_sede">
+                            </div>
+                            <div class="mb-4 col-md-6">
+                                <label class="form-label">Ciudad <span class="required_flied">*</span></label>
+                                <select class="select2 form-select" required name="id_ciudad">
+                                    <option value="">Seleccionar ciudad</option>
+                                    <?php
+                                    if ($ciudades->isNotEmpty()) {
+                                        foreach ($ciudades as $key => $value) {
+                                            echo '<option value="' . $value->id_ciudad . '">' . $value->nombre . '</option>';
+                                        }
+                                    }
+                                    ?>
+                                </select>
+                            </div>
                             <?php
                             if ($user->can('sede.empresa.v')) {
                             ?>

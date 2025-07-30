@@ -15,9 +15,9 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>ID RUN</th>
+                                <th>EMPRESA</th>
                                 <th>NOMBRE</th>
-                                <th>TELÉFONO</th>
+                                <th>CIUDAD</th>
                                 <th>ESTADO</th>
                                 <th></th>
                             </tr>

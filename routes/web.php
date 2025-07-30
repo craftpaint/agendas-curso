@@ -141,6 +141,20 @@ Route::controller(SedesController::class)->group(function () {
     Route::post('dashboard/sedes/delete_servicio', 'delete_servicio')
         ->middleware(['auth', 'verified', 'permission:sede.servicios.d']);
     Route::post('dashboard/sedes/get_servicio_by_id_sede', 'get_servicio_by_id_sede');
+
+    // Rutas para ciudades
+    Route::post('dashboard/sedes/get_ciudades', 'get_ciudades')
+        ->middleware(['auth', 'verified', 'permission:sede.Ciudades.v']);
+    Route::post('dashboard/sedes/add_ciudad', 'add_ciudad')
+        ->middleware(['auth', 'verified', 'permission:sede.Ciudades.a']);
+    Route::post('dashboard/sedes/change_estado_ciudad', 'change_estado_ciudad')
+        ->middleware(['auth', 'verified', 'permission:sede.Ciudades.d']);
+    Route::post('dashboard/sedes/get_ciudad', 'get_ciudad')
+        ->middleware(['auth', 'verified', 'permission:sede.Ciudades.e']);
+    Route::post('dashboard/sedes/edit_ciudad', 'edit_ciudad')
+        ->middleware(['auth', 'verified', 'permission:sede.Ciudades.e']);
+    Route::post('dashboard/sedes/save_ciudad', 'save_ciudad')
+        ->middleware(['auth', 'verified', 'permission:sede.Ciudades.e']);
 })->name('sedes');
 
 // Clientes
