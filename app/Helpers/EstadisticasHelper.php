@@ -183,7 +183,7 @@ class EstadisticasHelper {
         
         if ($empresaPaquetes) {
             foreach ($empresaPaquetes as $empresaPaquete) {
-                $empresaPaquete->porcentaje = ($empresaPaquete->citas_consumidas / $empresaPaquete->numero_citas) * 100;
+                $empresaPaquete->porcentaje = round(($empresaPaquete->citas_consumidas / $empresaPaquete->numero_citas) * 100, 2);
             }
             return $empresaPaquetes;
         } else {
@@ -203,14 +203,15 @@ class EstadisticasHelper {
 
         $empresaPaquetesPendientes = DB::table('tb_empresa_paquete')
             ->select(
-                'tb_empresa_paquete.*',          
-                'tb_paquete.*'
+                'tb_paquete.*',
+                'tb_empresa_paquete.*'
             )
             ->join('tb_paquete', 'tb_empresa_paquete.id_paquete', '=', 'tb_paquete.id_paquete')
             ->where('tb_empresa_paquete.id_empresa', $empresaUser->id_empresa)
             ->where('tb_empresa_paquete.estado', 'PENDIENTE')
             ->whereNot('tb_paquete.tipo_paquete', 'AUXILIAR')
-            ->orderBy('fecha_inicio', 'desc')
+            ->orderBy('fecha_inicio', 'asc')
+            ->take(3)
             ->get();
         
         if ($empresaPaquetesPendientes) {

@@ -120,8 +120,8 @@
                     <div class="col-md-5">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h4><i class="ti ti-clipboard-list text-warning fs-1 me-2"></i> Paquetes pendientes de
-                                    activación</h4>
+                                <h4><i class="ti ti-clipboard-list text-warning fs-1 me-2"></i> Paquetes pendientes de activación</h4>
+                                <div id="ListadopaquetesPendientes"></div>
                             </div>
                         </div>
                     </div>
@@ -129,18 +129,20 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- ESTE ES EL MODAL PARA LA IMAGEN DE AVISO DE LOS PAQUETES -->
-<div class="modal fade" id="imagenAviso" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content bg-transparent border-0">
-            <div class="modal-header border-0">
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                    aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center p-0">
-                <img id="modalImagen" src="" alt="Aviso paquetes" class="img-fluid rounded">
+    <!-- Modal para detalles de paquete -->
+    <div class="modal fade" id="modalDetallesPaquete" tabindex="-1" aria-labelledby="modalDetallesPaqueteLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNuevoPaqueteLabel">Citas del paquete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="datatables-detalles-paquete table">
+                    </table>
+                </div>
             </div>
         </div>
     </div>

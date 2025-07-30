@@ -4425,6 +4425,7 @@ $(function () {
             const botonContainer = document.createElement('div');
             botonContainer.id = botonId;
             botonContainer.className = 'mt-5';
+            botonContainer.style.marginBottom = '100px';
             container.appendChild(botonContainer);
 
             botonContainer.innerHTML = `
@@ -4433,8 +4434,9 @@ $(function () {
                     data-bs-placement="top" 
                     data-bs-custom-class="tooltip-info" 
                     title="Editar"
-                    data-id-empresa-paquete="${paquete.id_empresa_paquete}">
-                    <i class="ti ti-checkup-list me-2 text-info" style="font-size:50px"></i>
+                    data-id-empresa-paquete="${paquete.id_empresa_paquete}"
+                    data-bs-target="#modalDetallesPaquete">
+                    <i class="ti ti-checkup-list me-2 text-info" style="font-size:50px;"></i>
                 </button>
             `;
         });
@@ -4466,6 +4468,82 @@ $(function () {
                     });
                 }
             },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos del historial de paquetes.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function actualizarListadoPaquetesPendientes(datos) {
+        const container = document.getElementById('ListadopaquetesPendientes');
+
+        // Limpiar contenedor
+        container.innerHTML = '';
+
+        datos.forEach((paquete, index) => {
+            const paquetePendienteId = `paquetePendiente${index + 1}`;
+
+            const paquetePendienteContainer = document.createElement('div');
+            paquetePendienteContainer.id = paquetePendienteId;
+            paquetePendienteContainer.className = 'row';
+            container.appendChild(paquetePendienteContainer);
+
+            paquetePendienteContainer.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h4 style="color: #b5ba30;"><i class="ti ti-package-import display-1"></i></h4>
+                    <div>
+                        <h5 class="mb-1 text-info">Nombre: <strong class="text-dark">${paquete.nombre_paquete}</strong></h5>
+                        <h5 class="mb-1 text-info">Fecha de compra: <strong class="text-dark">${paquete.created_at.split(' ')[0]}</strong></h5>
+                        <h5 class="mb-1 text-info">Número de citas: <strong class="text-dark">${paquete.numero_citas}</strong></h5>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function obtenerListadoPaquetesPendientes(endpoint, id_empresa = null) {
+        $.ajax({
+            url: url + endpoint,
+            type: 'POST',
+            data: {
+                id_empresa: id_empresa
+            },
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        actualizarListadoPaquetesPendientes(response.Data);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los paquetes pendientes.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
         });
     }
 
@@ -4671,6 +4749,7 @@ $(function () {
         obtenerDatosProgressBarDashboardEmpresa('/dashboard/empresa/obtener_datos_barra_progreso', ChartDashboardEmpresasProgressBar);
         obtenerDatosLineBarMixedDashboardEmpresa('/dashboard/empresa/obtener_datos_linea_mezclada', ChartDashboardEmpresasLineBarMixed);
         obtenerDatosHistorialPaquetes('/dashboard/empresa/obtener_datos_historial_paquetes');
+        obtenerListadoPaquetesPendientes('/dashboard/empresa/obtener_datos_paquetes_pendientes');
     }
 
     $('#empresa-select-dashboard').on('change', function () {
@@ -4695,7 +4774,78 @@ $(function () {
         obtenerDatosProgressBarDashboardEmpresa('/dashboard/empresa/obtener_datos_barra_progreso', ChartDashboardEmpresasProgressBar, empresaSeleccionada);
         obtenerDatosLineBarMixedDashboardEmpresa('/dashboard/empresa/obtener_datos_linea_mezclada', ChartDashboardEmpresasLineBarMixed, empresaSeleccionada);
         obtenerDatosHistorialPaquetes('/dashboard/empresa/obtener_datos_historial_paquetes', empresaSeleccionada);
+        obtenerListadoPaquetesPendientes('/dashboard/empresa/obtener_datos_paquetes_pendientes', empresaSeleccionada);
     });
+
+    // Boton de detalles del paquete
+    $(document).on('click', '.btn-detalles-paquete', function() {
+    const id_empresa_paquete = $(this).data('id-empresa-paquete');
+    const $table = $('.datatables-detalles-paquete');
+
+    // Destruir la tabla existente si ya está inicializada
+    if ($.fn.DataTable.isDataTable($table)) {
+        $table.DataTable().destroy();
+        $table.empty();
+    }
+
+    // Reconstruir la estructura básica de la tabla
+    $table.html('<thead><tr>'
+        + '<th>Cliente</th>'
+        + '<th>Documento</th>'
+        + '<th>Sede</th>'
+        + '<th>Fecha Reserva</th>'
+        + '<th>Horario</th>'
+        + '<th>Estado</th>'
+        + '</tr></thead><tbody></tbody>');
+
+    // Inicializar la nueva instancia de DataTable
+    const table_detalles_paquete = $table.DataTable({
+        ordering: true,
+        processing: true,
+        serverSide: true,
+        searching: false,
+        info: false,
+        pageLength: 10,
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json',
+            infoEmpty: "No hay datos disponibles",
+        },
+        dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+        ajax: {
+            url: url + '/dashboard/empresa/consultar_citas_empresa_paquete/' + id_empresa_paquete,
+            type: 'GET',
+            dataSrc: function (json) {
+                return json.Data;
+            }
+        },
+        columns: [
+            {
+                data: null,
+                render: function (data) {
+                    return data.nombre_cliente + ' ' + data.apellido_cliente;
+                }
+            },
+            {
+                data: null,
+                render: function (data) {
+                    return data.tipo_doc_cliente + ' ' + data.doc_cliente;
+                }
+            },
+            { data: 'nombre_sede'},
+            { 
+                data: null,
+                render: function (data) {
+                    return data.reserva_cita.split(' ')[0];
+                }
+            },
+            { data: 'rango_horario' },
+            { data: 'nombre_estado' }
+        ],
+        pagingType: "simple"
+    });
+
+    $('#modalDetallesPaquete').modal('show');
+});
 
     // TABLAS DE PAQUETES
     var table_paquetes;
