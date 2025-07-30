@@ -27,6 +27,7 @@ Route::controller(LoadController::class)->group(function () {
 
 Route::controller(sedesController::class)->group(function () {
     Route::get('obtener-ubicaciones', 'obtenerUbicaciones');
+});
 
 Route::controller(EmpresasController::class)->group(function () {
     Route::post('verificar-empresa', 'validarExistenciaEmpresa');
