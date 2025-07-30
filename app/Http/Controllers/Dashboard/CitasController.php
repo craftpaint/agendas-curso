@@ -135,6 +135,7 @@ class CitasController extends Controller
                         't4.nombre_estado as estado_verificado_nombre',
                         't4.color_estado as estado_verificado_color',
                         't5.nombre_sede',
+                        't5.direccion_sede',
                         't5.id_servicio',
                         't6.tipo_servicio',
                         'a.name as agente_callcenter',
