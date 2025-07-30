@@ -4726,7 +4726,7 @@ $(function () {
                     if (response.Data) {
                         const citas_restantes = response.Data.numero_citas - response.Data.citas_consumidas;
                         // CUANDO NO TIENE UN PAQUETE ACTIVO
-                        if (rol == "Admin Empresa") {
+                        if (rol == "Admin Empresa PRE") {
                             if (citas_restantes <= 15 && citas_restantes > 0) {
                                 $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/aviso_paquetes.jpg`);
                                 $('#aviso-url').attr('href', `${page_wp_aliados}`);
@@ -4748,7 +4748,7 @@ $(function () {
                         }
                     } else {
                         // PARA CUANDO NO TIENE UN PAQUETE ACTIVO
-                        if ((rol == "Admin Empresa" && response.Data.tipo_paquete == "AUXILIAR") || (rol == "Admin Empresa")) {
+                        if ((rol == "Admin Empresa PRE" && response.Data.tipo_paquete == "AUXILIAR") || (rol == "Admin Empresa PRE")) {
                             $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/fin_paquetes.jpg`);
                             $('#aviso-url').attr('href', `${page_wp_aliados}`);
                             $('#popupPaquetes').find('.btn-close').hide();
@@ -4786,7 +4786,7 @@ $(function () {
     }
 
     // SE VALIDA EL POP-UP DE PAQUETES
-    if ($('#popupPaquetes').length) {
+    if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
         validarPaqueteActivo();
     }
 
