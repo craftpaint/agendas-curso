@@ -53,6 +53,9 @@
         rol = '<?= $rol ?>'
     </script>
     <script>
+        sede = '<?= $user->id_sede ?>'
+    </script>
+    <script>
         // Permisos para el módulo Sedes
         var canViewSedes = <?= json_encode($user->can('sede.listado.v')); ?>;
         var canAddSedes = <?= json_encode($user->can('sede.sede.a')); ?>;
@@ -129,12 +132,18 @@
 
         // Permisos para la gestión de Permisos
         var canManagePermissions = <?= json_encode($user->can('permissions.administrar.v')); ?>;
-
-        // Permisos para la gestión de ciudades
+        
+         // Permisos para la gestión de ciudades
         var canViewCiudades = <?= json_encode($user->can('sede.Ciudades.v')); ?>;
         var canAddCiudades = <?= json_encode($user->can('sede.Ciudades.a')); ?>;
         var canEditCiudades = <?= json_encode($user->can('sede.Ciudades.e')); ?>;
         var canDeleteCiudades = <?= json_encode($user->can('sede.Ciudades.d')); ?>;
+        
+        // Permisos para el módulo de paquetes
+        var canAddPaquetes = <?= json_encode($user->can('paquete.listado.a')); ?>;
+        var canEditPaquetes = <?= json_encode($user->can('paquete.listado.e')); ?>;
+        var canDeletePaquetes = <?= json_encode($user->can('paquete.listado.d')); ?>;
+        
     </script>
 
 </head>
