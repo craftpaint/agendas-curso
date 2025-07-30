@@ -423,4 +423,31 @@ class PaqueteHelper {
                 'updated_at' => Carbon::now()
             ]);
     }
+
+    public static function consultarCitasEmpresaPaquete($id_empresa_paquete) {
+        $citasPaquete = DB::table('tb_cita')
+            ->select(
+                'tb_cita.reserva_cita',
+                'tb_cita.rango_horario',
+                'tb_cita.id_empresa_paquete',
+                'tb_cliente.nombre_cliente',
+                'tb_cliente.apellido_cliente',
+                'tb_cliente.tipo_doc_cliente',
+                'tb_cliente.doc_cliente',
+                'tb_sede.nombre_sede',
+                'tb_estado.nombre_estado'
+            )
+            ->join('tb_empresa_paquete', 'tb_cita.id_empresa_paquete', '=', 'tb_empresa_paquete.id_empresa_paquete')
+            ->join('tb_cliente', 'tb_cita.id_cliente', '=', 'tb_cliente.id_cliente')
+            ->join('tb_sede', 'tb_cita.id_sede', '=', 'tb_sede.id_sede')
+            ->join('tb_estado', 'tb_cita.id_estado_verificado', '=', 'tb_estado.id_estado')
+            ->where('tb_cita.id_empresa_paquete', $id_empresa_paquete)
+            ->get();
+        
+        if ($citasPaquete) {
+            return $citasPaquete;
+        } else {
+            return null;
+        }
+    }
 }

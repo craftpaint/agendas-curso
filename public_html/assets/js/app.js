@@ -4274,7 +4274,9 @@ $(function () {
                         $('#logo-empresa-dashboard').attr('src', `${url}/${response.Data.logo}`);
                         $('#nombre-empresa-dashboard').html(`Nombre: <strong>${response.Data.Nombre}</strong>`);
                         $('#documento-empresa-dashboard').html(`Documento: <strong>${response.Data.tipo_documento_empresa} ${response.Data.documento_empresa}</strong>`);
-                        $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
+                       if (rol == 'superadmin' || rol == 'admin') {
+                            $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
+                        }
                     }
                 } else {
                     Swal.fire({
@@ -4312,7 +4314,9 @@ $(function () {
                         $('#logo-empresa-dashboard').attr('src', `${url}/${response.Data.logo}`);
                         $('#nombre-empresa-dashboard').html(`Nombre: <strong>${response.Data.Nombre}</strong>`);
                         $('#documento-empresa-dashboard').html(`Documento: <strong>${response.Data.tipo_documento_empresa} ${response.Data.documento_empresa}</strong>`);
-                        $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
+                        if (rol == 'superadmin' || rol == 'admin') {
+                            $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
+                        }
                     }
                 } else {
                     Swal.fire({
@@ -4367,60 +4371,6 @@ $(function () {
                                 data: [response.Data.citas_faltantes]
                             }
                         ]);
-
-                        const citas_restantes = response.Data.numero_citas - response.Data.citas_consumidas;
-                        // PARA LAS ÚLTIMAS 15 CITAS
-                        if (rol == "Admin Empresa") {
-                            if (citas_restantes <= 15 && citas_restantes > 0) {
-                                Swal.fire({
-                                    html: `
-                                    <div class="text-center">
-                                        <a href="https://curso-comparendo.com/" target="blank">
-                                            <img src="${url}/assets/img/paquetes/aviso_paquetes.jpg" class="img-fluid mb-3">
-                                        </a>
-                                    </div>
-                                `,
-                                    showCloseButton: true,
-                                    showConfirmButton: false,
-                                    width: '800px'
-                                });
-                            }
-                        }
-                    } else {
-                        // PARA CUANDO NO TIENE UN PAQUETE ACTIVO
-                        if (rol == "Admin Empresa") {
-                            Swal.fire({
-                                html: `
-                                <div class="text-center">
-                                    <a href="https://curso-comparendo.com/" target="blank">
-                                        <img src="${url}/assets/img/paquetes/fin_paquetes.jpg" class="img-fluid mb-3">
-                                    </a>
-                                </div>
-                                `,
-                                showCloseButton: false,
-                                showConfirmButton: false,
-                                allowOutsideClick: false,
-                                allowEscapeKey: false,
-                                allowEnterKey: false,
-                                width: '800px',
-                                backdrop: 'rgba(0,0,0,0.8)',
-                                showClass: {
-                                    popup: 'animate__animated animate__fadeIn'
-                                },
-                                willOpen: () => {
-                                    $('body').css('overflow', 'hidden');
-                                    $('.swal2-container').css('pointer-events', 'auto');
-                                },
-                                didOpen: () => {
-                                    $(document).on('click', '.swal2-popup', function (e) {
-                                        e.stopPropagation();
-                                    });
-                                },
-                                willClose: () => {
-                                    return false;
-                                }
-                            });
-                        }
                     }
                 } else {
                     Swal.fire({
@@ -4448,7 +4398,7 @@ $(function () {
         });
     }
 
-    function obtenerDatosLineBarMixedDashboardEmpresa(endpoint, chart, id_empresa) {
+    function obtenerDatosLineBarMixedDashboardEmpresa(endpoint, chart, id_empresa = null) {
         $.ajax({
             url: url + endpoint,
             type: 'POST',
@@ -4498,6 +4448,309 @@ $(function () {
         });
     }
 
+    function actualizarGraficosHistorial(datos) {
+        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorial');
+
+        // Limpiar contenedor
+        container.innerHTML = '';
+
+        // Crear un gráfico por cada paquete
+        datos.forEach((paquete, index) => {
+            const chartId = `chart${index + 1}`;
+
+            // Crear contenedor para el gráfico
+            const chartContainer = document.createElement('div');
+            chartContainer.id = chartId;
+            chartContainer.className = 'py-auto h-50';
+            container.appendChild(chartContainer);
+
+            // Configuración del gráfico
+            const chartOptions = {
+                series: [paquete.porcentaje],
+                chart: {
+                    height: 130,
+                    type: 'radialBar'
+                },
+                plotOptions: {
+                    radialBar: {
+                        startAngle: -135,
+                        endAngle: 135,
+                        dataLabels: {
+                            name: {
+                                fontSize: '14px',
+                                offsetY: 90
+                            },
+                            value: {
+                                offsetY: 50,
+                                fontSize: '18px',
+                                formatter: (val) => `${val}%`
+                            }
+                        }
+                    }
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shade: 'dark',
+                        shadeIntensity: 0.15,
+                        inverseColors: false,
+                        stops: [0, 50, 65, 91]
+                    }
+                },
+                stroke: {
+                    dashArray: 4
+                },
+                labels: [''],
+                colors: ['#b5ba30']
+            };
+
+            // Renderizar gráfico
+            const chart = new ApexCharts(document.querySelector(`#${chartId}`), chartOptions);
+            chart.render();
+        });
+    }
+
+    function actualizarInfoHistorial(datos) {
+        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorialInfo');
+
+        // Limpiar contenedor
+        container.innerHTML = '';
+
+        //Crea la informmación para cada paquete
+        datos.forEach((paquete, index) => {
+            const infoId = `info${index + 1}`;
+
+            const infoContainer = document.createElement('div');
+            infoContainer.id = infoId;
+            infoContainer.className = 'mb-5';
+            container.appendChild(infoContainer);
+            paquete.fecha_inicio = paquete.fecha_inicio.split(' ')[0];
+
+            if (!paquete.fecha_fin) {
+                paquete.fecha_fin = "ACTIVO";
+            } else {
+                paquete.fecha_fin = paquete.fecha_fin.split(' ')[0];
+            }
+
+            infoContainer.innerHTML = `
+                <h5 class="text-info pt-5 mb-2">Nombre: <strong class="text-dark">${paquete.nombre_paquete}</strong></h5>
+                <h6 class="text-info mb-2"><strong>${paquete.fecha_inicio} - ${paquete.fecha_fin}</strong></h6>
+                <h6 class="text-info mb-2">Número de citas: <strong class="text-dark">${paquete.numero_citas}</strong></h6>
+                <h6 class="text-info mb-5">Precio: <strong class="text-dark">${paquete.valor}</strong></h6>
+            `;
+        });
+    }
+
+    function actualizarBotonesHistorial(datos) {
+        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorialBoton');
+
+        // Limpiar contenedor
+        container.innerHTML = '';
+
+        datos.forEach((paquete, index) => {
+            const botonId = `boton${index + 1}`;
+
+            const botonContainer = document.createElement('div');
+            botonContainer.id = botonId;
+            botonContainer.className = 'mt-5';
+            botonContainer.style.marginBottom = '100px';
+            container.appendChild(botonContainer);
+
+            botonContainer.innerHTML = `
+                <button class="btn btn-icon btn-lg waves-effect btn-detalles-paquete w-100 text-center" 
+                    data-bs-toggle="tooltip" 
+                    data-bs-placement="top" 
+                    data-bs-custom-class="tooltip-info" 
+                    title="Editar"
+                    data-id-empresa-paquete="${paquete.id_empresa_paquete}"
+                    data-bs-target="#modalDetallesPaquete">
+                    <i class="ti ti-checkup-list me-2 text-info" style="font-size:50px;"></i>
+                </button>
+            `;
+        });
+    }
+
+    function obtenerDatosHistorialPaquetes(endpoint, id_empresa = null) {
+        $.ajax({
+            url: url + endpoint,
+            type: 'POST',
+            data: {
+                id_empresa: id_empresa
+            },
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        actualizarGraficosHistorial(response.Data);
+                        actualizarInfoHistorial(response.Data);
+                        actualizarBotonesHistorial(response.Data);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos del historial de paquetes.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function actualizarListadoPaquetesPendientes(datos) {
+        const container = document.getElementById('ListadopaquetesPendientes');
+
+        // Limpiar contenedor
+        container.innerHTML = '';
+
+        datos.forEach((paquete, index) => {
+            const paquetePendienteId = `paquetePendiente${index + 1}`;
+
+            const paquetePendienteContainer = document.createElement('div');
+            paquetePendienteContainer.id = paquetePendienteId;
+            paquetePendienteContainer.className = 'row';
+            container.appendChild(paquetePendienteContainer);
+
+            paquetePendienteContainer.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h4 style="color: #b5ba30;"><i class="ti ti-package-import display-1"></i></h4>
+                    <div>
+                        <h5 class="mb-1 text-info">Nombre: <strong class="text-dark">${paquete.nombre_paquete}</strong></h5>
+                        <h5 class="mb-1 text-info">Fecha de compra: <strong class="text-dark">${paquete.created_at.split(' ')[0]}</strong></h5>
+                        <h5 class="mb-1 text-info">Número de citas: <strong class="text-dark">${paquete.numero_citas}</strong></h5>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function obtenerListadoPaquetesPendientes(endpoint, id_empresa = null) {
+        $.ajax({
+            url: url + endpoint,
+            type: 'POST',
+            data: {
+                id_empresa: id_empresa
+            },
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        actualizarListadoPaquetesPendientes(response.Data);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los paquetes pendientes.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function validarPaqueteActivo (id_empresa = null) {
+        $.ajax({
+            url: url + '/dashboard/empresa/obtener_datos_barra_progreso',
+            type: 'POST',
+            data: {
+                id_empresa: id_empresa
+            },
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        const citas_restantes = response.Data.numero_citas - response.Data.citas_consumidas;
+                        // CUANDO NO TIENE UN PAQUETE ACTIVO
+                        if (rol == "Admin Empresa") {
+                            if (citas_restantes <= 15 && citas_restantes > 0) {
+                                $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/aviso_paquetes.jpg`);
+                                $('#aviso-url').attr('href', `${page_wp_aliados}`);
+                                $('#popupPaquetes').modal({
+                                    backdrop: 'static',
+                                    keyboard: false
+                                });
+                                $('#popupPaquetes').modal('show');
+                            } else if (citas_restantes == 0 || response.Data.tipo_paquete == "AUXILIAR") {
+                                $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/fin_paquetes.jpg`);
+                                $('#aviso-url').attr('href', `${page_wp_aliados}`);
+                                 $('#popupPaquetes').find('.btn-close').hide();
+                                $('#popupPaquetes').modal({
+                                    backdrop: 'static',
+                                    keyboard: false
+                                });
+                                $('#popupPaquetes').modal('show');
+                            }
+                        }
+                    } else {
+                        // PARA CUANDO NO TIENE UN PAQUETE ACTIVO
+                        if ((rol == "Admin Empresa" && response.Data.tipo_paquete == "AUXILIAR") || (rol == "Admin Empresa")) {
+                            $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/fin_paquetes.jpg`);
+                            $('#aviso-url').attr('href', `${page_wp_aliados}`);
+                            $('#popupPaquetes').find('.btn-close').hide();
+                            $('#popupPaquetes').modal({
+                                    backdrop: 'static',
+                                    keyboard: false
+                                });
+                            $('#popupPaquetes').modal('show');
+                        }
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de la barra de progreso.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    // SE VALIDA EL POP-UP DE PAQUETES
+    if ($('#popupPaquetes').length) {
+        validarPaqueteActivo();
+    }
+
     if ($('#dashboard-empresas').length) {
         // BARRA DE PROGRESO DE CONSUMO DE PAQUETE ACTIVO
         var optionsChartDashboardEmpresasProgressBar = {
@@ -4514,7 +4767,7 @@ $(function () {
                 stacked: true,
                 stackType: '100%'
             },
-            colors: ['#ff9f43', '#ff4c51'],
+            colors: ['#00d2ff', '#b5ba30'],
             plotOptions: {
                 bar: {
                     horizontal: true,
@@ -4590,7 +4843,7 @@ $(function () {
             title: {
                 text: 'Citas Agendadas vs Asistidas del mes actual',
             },
-            colors: ['#00d2ff', '#b5ba30'],
+            colors: ['#cecece', '#00d2ff'],
             dataLabels: {
                 enabled: true,
                 enabledOnSeries: [1]
@@ -4614,84 +4867,6 @@ $(function () {
         var ChartDashboardEmpresasLineBarMixed = new ApexCharts(document.querySelector("#ChartDashboardEmpresasLineBarMixed"), optionsChartDashboardEmpresasLineBarMixed);
         ChartDashboardEmpresasLineBarMixed.render();
 
-        // RADIAL PROGRESS BAR DEL HISTORIAL DE PAQUETES
-        /*
-        const chartsConfig = [
-            {
-                id: "chart1",
-                title: "Paquete 1",
-                value: 67
-            },
-            {
-                id: "chart2",
-                title: "Paquete 2",
-                value: 45
-            },
-            {
-                id: "chart3",
-                title: "Paquete 3",
-                value: 85
-            }
-        ];
-
-        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorial');
-
-        chartsConfig.forEach(config => {
-            // Crear contenedor individual para cada gráfico
-            const chartContainer = document.createElement('div');
-            chartContainer.id = config.id;
-            container.appendChild(chartContainer);
-
-            // Crear opciones del gráfico
-            const chartOptions = {
-                series: [config.value],
-                chart: {
-                    height: 150,
-                    type: 'radialBar'
-                },
-                plotOptions: {
-                    radialBar: {
-                        startAngle: -135,
-                        endAngle: 135,
-                        dataLabels: {
-                            name: {
-                                fontSize: '14px',
-                                offsetY: 90
-                            },
-                            value: {
-                                offsetY: 50,
-                                fontSize: '18px',
-                                formatter: function (val) {
-                                    return val + "%";
-                                }
-                            }
-                        }
-                    }
-                },
-                fill: {
-                    type: 'gradient',
-                    gradient: {
-                        shade: 'dark',
-                        shadeIntensity: 0.15,
-                        inverseColors: false,
-                        stops: [0, 50, 65, 91]
-                    }
-                },
-                stroke: {
-                    dashArray: 4
-                },
-                labels: [config.title],
-                colors: ['#556EE6']
-            };
-
-            // Crear y renderizar gráfico
-            const chart = new ApexCharts(
-                document.querySelector(`#${config.id}`),
-                chartOptions
-            );
-            chart.render();
-        }); */
-
         // Datos de las empresas para el select
         if (rol == 'superadmin' || rol == 'admin') {
             consultarTodasEmpresas();
@@ -4701,6 +4876,8 @@ $(function () {
         consultarEmpresaUsuario();
         obtenerDatosProgressBarDashboardEmpresa('/dashboard/empresa/obtener_datos_barra_progreso', ChartDashboardEmpresasProgressBar);
         obtenerDatosLineBarMixedDashboardEmpresa('/dashboard/empresa/obtener_datos_linea_mezclada', ChartDashboardEmpresasLineBarMixed);
+        obtenerDatosHistorialPaquetes('/dashboard/empresa/obtener_datos_historial_paquetes');
+        obtenerListadoPaquetesPendientes('/dashboard/empresa/obtener_datos_paquetes_pendientes');
     }
 
     $('#empresa-select-dashboard').on('change', function () {
@@ -4724,7 +4901,79 @@ $(function () {
         consultarEmpresa(empresaSeleccionada);
         obtenerDatosProgressBarDashboardEmpresa('/dashboard/empresa/obtener_datos_barra_progreso', ChartDashboardEmpresasProgressBar, empresaSeleccionada);
         obtenerDatosLineBarMixedDashboardEmpresa('/dashboard/empresa/obtener_datos_linea_mezclada', ChartDashboardEmpresasLineBarMixed, empresaSeleccionada);
+        obtenerDatosHistorialPaquetes('/dashboard/empresa/obtener_datos_historial_paquetes', empresaSeleccionada);
+        obtenerListadoPaquetesPendientes('/dashboard/empresa/obtener_datos_paquetes_pendientes', empresaSeleccionada);
     });
+
+    // Boton de detalles del paquete
+    $(document).on('click', '.btn-detalles-paquete', function() {
+    const id_empresa_paquete = $(this).data('id-empresa-paquete');
+    const $table = $('.datatables-detalles-paquete');
+
+    // Destruir la tabla existente si ya está inicializada
+    if ($.fn.DataTable.isDataTable($table)) {
+        $table.DataTable().destroy();
+        $table.empty();
+    }
+
+    // Reconstruir la estructura básica de la tabla
+    $table.html('<thead><tr>'
+        + '<th>Cliente</th>'
+        + '<th>Documento</th>'
+        + '<th>Sede</th>'
+        + '<th>Fecha Reserva</th>'
+        + '<th>Horario</th>'
+        + '<th>Estado</th>'
+        + '</tr></thead><tbody></tbody>');
+
+    // Inicializar la nueva instancia de DataTable
+    const table_detalles_paquete = $table.DataTable({
+        ordering: true,
+        processing: true,
+        serverSide: true,
+        searching: false,
+        info: false,
+        pageLength: 10,
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json',
+            infoEmpty: "No hay datos disponibles",
+        },
+        dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+        ajax: {
+            url: url + '/dashboard/empresa/consultar_citas_empresa_paquete/' + id_empresa_paquete,
+            type: 'GET',
+            dataSrc: function (json) {
+                return json.Data;
+            }
+        },
+        columns: [
+            {
+                data: null,
+                render: function (data) {
+                    return data.nombre_cliente + ' ' + data.apellido_cliente;
+                }
+            },
+            {
+                data: null,
+                render: function (data) {
+                    return data.tipo_doc_cliente + ' ' + data.doc_cliente;
+                }
+            },
+            { data: 'nombre_sede'},
+            { 
+                data: null,
+                render: function (data) {
+                    return data.reserva_cita.split(' ')[0];
+                }
+            },
+            { data: 'rango_horario' },
+            { data: 'nombre_estado' }
+        ],
+        pagingType: "simple"
+    });
+
+    $('#modalDetallesPaquete').modal('show');
+});
 
     // TABLAS DE PAQUETES
     var table_paquetes;
