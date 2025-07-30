@@ -149,7 +149,8 @@ class CitasController extends Controller
                         'v.id_vehiculo',
                         'v.placa_vehiculo',
                         'v.tipo_vehiculo',
-                        'v.modelo_vehiculo'
+                        'v.modelo_vehiculo',
+                        'tb_paquete.tipo_paquete'
                     )
                     ->addSelect(DB::raw("(SELECT COUNT(*) FROM tb_seguimiento AS ts WHERE ts.id_cita = t1.id_cita) AS total_anotaciones"))
                     ->join('tb_cliente as t2', 't1.id_cliente', '=', 't2.id_cliente')
@@ -158,6 +159,9 @@ class CitasController extends Controller
                     ->join('tb_sede as t5', 't1.id_sede', '=', 't5.id_sede')
                     ->join('tb_servicio as t6', 't5.id_servicio', '=', 't6.id_servicio')
                     ->join('users as a', 't1.id_agente_callcenter', '=', 'a.id')
+                    ->leftJoin('tb_empresa_paquete', 't1.id_empresa_paquete', '=', 'tb_empresa_paquete.id_empresa_paquete')
+                    ->leftJoin('tb_paquete', 'tb_empresa_paquete.id_paquete', '=', 'tb_paquete.id_paquete')
+
                     // JOIN con subconsulta para evitar duplicados
                     ->leftJoinSub(
                         $liquidadorSub,

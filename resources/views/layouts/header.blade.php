@@ -105,6 +105,7 @@
         var canEditServiciosLiquidador = <?= json_encode($user->can('cita.Servicio Liquidador.e')); ?>;
         var canDeleteServiciosLiquidador = <?= json_encode($user->can('cita.Servicio Liquidador.d')); ?>;
         var canEditCualquierFecha = <?= json_encode($user->can('cita.Seleccionar Cualquier Fecha.e')); ?>;
+        var canViewTipoPaquete = <?= json_encode($user->can('cita.Ver Tipo Paquete.v')); ?>;
 
         // Permisos para ver y editar el agente call center dentro de citas
         var canViewCallCenter = <?= json_encode($user->can('cita.Agente Call Center.v')); ?>;

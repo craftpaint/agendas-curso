@@ -1316,9 +1316,16 @@ $(function () {
                             iconColorAnotaciones = 'text-success';
                         }
 
+                        if (data.tipo_paquete == "PREPAGO") {
+                            data.tipo_paquete = "PRE";
+                        } else if (data.tipo_paquete == "POSPAGO") {
+                            data.tipo_paquete = "POS";
+                        } else if (data.tipo_paquete == "AUXILIAR") {
+                            data.tipo_paquete = "AUX";
+                        }
+
                         return `
                         <div style="position:relative; display:inline-block;">
-                            <!-- Botón para ver el seguimiento -->
                             <button type="button"
                                 class="btn btn-sm btn-light btn-open-seguimiento-modal ${iconColorAnotaciones}"
                                 data-id-cita="${full.id_cita}"
@@ -1327,7 +1334,12 @@ $(function () {
                             </button>
                             ${badgeAnotaciones}
                         </div>
-                      `;
+                        ${canViewTipoPaquete && data.tipo_paquete
+                            ? `<div class="mt-1">
+                                    <span class="badge bg-label-warning mb-3">${data.tipo_paquete}</span>
+                                </div>`
+                            : ''}
+                        `;
                     }
                 },
                 {
@@ -3383,7 +3395,7 @@ $(function () {
         $('#filtro-dos-meses-anteriores').on('click', function () {
             const ahora = new Date();
             const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth() - 2, 1);
-            const finMes = new Date(ahora.getFullYear(), ahora.getMonth() -1, 0);
+            const finMes = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 0);
             filtroDia = formatDate(inicioMes);
             filtroDiaEnd = formatDate(finMes);
             table.ajax.reload();
@@ -4146,7 +4158,7 @@ $(function () {
                         $('#logo-empresa-dashboard').attr('src', `${url}/${response.Data.logo}`);
                         $('#nombre-empresa-dashboard').html(`Nombre: <strong>${response.Data.Nombre}</strong>`);
                         $('#documento-empresa-dashboard').html(`Documento: <strong>${response.Data.tipo_documento_empresa} ${response.Data.documento_empresa}</strong>`);
-                       if (rol == 'superadmin' || rol == 'admin') {
+                        if (rol == 'superadmin' || rol == 'admin') {
                             $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
                         }
                     }
@@ -4547,7 +4559,7 @@ $(function () {
         });
     }
 
-    function validarPaqueteActivo (id_empresa = null) {
+    function validarPaqueteActivo(id_empresa = null) {
         $.ajax({
             url: url + '/dashboard/empresa/obtener_datos_barra_progreso',
             type: 'POST',
@@ -4571,7 +4583,7 @@ $(function () {
                             } else if (citas_restantes == 0 || response.Data.tipo_paquete == "AUXILIAR") {
                                 $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/fin_paquetes.jpg`);
                                 $('#aviso-url').attr('href', `${page_wp_aliados}`);
-                                 $('#popupPaquetes').find('.btn-close').hide();
+                                $('#popupPaquetes').find('.btn-close').hide();
                                 $('#popupPaquetes').modal({
                                     backdrop: 'static',
                                     keyboard: false
@@ -4586,9 +4598,9 @@ $(function () {
                             $('#aviso-url').attr('href', `${page_wp_aliados}`);
                             $('#popupPaquetes').find('.btn-close').hide();
                             $('#popupPaquetes').modal({
-                                    backdrop: 'static',
-                                    keyboard: false
-                                });
+                                backdrop: 'static',
+                                keyboard: false
+                            });
                             $('#popupPaquetes').modal('show');
                         }
                     }
@@ -4767,6 +4779,22 @@ $(function () {
         $('#citas-erradas-paquete-activo-dashboard-empresa').text(``);
         $('#citas-validacion-paquete-activo-dashboard-empresa').text(``);
         $('#citas-pendientes-paquete-activo-dashboard-empresa').text(``);
+        $('#ChartRadialProgressDashboardEmpresasHistorial').html(``);
+        $('#ChartRadialProgressDashboardEmpresasHistorialInfo').html(``);
+        $('#ChartRadialProgressDashboardEmpresasHistorialBoton').html(``);
+        $('#ListadopaquetesPendientes').html(``);
+        ChartDashboardEmpresasProgressBar.updateSeries([
+            { data: [] },
+            { data: [] }
+        ]);
+        ChartDashboardEmpresasProgressBar.render();
+        ChartDashboardEmpresasLineBarMixed.updateSeries([
+            { data: [] },
+            { data: [] }
+        ]);
+        ChartDashboardEmpresasLineBarMixed.render();
+
+
 
         // Se consulta la nueva empresa
         const empresaSeleccionada = $(this).val();
@@ -4778,74 +4806,74 @@ $(function () {
     });
 
     // Boton de detalles del paquete
-    $(document).on('click', '.btn-detalles-paquete', function() {
-    const id_empresa_paquete = $(this).data('id-empresa-paquete');
-    const $table = $('.datatables-detalles-paquete');
+    $(document).on('click', '.btn-detalles-paquete', function () {
+        const id_empresa_paquete = $(this).data('id-empresa-paquete');
+        const $table = $('.datatables-detalles-paquete');
 
-    // Destruir la tabla existente si ya está inicializada
-    if ($.fn.DataTable.isDataTable($table)) {
-        $table.DataTable().destroy();
-        $table.empty();
-    }
+        // Destruir la tabla existente si ya está inicializada
+        if ($.fn.DataTable.isDataTable($table)) {
+            $table.DataTable().destroy();
+            $table.empty();
+        }
 
-    // Reconstruir la estructura básica de la tabla
-    $table.html('<thead><tr>'
-        + '<th>Cliente</th>'
-        + '<th>Documento</th>'
-        + '<th>Sede</th>'
-        + '<th>Fecha Reserva</th>'
-        + '<th>Horario</th>'
-        + '<th>Estado</th>'
-        + '</tr></thead><tbody></tbody>');
+        // Reconstruir la estructura básica de la tabla
+        $table.html('<thead><tr>'
+            + '<th>Cliente</th>'
+            + '<th>Documento</th>'
+            + '<th>Sede</th>'
+            + '<th>Fecha Reserva</th>'
+            + '<th>Horario</th>'
+            + '<th>Estado</th>'
+            + '</tr></thead><tbody></tbody>');
 
-    // Inicializar la nueva instancia de DataTable
-    const table_detalles_paquete = $table.DataTable({
-        ordering: true,
-        processing: true,
-        serverSide: true,
-        searching: false,
-        info: false,
-        pageLength: 10,
-        language: {
-            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json',
-            infoEmpty: "No hay datos disponibles",
-        },
-        dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
-        ajax: {
-            url: url + '/dashboard/empresa/consultar_citas_empresa_paquete/' + id_empresa_paquete,
-            type: 'GET',
-            dataSrc: function (json) {
-                return json.Data;
-            }
-        },
-        columns: [
-            {
-                data: null,
-                render: function (data) {
-                    return data.nombre_cliente + ' ' + data.apellido_cliente;
+        // Inicializar la nueva instancia de DataTable
+        const table_detalles_paquete = $table.DataTable({
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            searching: false,
+            info: false,
+            pageLength: 10,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json',
+                infoEmpty: "No hay datos disponibles",
+            },
+            dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+            ajax: {
+                url: url + '/dashboard/empresa/consultar_citas_empresa_paquete/' + id_empresa_paquete,
+                type: 'GET',
+                dataSrc: function (json) {
+                    return json.Data;
                 }
             },
-            {
-                data: null,
-                render: function (data) {
-                    return data.tipo_doc_cliente + ' ' + data.doc_cliente;
-                }
-            },
-            { data: 'nombre_sede'},
-            { 
-                data: null,
-                render: function (data) {
-                    return data.reserva_cita.split(' ')[0];
-                }
-            },
-            { data: 'rango_horario' },
-            { data: 'nombre_estado' }
-        ],
-        pagingType: "simple"
+            columns: [
+                {
+                    data: null,
+                    render: function (data) {
+                        return data.nombre_cliente + ' ' + data.apellido_cliente;
+                    }
+                },
+                {
+                    data: null,
+                    render: function (data) {
+                        return data.tipo_doc_cliente + ' ' + data.doc_cliente;
+                    }
+                },
+                { data: 'nombre_sede' },
+                {
+                    data: null,
+                    render: function (data) {
+                        return data.reserva_cita.split(' ')[0];
+                    }
+                },
+                { data: 'rango_horario' },
+                { data: 'nombre_estado' }
+            ],
+            pagingType: "simple"
+        });
+
+        $('#modalDetallesPaquete').modal('show');
     });
-
-    $('#modalDetallesPaquete').modal('show');
-});
 
     // TABLAS DE PAQUETES
     var table_paquetes;
