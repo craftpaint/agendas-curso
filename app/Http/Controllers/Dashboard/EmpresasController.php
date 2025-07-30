@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use App\Helpers\AdminHelper;
 use App\Helpers\EmpresaHelper;
 use App\Helpers\EstadisticasHelper;
+use App\Helpers\PaqueteHelper;
 
 
 class EmpresasController extends Controller
@@ -281,6 +282,64 @@ class EmpresasController extends Controller
         return response()->json($response);
     }
 
+    public function obtenerDatosHistorialPaquetes(Request $request) {
+        $response = [
+            'Status' => 500,
+            'Message' => 'Ocurrió un error al consultar los datos del historial de paquete.',
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            $id_empresa = $request->input('id_empresa');
+            $data = EstadisticasHelper::obtenerDatosHistorialPaquetes($id_empresa);
+
+            if ($data !== null && $data->isNotEmpty()) {
+                $response['Status'] = 200;
+                $response['Message'] = "Los datos han sido cargados exitosamente.";
+                $response['Success'] = true;
+                $response['Data'] = $data;
+            } else {
+                $response['Status'] = 200;
+                $response['Success'] = true;
+                $response['Message'] = "La empresa no posee paquetes comprados hasta la fecha.";
+            }
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            $response['Message'] = "Error al consultar el historial de paquetes.";
+        }
+        return response()->json($response);
+    }
+
+    public function obtenerDatosPaquetesPendientes(Request $request) {
+        $response = [
+            'Status' => 500,
+            'Message' => 'Ocurrió un error al consultar los datos de los paquetes pendientes.',
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            $id_empresa = $request->input('id_empresa');
+            $data = EstadisticasHelper::obtenerDatosPaquetesPendientes($id_empresa);
+
+            if ($data !== null && $data->isNotEmpty()) {
+                $response['Status'] = 200;
+                $response['Message'] = "Los datos han sido cargados exitosamente.";
+                $response['Success'] = true;
+                $response['Data'] = $data;
+            } else {
+                $response['Status'] = 200;
+                $response['Success'] = true;
+                $response['Message'] = "La empresa no posee paquetes pendientes comprados hasta la fecha.";
+            }
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            $response['Message'] = "Error al consultar los paquetes pendientes comprados.";
+        }
+        return response()->json($response);
+    }
+
     public function validarExistenciaEmpresa(Request $request) {
         $response = [
             'Status' => 500,
@@ -304,6 +363,30 @@ class EmpresasController extends Controller
                 $response['Message'] = "La empresa ha sido consultada exitosamente.";
             } else {
                 $response['Message'] = "No existen datos de la empresa consultada.";
+            }
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            $response['Message'] = "Error al consultar la empresa.";
+        }
+        return response()->json($response);
+    }
+
+    public function consultarCitasEmpresaPaquete($id_empresa_paquete) {
+        $response = [
+            'Status' => 500,
+            'Message' => "Ocurrió un error al consultar las citas del paquete.",
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            $data = PaqueteHelper::consultarCitasEmpresaPaquete($id_empresa_paquete);
+
+            if ($data !== null && $data->isNotEmpty()) {
+                $response['Status'] = 200;
+                $response['Message'] = "Los datos han sido cargados exitosamente.";
+                $response['Success'] = true;
+                $response['Data'] = $data;
             }
         } catch (\Throwable $e) {
             Log::error($e->getMessage());
