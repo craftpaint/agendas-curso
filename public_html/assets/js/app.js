@@ -4461,7 +4461,7 @@ $(function () {
             // Crear contenedor para el gráfico
             const chartContainer = document.createElement('div');
             chartContainer.id = chartId;
-            chartContainer.className = 'py-auto h-50';
+            chartContainer.className = 'mt-5 py-auto';
             container.appendChild(chartContainer);
 
             // Configuración del gráfico
