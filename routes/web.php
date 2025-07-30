@@ -13,6 +13,7 @@ use App\Http\Controllers\Dashboard\EstadisticasController;
 use App\Http\Controllers\Dashboard\RolesController;
 use App\Http\Controllers\Dashboard\PermissionsController;
 use App\Http\Controllers\Dashboard\EmpresasController;
+use App\Http\Controllers\Dashboard\PaquetesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -141,6 +142,20 @@ Route::controller(SedesController::class)->group(function () {
     Route::post('dashboard/sedes/delete_servicio', 'delete_servicio')
         ->middleware(['auth', 'verified', 'permission:sede.servicios.d']);
     Route::post('dashboard/sedes/get_servicio_by_id_sede', 'get_servicio_by_id_sede');
+
+    // Rutas para ciudades
+    Route::post('dashboard/sedes/get_ciudades', 'get_ciudades')
+        ->middleware(['auth', 'verified', 'permission:sede.Ciudades.v']);
+    Route::post('dashboard/sedes/add_ciudad', 'add_ciudad')
+        ->middleware(['auth', 'verified', 'permission:sede.Ciudades.a']);
+    Route::post('dashboard/sedes/change_estado_ciudad', 'change_estado_ciudad')
+        ->middleware(['auth', 'verified', 'permission:sede.Ciudades.d']);
+    Route::post('dashboard/sedes/get_ciudad', 'get_ciudad')
+        ->middleware(['auth', 'verified', 'permission:sede.Ciudades.e']);
+    Route::post('dashboard/sedes/edit_ciudad', 'edit_ciudad')
+        ->middleware(['auth', 'verified', 'permission:sede.Ciudades.e']);
+    Route::post('dashboard/sedes/save_ciudad', 'save_ciudad')
+        ->middleware(['auth', 'verified', 'permission:sede.Ciudades.e']);
 })->name('sedes');
 
 // Clientes
@@ -399,20 +414,60 @@ Route::middleware(['auth', 'verified', 'permission:empresa.listado.v'])->group(f
 
 // Otras operaciones que requieren permisos distintos:
 Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.a'])->group(function () {
-    Route::get('dashboard/empresas/create', [EmpresasController::class, 'create'])->name('empresas.create');
-    Route::post('dashboard/empresas/store', [EmpresasController::class, 'store'])->name('empresas.store');
+    Route::post('dashboard/empresas/guardar', [EmpresasController::class, 'guardarEmpresa'])->name('empresas.guardarEmpresa');
 });
 
 Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.e'])->group(function () {
-    Route::get('dashboard/empresas/edit/{id}', [EmpresasController::class, 'edit'])->name('empresas.edit');
-    Route::post('dashboard/empresas/update/{id}', [EmpresasController::class, 'update'])->name('empresas.update');
+    Route::post('dashboard/empresas/actualizar/{id}', [EmpresasController::class, 'actualizar'])->name('empresas.actualizar');
 });
 
 Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.d'])->group(function () {
-    Route::delete('dashboard/empresas/destroy/{id}', [EmpresasController::class, 'destroy'])->name('empresas.destroy');
+    Route::post('dashboard/empresas/cambiar_estado/', [EmpresasController::class, 'cambiarEstado'])->name('empresas.cambiarEstado');
 });
 
 Route::middleware(['auth', 'verified', 'permission:empresa.Empresa.a'])
-    ->post('dashboard/empresas/upload-logo', [EmpresasController::class, 'uploadLogo'])->name('empresas.uploadLogo');
+    ->post('dashboard/empresas/guardar-logo', [EmpresasController::class, 'guardarLogo'])->name('empresas.guardarLogo');
+
+
+
+Route::controller(EmpresasController::class)->group(function () {
+    Route::get('dashboard/empresa', 'obtenerDashboardEmpresa')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+    Route::get('dashboard/empresa/consultar_todas_empresas/', 'consultarTodasEmpresas')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+    Route::get('dashboard/empresa/consultar_empresa/{id}', 'consultarEmpresa')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+    Route::get('dashboard/empresa/consultar_empresa_por_sede/{id}', 'consultarEmpresaPorSede')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+    Route::post('dashboard/empresa/obtener_datos_barra_progreso', 'obtenerDatosProgressBarDasboardEmpresa')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+    Route::post('dashboard/empresa/obtener_datos_linea_mezclada', 'obtenerDatosLineBarMixedDashboardEmpresa')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+    Route::post('dashboard/empresa/obtener_datos_historial_paquetes', 'obtenerDatosHistorialPaquetes')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+    Route::post('dashboard/empresa/obtener_datos_paquetes_pendientes', 'obtenerDatosPaquetesPendientes')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+    Route::get('dashboard/empresa/consultar_citas_empresa_paquete/{id_empresa_paquete}', 'consultarCitasEmpresaPaquete')
+        ->middleware(['auth', 'verified', 'permission:empresa.dashboard.v']);
+});
+
+Route::controller(EmpresasController::class)->group(function () {
+    Route::post('webhook/wompi', 'handleWebhook');
+});
+
+// Rutas para Paquetes
+Route::controller(PaquetesController::class)->group(function () {
+    Route::get('dashboard/paquetes', 'index')
+    ->middleware(['auth', 'verified', 'permission:paquete.listado.v'])
+    ->name('paquetes.index');
+    Route::post('dashboard/paquetes/obtener_paquetes', 'obtenerPaquetes')
+    ->middleware(['auth', 'verified', 'permission:paquete.listado.v']);
+    Route::post('dashboard/paquetes/cambio_estado', 'cambioEstadoPaquete')
+    ->middleware(['auth', 'verified', 'permission:paquete.listado.d']);
+    Route::post('dashboard/paquetes/guardar', 'guardarPaquete')
+    ->middleware(['auth', 'verified', 'permission:paquete.listado.a']);
+    Route::post('dashboard/paquetes/actualizar/{id}', 'actualizarPaquete')
+    ->middleware(['auth', 'verified', 'permission:paquete.listado.e']);
+})->name('paquetes');
 
 require __DIR__ . '/auth.php';

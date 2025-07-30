@@ -60,6 +60,11 @@ $(function () {
     let tipoCita = '';
     let filtroAgente = '';
 
+    //Filtros de paquetes
+    let filtroNombre = '';
+    let filtroTipo = '';
+    let filtroValor = '';
+
     let MATERIAL3 = {
         primary: getComputedStyle(document.documentElement).getPropertyValue('--color-azul-500').trim(),
         secondary: getComputedStyle(document.documentElement).getPropertyValue('--color-verde').trim(),
@@ -364,7 +369,7 @@ $(function () {
     //TABLAS DE SEDES
     if ($('.datatables-sedes').length) {
         let table = $('.datatables-sedes').DataTable({
-            ordering: false,
+            ordering: true,
             processing: true,
             serverSide: true,
             ajax: {
@@ -382,7 +387,7 @@ $(function () {
                 {
                     targets: 1,
                     render: function (data, type, full, meta) {
-                        return full.idrun_sede;
+                        return full.Nombre_empresa;
                     }
                 },
                 {
@@ -394,7 +399,7 @@ $(function () {
                 {
                     targets: 3,
                     render: function (data, type, full, meta) {
-                        return full.tel_sede;
+                        return full.Nombre_ciudad;
                     }
                 },
                 {
@@ -462,8 +467,8 @@ $(function () {
     if ($('.datatables-horarios').length) {
         table_horarios = $('.datatables-horarios').DataTable({
             lengthChange: true,
-            searching: false,
-            ordering: false,
+            searching: true,
+            ordering: true,
             processing: true,
             serverSide: true,
             ajax: {
@@ -668,6 +673,132 @@ $(function () {
                     });
                 }
             });
+        });
+    }
+
+    //Tabla de CIUDADES
+    if ($('.datatables-ciudades').length) {
+        table_servicios = $('.datatables-ciudades').DataTable({
+            lengthChange: true,
+            searching: true,
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            info: true,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
+                info: "Mostrando _START_ a _END_ de _MAX_ registros",
+                infoEmpty: "No hay datos disponibles",
+                infoFiltered: "(filtrados de un total de _MAX_ registros)"
+            },
+            ajax: {
+                url: url + '/dashboard/sedes/get_ciudades',
+                type: "POST"
+            },
+            column: [{ data: '' }],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        return full.nombre;
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return full.latitud + ', ' + full.longitud;
+                    }
+                },
+                {
+                    targets: 2,
+                    render: function (data, type, full, meta) {
+                        return '<i class="tf-icons ti ti-zoom-scan ti-md"></i>' + full.nivel_zoom;
+                    }
+                },
+                {
+                    targets: 3,
+                    render: function (data, type, full, meta) {
+                        if (full.estado == 'ACTIVO') {
+                            return '<span class="badge bg-label-success">' + full.estado + '</span>';
+                        }
+                        return '<span class="badge bg-label-danger">' + full.estado + '</span>';
+                    }
+                },
+                {
+                    targets: 4,
+                    render: function (data, type, full, meta) {
+                        return `
+                        <div class="d-flex justify-content-end">
+                            ${(canEditCiudades) ? `
+                                <a href="#" data-id_ciudad="${full.id_ciudad}" class="btn_edit_ciudad btn btn-icon btn-label-primary waves-effect me-2">
+                                    <i class="tf-icons ti ti-edit ti-md"></i>
+                                </a>` : ``}
+                            ${(canDeleteCiudades) ? `
+                                <a href="#" data-id_ciudad="${full.id_ciudad}" data-estado="${full.estado}" class="btn_desactivar_ciudad btn btn-icon btn-label-danger waves-effect">
+                                    <i class="tf-icons ti ti-map-pin-x ti-md"></i>
+                                </a>` : ``}
+                        </div>`	;
+                    }
+                },
+
+            ],
+            pagingType: "simple"
+        });
+        //ELIMINAR SEDE
+        $('.datatables-ciudades').on('click', '.btn_desactivar_ciudad', function () {
+            let id_ciudad = $(this).data('id_ciudad');
+            let estado = $(this).data('estado');
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: '¡Todas las sedes asociadas a esta ciudad serán desactivadas!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '¡Sí, desactivar!',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-outline-danger ml-1'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url + '/dashboard/sedes/change_estado_ciudad',
+                        type: 'POST',
+                        data: { id_ciudad: id_ciudad, estado: estado },
+                        success: function (data) {
+                            if (data.validate) {
+                                table_servicios.ajax.reload();
+                            } else {
+                                alertNotify('¡Error!', data.text, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        //Editar usuario
+        $('.datatables-ciudades').on('click', '.btn_edit_ciudad', function () {
+            let id_ciudad = $(this).data('id_ciudad');
+            $.ajax({
+                url: url + '/dashboard/sedes/get_ciudad',
+                type: 'POST',
+                data: { id_ciudad: id_ciudad },
+                success: function (response) {
+                    $('.content_ciudad_edit input[name="id_ciudad"]').val(id_ciudad);
+                    $('.content_ciudad_edit input[name="nombre_ciudad"]').val(response.data.nombre);
+                    $('.content_ciudad_edit input[name="longitud_ciudad"]').val(response.data.longitud);
+                    $('.content_ciudad_edit input[name="latitud_ciudad"]').val(response.data.latitud);
+                    $('.content_ciudad_edit input[name="nivel_zoom_ciudad"]').val(response.data.nivel_zoom);
+                    $('.content_ciudad_add').hide();
+                    $('.content_ciudad_edit').fadeIn(200);
+
+                }
+            });
+        });
+        $('.add_ciudad').click(function () {
+            $('.content_ciudad_edit').hide();
+            $('.content_ciudad_add').fadeIn(200);
         });
     }
     //FIN: HORARIOS------------------------------------------------------------------------
@@ -1855,9 +1986,9 @@ $(function () {
     //USUARIOS
     if ($('.datatables-usuarios').length) {
         table_usuarios = $('.datatables-usuarios').DataTable({
-            lengthChange: false,
-            searching: false,
-            ordering: false,
+            lengthChange: true,
+            searching: true,
+            ordering: true,
             processing: true,
             serverSide: true,
             ajax: {
@@ -1868,12 +1999,14 @@ $(function () {
             columnDefs: [
                 {
                     targets: 0,
+                    searchable: true,
                     render: function (data, type, full, meta) {
                         return '<h6 class="m-0">' + full.name + '</h6>';
                     }
                 },
                 {
                     targets: 1,
+                    searchable: true,
                     render: function (data, type, full, meta) {
                         return '<span class="badge bg-label-dark">' + full.email + '</span>';
                     }
@@ -3417,7 +3550,7 @@ $(function () {
         $('#filtro-dos-meses-anteriores').on('click', function () {
             const ahora = new Date();
             const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth() - 2, 1);
-            const finMes = new Date(ahora.getFullYear(), ahora.getMonth() -1, 0);
+            const finMes = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 0);
             filtroDia = formatDate(inicioMes);
             filtroDiaEnd = formatDate(finMes);
             table.ajax.reload();
@@ -3915,5 +4048,1197 @@ $(function () {
             }
         });
     }
+
+    // VISTA DE EMPRESAS
+    // Previsualización de la imagen seleccionada
+    $('#create-empresa-file').on('change', function () {
+        const file = this.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('#preview-image').attr('src', e.target.result);
+                $('#preview-container').show();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            $('#preview-image').attr('src', '');
+            $('#preview-container').hide();
+        }
+    });
+
+    // Botón para quitar la imagen seleccionada
+    $('#btn-cancel-image').on('click', function () {
+        $('#create-empresa-file').val('');
+        $('#preview-image').attr('src', '');
+        $('#preview-container').hide();
+        $('#logo-url').val('');
+    });
+
+    $('#btn-crear-empresa').on('click', function () {
+        $('#createEmpresaModalLabel').text('Crear Empresa');
+        $('#createEmpresaForm').attr('action', url + '/dashboard/empresas/guardar');
+        $('#createEmpresaForm')[0].reset();
+        $('#create-empresa-plan').val('').trigger('change');
+        $('#create-empresa-file').val('');
+        $('#preview-image').attr('src', '');
+        $('#preview-container').hide();
+        $('#createEmpresaModal').modal('show');
+    });
+
+    // Formulario para crear una nueva empresa
+    $('#createEmpresaForm').on('submit', function (event) {
+        event.preventDefault();
+        let action = $(this).attr('action');
+        let form = $(this);
+        let fileInput = $('#create-empresa-file')[0];
+        let file = fileInput.files[0];
+
+        function guardarEmpresa() {
+            let formData = new FormData(form[0]);
+            $.ajax({
+                url: action,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.Success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Exito!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        }).then(() => {
+                            $('#createEmpresaModal').modal('hide');
+                            $('#createEmpresaForm')[0].reset();
+                            $('#preview-image').attr('src', '');
+                            $('#preview-container').hide();
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al enviar los datos de la empresa.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    });
+                }
+            });
+        }
+
+        if (file) {
+            let imgData = new FormData();
+            imgData.append('file', file);
+
+            $.ajax({
+                url: 'empresas/guardar-logo',
+                type: 'POST',
+                data: imgData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.Success) {
+                        $('#logo-url').val(response.Data);
+                        guardarEmpresa();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo subir el logo de la empresa.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    });
+                }
+            });
+        } else {
+            guardarEmpresa();
+        }
+    });
+
+    //Botón para abrir el modal de editar empresa
+    $('.btn-edit-empresa').on('click', function () {
+        const id = $(this).data('empresa-id');
+        const nombre = $(this).data('empresa-nombre');
+        const descripcion = $(this).data('empresa-descripcion');
+        const tipo_documento = $(this).data('empresa-tipo-documento');
+        const numero_documento = $(this).data('empresa-documento');
+        const plan = $(this).data('empresa-plan');
+        const logo = $(this).data('empresa-logo');
+        const plantilla = $(this).data('empresa-plantilla');
+
+        $('#createEmpresaModalLabel').text('Editar Empresa');
+        $('#createEmpresaForm').attr('action', url + '/dashboard/empresas/actualizar/' + id);
+        $('#create-empresa-name').val(nombre);
+        $('#create-empresa-description').val(descripcion);
+        $('#create-empresa-document-type').val(tipo_documento);
+        $('#create-empresa-document-number').val(numero_documento);
+        $('#create-empresa-plan').val(plan);
+        $('#create-empresa-template').val(plantilla);
+
+        if (logo && logo !== '') {
+            $('#preview-image').attr('src', logo.startsWith('http') ? logo : (url + '/' + logo.replace(/^\/+/, '')));
+            $('#preview-container').show();
+            $('#logo-url').val(logo);
+        } else {
+            $('#preview-image').attr('src', '');
+            $('#preview-container').hide();
+            $('#logo-url').val('');
+        }
+
+        $('#createEmpresaModal').modal('show');
+    });
+
+    // Botón para cambiar de estado de la empresa
+    $('.btn-estado-empresa').on('click', function () {
+        const id = $(this).data('empresa-id');
+
+        $.ajax({
+            url: url + '/dashboard/empresas/cambiar_estado',
+            type: 'POST',
+            data: {
+                id_empresa: id
+            },
+            success: function (response) {
+                if (response.Success) {
+                    location.reload();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cambiar el estado de la empresa.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                    }
+                });
+            }
+        });
+    });
+
+    // VISTA DE DASHBOARD EMPRESAS
+    function consultarTodasEmpresas() {
+        $.ajax({
+            url: url + '/dashboard/empresa/consultar_todas_empresas',
+            type: 'GET',
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        $('#empresa-select-dashboard option:not(:first)').remove();
+                        response.Data.forEach(empresa => {
+                            $('#empresa-select-dashboard').append(
+                                $('<option>', {
+                                    value: empresa.id_empresa,
+                                    text: empresa.Nombre,
+                                })
+                            );
+                        });
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de las empresas.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function consultarEmpresaUsuario(id_sede = sede) {
+        $.ajax({
+            url: url + '/dashboard/empresa/consultar_empresa_por_sede/' + id_sede,
+            type: 'GET',
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        $('#logo-empresa-dashboard').attr('src', `${url}/${response.Data.logo}`);
+                        $('#nombre-empresa-dashboard').html(`Nombre: <strong>${response.Data.Nombre}</strong>`);
+                        $('#documento-empresa-dashboard').html(`Documento: <strong>${response.Data.tipo_documento_empresa} ${response.Data.documento_empresa}</strong>`);
+                       if (rol == 'superadmin' || rol == 'admin') {
+                            $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
+                        }
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de la empresa.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function consultarEmpresa(id_empresa) {
+        $.ajax({
+            url: url + '/dashboard/empresa/consultar_empresa/' + id_empresa,
+            type: 'GET',
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        $('#logo-empresa-dashboard').attr('src', `${url}/${response.Data.logo}`);
+                        $('#nombre-empresa-dashboard').html(`Nombre: <strong>${response.Data.Nombre}</strong>`);
+                        $('#documento-empresa-dashboard').html(`Documento: <strong>${response.Data.tipo_documento_empresa} ${response.Data.documento_empresa}</strong>`);
+                        if (rol == 'superadmin' || rol == 'admin') {
+                            $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
+                        }
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de la empresa.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function obtenerDatosProgressBarDashboardEmpresa(endpoint, chart, id_empresa = null) {
+        $.ajax({
+            url: url + endpoint,
+            type: 'POST',
+            data: {
+                id_empresa: id_empresa
+            },
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        $('#nombre-paquete-activo-dashboard-empresa').html(`Nombre: <strong>${response.Data.nombre_paquete}</strong>`);
+                        $('#numero-citas-paquete-activo-dashboard-empresa').html(`Número de citas: <strong>${response.Data.numero_citas}</strong>`);
+                        $('#estado-paquete-activo-dashboard-empresa').html(`Estado: <strong>${response.Data.estado}</strong>`);
+                        $('#citas-consumidas-paquete-activo-dashboard-empresa').html(`<strong>${response.Data.citas_consumidas}</strong>`);
+                        $('#citas-faltantes-paquete-activo-dashboard-empresa').html(`<strong>${response.Data.citas_faltantes}</strong>`);
+                        $('#citas-confirmadas-paquete-activo-dashboard-empresa').text(`${response.Data.citasConfirmadas}`);
+                        $('#citas-erradas-paquete-activo-dashboard-empresa').text(`${response.Data.citasErradas}`);
+                        $('#citas-validacion-paquete-activo-dashboard-empresa').text(`${response.Data.citasEnValidacion}`);
+                        $('#citas-pendientes-paquete-activo-dashboard-empresa').text(`${response.Data.citasPendientes}`);
+                        chart.updateSeries([
+                            {
+                                data: [response.Data.citas_consumidas]
+                            },
+                            {
+                                data: [response.Data.citas_faltantes]
+                            }
+                        ]);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de la barra de progreso.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function obtenerDatosLineBarMixedDashboardEmpresa(endpoint, chart, id_empresa = null) {
+        $.ajax({
+            url: url + endpoint,
+            type: 'POST',
+            data: {
+                id_empresa: id_empresa
+            },
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        chart.updateSeries([
+                            {
+                                data: response.Data.citasAgendadasPorMesActual
+                            },
+                            {
+                                data: response.Data.citasAsistidasPorMesActual
+                            }
+                        ]);
+                        chart.updateOptions({
+                            yaxis: [{
+                                max: response.Data.numero_citas
+                            }]
+                        })
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de la barra de progreso.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function actualizarGraficosHistorial(datos) {
+        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorial');
+
+        // Limpiar contenedor
+        container.innerHTML = '';
+
+        // Crear un gráfico por cada paquete
+        datos.forEach((paquete, index) => {
+            const chartId = `chart${index + 1}`;
+
+            // Crear contenedor para el gráfico
+            const chartContainer = document.createElement('div');
+            chartContainer.id = chartId;
+            chartContainer.className = 'mt-5 py-auto';
+            container.appendChild(chartContainer);
+
+            // Configuración del gráfico
+            const chartOptions = {
+                series: [paquete.porcentaje],
+                chart: {
+                    height: 130,
+                    type: 'radialBar'
+                },
+                plotOptions: {
+                    radialBar: {
+                        startAngle: -135,
+                        endAngle: 135,
+                        dataLabels: {
+                            name: {
+                                fontSize: '14px',
+                                offsetY: 90
+                            },
+                            value: {
+                                offsetY: 50,
+                                fontSize: '18px',
+                                formatter: (val) => `${val}%`
+                            }
+                        }
+                    }
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shade: 'dark',
+                        shadeIntensity: 0.15,
+                        inverseColors: false,
+                        stops: [0, 50, 65, 91]
+                    }
+                },
+                stroke: {
+                    dashArray: 4
+                },
+                labels: [''],
+                colors: ['#b5ba30']
+            };
+
+            // Renderizar gráfico
+            const chart = new ApexCharts(document.querySelector(`#${chartId}`), chartOptions);
+            chart.render();
+        });
+    }
+
+    function actualizarInfoHistorial(datos) {
+        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorialInfo');
+
+        // Limpiar contenedor
+        container.innerHTML = '';
+
+        //Crea la informmación para cada paquete
+        datos.forEach((paquete, index) => {
+            const infoId = `info${index + 1}`;
+
+            const infoContainer = document.createElement('div');
+            infoContainer.id = infoId;
+            infoContainer.className = 'mb-5';
+            container.appendChild(infoContainer);
+            paquete.fecha_inicio = paquete.fecha_inicio.split(' ')[0];
+
+            if (!paquete.fecha_fin) {
+                paquete.fecha_fin = "ACTIVO";
+            } else {
+                paquete.fecha_fin = paquete.fecha_fin.split(' ')[0];
+            }
+
+            infoContainer.innerHTML = `
+                <h5 class="text-info pt-5 mb-2">Nombre: <strong class="text-dark">${paquete.nombre_paquete}</strong></h5>
+                <h6 class="text-info mb-2"><strong>${paquete.fecha_inicio} - ${paquete.fecha_fin}</strong></h6>
+                <h6 class="text-info mb-2">Número de citas: <strong class="text-dark">${paquete.numero_citas}</strong></h6>
+                <h6 class="text-info mb-5">Precio: <strong class="text-dark">${paquete.valor}</strong></h6>
+            `;
+        });
+    }
+
+    function actualizarBotonesHistorial(datos) {
+        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorialBoton');
+
+        // Limpiar contenedor
+        container.innerHTML = '';
+
+        datos.forEach((paquete, index) => {
+            const botonId = `boton${index + 1}`;
+
+            const botonContainer = document.createElement('div');
+            botonContainer.id = botonId;
+            botonContainer.className = 'mt-5';
+            botonContainer.style.marginBottom = '100px';
+            container.appendChild(botonContainer);
+
+            botonContainer.innerHTML = `
+                <button class="btn btn-icon btn-lg waves-effect btn-detalles-paquete w-100 text-center" 
+                    data-bs-toggle="tooltip" 
+                    data-bs-placement="top" 
+                    data-bs-custom-class="tooltip-info" 
+                    title="Editar"
+                    data-id-empresa-paquete="${paquete.id_empresa_paquete}"
+                    data-bs-target="#modalDetallesPaquete">
+                    <i class="ti ti-checkup-list me-2 text-info" style="font-size:50px;"></i>
+                </button>
+            `;
+        });
+    }
+
+    function obtenerDatosHistorialPaquetes(endpoint, id_empresa = null) {
+        $.ajax({
+            url: url + endpoint,
+            type: 'POST',
+            data: {
+                id_empresa: id_empresa
+            },
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        actualizarGraficosHistorial(response.Data);
+                        actualizarInfoHistorial(response.Data);
+                        actualizarBotonesHistorial(response.Data);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos del historial de paquetes.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function actualizarListadoPaquetesPendientes(datos) {
+        const container = document.getElementById('ListadopaquetesPendientes');
+
+        // Limpiar contenedor
+        container.innerHTML = '';
+
+        datos.forEach((paquete, index) => {
+            const paquetePendienteId = `paquetePendiente${index + 1}`;
+
+            const paquetePendienteContainer = document.createElement('div');
+            paquetePendienteContainer.id = paquetePendienteId;
+            paquetePendienteContainer.className = 'row';
+            container.appendChild(paquetePendienteContainer);
+
+            paquetePendienteContainer.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h4 style="color: #b5ba30;"><i class="ti ti-package-import display-1"></i></h4>
+                    <div>
+                        <h5 class="mb-1 text-info">Nombre: <strong class="text-dark">${paquete.nombre_paquete}</strong></h5>
+                        <h5 class="mb-1 text-info">Fecha de compra: <strong class="text-dark">${paquete.created_at.split(' ')[0]}</strong></h5>
+                        <h5 class="mb-1 text-info">Número de citas: <strong class="text-dark">${paquete.numero_citas}</strong></h5>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function obtenerListadoPaquetesPendientes(endpoint, id_empresa = null) {
+        $.ajax({
+            url: url + endpoint,
+            type: 'POST',
+            data: {
+                id_empresa: id_empresa
+            },
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        actualizarListadoPaquetesPendientes(response.Data);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los paquetes pendientes.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    function validarPaqueteActivo (id_empresa = null) {
+        $.ajax({
+            url: url + '/dashboard/empresa/obtener_datos_barra_progreso',
+            type: 'POST',
+            data: {
+                id_empresa: id_empresa
+            },
+            success: function (response) {
+                if (response.Success) {
+                    if (response.Data) {
+                        const citas_restantes = response.Data.numero_citas - response.Data.citas_consumidas;
+                        // CUANDO NO TIENE UN PAQUETE ACTIVO
+                        if (rol == "Admin Empresa") {
+                            if (citas_restantes <= 15 && citas_restantes > 0) {
+                                $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/aviso_paquetes.jpg`);
+                                $('#aviso-url').attr('href', `${page_wp_aliados}`);
+                                $('#popupPaquetes').modal({
+                                    backdrop: 'static',
+                                    keyboard: false
+                                });
+                                $('#popupPaquetes').modal('show');
+                            } else if (citas_restantes == 0 || response.Data.tipo_paquete == "AUXILIAR") {
+                                $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/fin_paquetes.jpg`);
+                                $('#aviso-url').attr('href', `${page_wp_aliados}`);
+                                 $('#popupPaquetes').find('.btn-close').hide();
+                                $('#popupPaquetes').modal({
+                                    backdrop: 'static',
+                                    keyboard: false
+                                });
+                                $('#popupPaquetes').modal('show');
+                            }
+                        }
+                    } else {
+                        // PARA CUANDO NO TIENE UN PAQUETE ACTIVO
+                        if ((rol == "Admin Empresa" && response.Data.tipo_paquete == "AUXILIAR") || (rol == "Admin Empresa")) {
+                            $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/fin_paquetes.jpg`);
+                            $('#aviso-url').attr('href', `${page_wp_aliados}`);
+                            $('#popupPaquetes').find('.btn-close').hide();
+                            $('#popupPaquetes').modal({
+                                    backdrop: 'static',
+                                    keyboard: false
+                                });
+                            $('#popupPaquetes').modal('show');
+                        }
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: "Ocurrió un error al obtener los datos de la barra de progreso.",
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    }
+
+    // SE VALIDA EL POP-UP DE PAQUETES
+    if ($('#popupPaquetes').length) {
+        validarPaqueteActivo();
+    }
+
+    if ($('#dashboard-empresas').length) {
+        // BARRA DE PROGRESO DE CONSUMO DE PAQUETE ACTIVO
+        var optionsChartDashboardEmpresasProgressBar = {
+            series: [{
+                name: 'Citas consumidas',
+                data: []
+            }, {
+                name: 'Citas faltantes',
+                data: []
+            }],
+            chart: {
+                type: 'bar',
+                height: 200,
+                stacked: true,
+                stackType: '100%'
+            },
+            colors: ['#00d2ff', '#b5ba30'],
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    borderRadius: 5,
+                },
+            },
+            stroke: {
+                width: 1,
+                colors: ['#fff']
+            },
+            title: {
+                text: '% de progreso del paquete',
+            },
+            xaxis: {
+                categories: [''],
+                labels: {
+                    show: false
+                },
+                axisTicks: {
+                    show: false
+                },
+                axisBorder: {
+                    show: false
+                }
+            },
+            grid: {
+                show: false,
+                padding: {
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    left: 0
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function (val) {
+                        return val + " Citas"
+                    }
+                }
+            },
+            fill: {
+                opacity: 1
+            },
+            legend: {
+                position: 'top',
+                horizontalAlign: 'left',
+                offsetX: 0
+            }
+        };
+
+        var ChartDashboardEmpresasProgressBar = new ApexCharts(document.querySelector("#ChartDashboardEmpresasProgressBar"), optionsChartDashboardEmpresasProgressBar);
+        ChartDashboardEmpresasProgressBar.render();
+
+        // GRAFICA MIXED DE LAS CITAS EXISTENTES VS LAS ASISTIDAS
+        var optionsChartDashboardEmpresasLineBarMixed = {
+            series: [{
+                name: 'Agendados',
+                type: 'column',
+                data: []
+            }, {
+                name: 'Asistidos',
+                type: 'line',
+                data: []
+            }],
+            chart: {
+                height: 500,
+                type: 'line',
+            },
+            stroke: {
+                width: [0, 4]
+            },
+            title: {
+                text: 'Citas Agendadas vs Asistidas del mes actual',
+            },
+            colors: ['#cecece', '#00d2ff'],
+            dataLabels: {
+                enabled: true,
+                enabledOnSeries: [1]
+            },
+            labels: [],
+            yaxis: [{
+                min: 0,
+                max: 150,
+
+            }, {
+                opposite: true,
+                show: false,
+                title: {
+                    text: 'Asistidos'
+                },
+                min: 0,
+                max: 150,
+            }]
+        };
+
+        var ChartDashboardEmpresasLineBarMixed = new ApexCharts(document.querySelector("#ChartDashboardEmpresasLineBarMixed"), optionsChartDashboardEmpresasLineBarMixed);
+        ChartDashboardEmpresasLineBarMixed.render();
+
+        // Datos de las empresas para el select
+        if (rol == 'superadmin' || rol == 'admin') {
+            consultarTodasEmpresas();
+        }
+
+        // Se hacen todas las consultas de la vista
+        consultarEmpresaUsuario();
+        obtenerDatosProgressBarDashboardEmpresa('/dashboard/empresa/obtener_datos_barra_progreso', ChartDashboardEmpresasProgressBar);
+        obtenerDatosLineBarMixedDashboardEmpresa('/dashboard/empresa/obtener_datos_linea_mezclada', ChartDashboardEmpresasLineBarMixed);
+        obtenerDatosHistorialPaquetes('/dashboard/empresa/obtener_datos_historial_paquetes');
+        obtenerListadoPaquetesPendientes('/dashboard/empresa/obtener_datos_paquetes_pendientes');
+    }
+
+    $('#empresa-select-dashboard').on('change', function () {
+        // Se limpian los datos del dashboard
+        $('#logo-empresa-dashboard').attr('src', ``);
+        $('#nombre-empresa-dashboard').html(``);
+        $('#documento-empresa-dashboard').html(``);
+        $('#plan-empresa-dashboard').html(``);
+        $('#nombre-paquete-activo-dashboard-empresa').html(``);
+        $('#numero-citas-paquete-activo-dashboard-empresa').html(``);
+        $('#estado-paquete-activo-dashboard-empresa').html(``);
+        $('#citas-consumidas-paquete-activo-dashboard-empresa').html(``);
+        $('#citas-faltantes-paquete-activo-dashboard-empresa').html(``);
+        $('#citas-confirmadas-paquete-activo-dashboard-empresa').text(``);
+        $('#citas-erradas-paquete-activo-dashboard-empresa').text(``);
+        $('#citas-validacion-paquete-activo-dashboard-empresa').text(``);
+        $('#citas-pendientes-paquete-activo-dashboard-empresa').text(``);
+
+        // Se consulta la nueva empresa
+        const empresaSeleccionada = $(this).val();
+        consultarEmpresa(empresaSeleccionada);
+        obtenerDatosProgressBarDashboardEmpresa('/dashboard/empresa/obtener_datos_barra_progreso', ChartDashboardEmpresasProgressBar, empresaSeleccionada);
+        obtenerDatosLineBarMixedDashboardEmpresa('/dashboard/empresa/obtener_datos_linea_mezclada', ChartDashboardEmpresasLineBarMixed, empresaSeleccionada);
+        obtenerDatosHistorialPaquetes('/dashboard/empresa/obtener_datos_historial_paquetes', empresaSeleccionada);
+        obtenerListadoPaquetesPendientes('/dashboard/empresa/obtener_datos_paquetes_pendientes', empresaSeleccionada);
+    });
+
+    // Boton de detalles del paquete
+    $(document).on('click', '.btn-detalles-paquete', function() {
+    const id_empresa_paquete = $(this).data('id-empresa-paquete');
+    const $table = $('.datatables-detalles-paquete');
+
+    // Destruir la tabla existente si ya está inicializada
+    if ($.fn.DataTable.isDataTable($table)) {
+        $table.DataTable().destroy();
+        $table.empty();
+    }
+
+    // Reconstruir la estructura básica de la tabla
+    $table.html('<thead><tr>'
+        + '<th>Cliente</th>'
+        + '<th>Documento</th>'
+        + '<th>Sede</th>'
+        + '<th>Fecha Reserva</th>'
+        + '<th>Horario</th>'
+        + '<th>Estado</th>'
+        + '</tr></thead><tbody></tbody>');
+
+    // Inicializar la nueva instancia de DataTable
+    const table_detalles_paquete = $table.DataTable({
+        ordering: true,
+        processing: true,
+        serverSide: true,
+        searching: false,
+        info: false,
+        pageLength: 10,
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json',
+            infoEmpty: "No hay datos disponibles",
+        },
+        dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+        ajax: {
+            url: url + '/dashboard/empresa/consultar_citas_empresa_paquete/' + id_empresa_paquete,
+            type: 'GET',
+            dataSrc: function (json) {
+                return json.Data;
+            }
+        },
+        columns: [
+            {
+                data: null,
+                render: function (data) {
+                    return data.nombre_cliente + ' ' + data.apellido_cliente;
+                }
+            },
+            {
+                data: null,
+                render: function (data) {
+                    return data.tipo_doc_cliente + ' ' + data.doc_cliente;
+                }
+            },
+            { data: 'nombre_sede'},
+            { 
+                data: null,
+                render: function (data) {
+                    return data.reserva_cita.split(' ')[0];
+                }
+            },
+            { data: 'rango_horario' },
+            { data: 'nombre_estado' }
+        ],
+        pagingType: "simple"
+    });
+
+    $('#modalDetallesPaquete').modal('show');
+});
+
+    // TABLAS DE PAQUETES
+    var table_paquetes;
+
+    if ($('.datatables-paquetes').length) {
+        table_paquetes = $('.datatables-paquetes').DataTable({
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            searching: false,
+            info: true,
+            pageLength: 10,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
+                info: "Mostrando _START_ a _END_ de _MAX_ registros",
+                infoEmpty: "No hay datos disponibles",
+                infoFiltered: "(filtrados de un total de _MAX_ registros)"
+            },
+            dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+            ajax: {
+                url: url + '/dashboard/paquetes/obtener_paquetes',
+                type: 'POST',
+                data: function (d) {
+                    d.filtro_nombre = filtroNombre;
+                    d.filtro_valor = filtroValor;
+                    d.filtro_tipo = filtroTipo;
+                },
+                dataSrc: function (json) {
+                    // Se extraen los datos para la información de la tabla
+                    json.draw = json.Data.draw;
+                    json.recordsTotal = json.Data.recordsTotal;
+                    json.recordsFiltered = json.Data.recordsFiltered;
+
+                    // Se retorna los datos de los paquetes
+                    return json.Data.paquetes;
+                }
+            },
+            columns: [
+                { data: 'nombre_paquete' },
+                { data: 'descripcion_paquete' },
+                { data: 'numero_citas' },
+                { data: 'valor' },
+                { data: 'tipo_paquete' },
+                { data: null },
+                { data: null, visible: (canEditPaquetes || canDeletePaquetes) ? true : false }
+            ],
+            columnDefs: [
+                {
+                    targets: '_all',
+                    className: 'dt-center'
+                },
+                {
+                    targets: 5,
+                    render: function (data) {
+                        if (data.deleted_at == null) {
+                            return `<span class="badge bg-label-success">ACTIVO</span>`;
+                        } else {
+                            return `<span class="badge bg-label-danger">INACTIVO</span>`;
+                        }
+                    }
+                },
+                {
+                    targets: 6,
+                    orderable: false,
+                    render: function (data) {
+                        return `
+                            ${(canEditPaquetes) ? `
+                                <button class="btn btn-icon btn-label-info waves-effect btn-editar-paquete" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-info" title="Editar"
+                                    data-id-paquete="${data.id_paquete}"
+                                    data-nombre-paquete="${data.nombre_paquete}"
+                                    data-descripcion-paquete="${data.descripcion_paquete}"
+                                    data-tipo-paquete="${data.tipo_paquete}"
+                                    data-numero-citas="${data.numero_citas}"
+                                    data-valor="${data.valor}">
+                                    <i class="tf-icons ti ti-pencil-cog ti-md"></i>
+                                </button>` : ''}
+                            ${(canDeletePaquetes) ? `
+                                ${(data.deleted_at == null) ? `
+                                    <button type="button" class="btn btn-icon btn-label-danger waves-effect cambio_estado_paquete" data-id_paquete="${data.id_paquete}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-danger" title="Desactivar">
+                                        <i class="tf-icons ti ti-box-off ti-md"></i>
+                                    </button>
+                                ` : `
+                                    <button type="button" class="btn btn-icon btn-label-success waves-effect cambio_estado_paquete" data-id_paquete="${data.id_paquete}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-success" title="Activar">
+                                        <i class="tf-icons ti ti-package ti-md"></i>
+                                    </button>
+                                `}
+                            `: ''}
+                        `;
+                    }
+                }
+            ],
+            createdRow: function (row, data) {
+                if (data.deleted_at == null) {
+                    $(row).css('background-color', 'rgba(225, 247, 222, 0.5)');
+                } else {
+                    $(row).css('background-color', 'rgba(255, 224, 224, 0.5)');
+                }
+            },
+            drawCallback: function (settings) {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            },
+            pagingType: "simple"
+        });
+    }
+
+    // Cambio de estado de paquete
+    $('.datatables-paquetes').on('click', '.cambio_estado_paquete', function () {
+        let id_paquete = $(this).data('id_paquete');
+
+        $.ajax({
+            url: url + '/dashboard/paquetes/cambio_estado',
+            type: 'POST',
+            data: {
+                id_paquete: id_paquete
+            },
+            success: function () {
+                // Destruir todos los tooltips activos antes de recargar la tabla
+                var tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                tooltips.forEach(function (el) {
+                    var instance = bootstrap.Tooltip.getInstance(el);
+                    if (instance) {
+                        instance.dispose();
+                    }
+                });
+
+                table_paquetes.ajax.reload();
+            }
+        });
+    });
+
+    // Eventos para los filtros de paquetes
+    $('#buscar-nombre-paquetes').on('keyup', function () {
+        filtroNombre = $(this).val();
+        table_paquetes.ajax.reload();
+    });
+
+    $('#filtro-tipo-paquete').on('change', function () {
+        filtroTipo = $(this).val();
+        table_paquetes.ajax.reload();
+    });
+
+    $('#buscar-valor-paquetes').on('keyup', function () {
+        filtroValor = $(this).val();
+        table_paquetes.ajax.reload();
+    });
+
+    $('#filtro-reiniciar').on('click', function () {
+        filtroNombre = '';
+        filtroTipo = '';
+        filtroValor = '';
+        $('#buscar-nombre-paquetes').val("").trigger('input');
+        $('#filtro-tipo-paquete').val("").trigger('change');
+        $('#buscar-valor-paquetes').val("").trigger('input');
+    });
+
+    $('#crear-paquete').on('click', function () {
+        $('#modalNuevoPaqueteLabel').text('Crear Paquete');
+        $('#form-nuevo-paquete').attr('action', url + '/dashboard/paquetes/guardar');
+        $('#form-nuevo-paquete')[0].reset();
+        $('#tipo-paquete').val('').trigger('change');
+        $('#modalNuevoPaquete').modal('show');
+    });
+
+    $('.datatables-paquetes').on('click', '.btn-editar-paquete', function () {
+        const id = $(this).data('id-paquete');
+        const nombre = $(this).data('nombre-paquete');
+        const descripcion = $(this).data('descripcion-paquete');
+        const numeroCitas = $(this).data('numero-citas');
+        const tipo = $(this).data('tipo-paquete');
+        const valor = $(this).data('valor');
+
+        $('#modalNuevoPaqueteLabel').text('Editar Paquete');
+        $('#form-nuevo-paquete').attr('action', url + '/dashboard/paquetes/actualizar/' + id);
+        $('#nombre-paquete').val(nombre);
+        $('#descripcion-paquete').val(descripcion);
+        $('#numero-citas-paquete').val(numeroCitas);
+        $('#valor-paquete').val(valor);
+        $('#tipo-paquete').val(tipo);
+
+        $('#modalNuevoPaquete').modal('show');
+    });
+
+    //Formulario para crear un nuevo paquete
+    $('#form-nuevo-paquete').on('submit', function (event) {
+        event.preventDefault();
+        let action = $(this).attr('action');
+        let formData = $(this).serialize();
+
+        $.ajax({
+            url: action,
+            type: 'POST',
+            data: formData,
+            success: function (response) {
+                if (response.Success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Exito!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    }).then(() => {
+                        table_paquetes.ajax.reload();
+                        $('#modalNuevoPaquete').modal('hide');
+                        $('#form-nuevo-paquete')[0].reset();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al enviar los datos.'
+                });
+            }
+        });
+    });
 });
 

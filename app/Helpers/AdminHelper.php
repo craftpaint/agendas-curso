@@ -13,6 +13,7 @@ use App\Models\CitasModel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class AdminHelper
 {
@@ -90,6 +91,20 @@ class AdminHelper
                 return $checkIntent;
             }
             return false;
+        } catch (\Exception $e) {
+            Log::error('get_servicios error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public static function get_ciudades_activas()
+    {
+        try {
+            $query = DB::table('tb_ciudad')
+                ->where('estado', 'ACTIVO')
+                ->orderBy('nombre', 'asc')
+                ->get();
+            return $query;
         } catch (\Exception $e) {
             Log::error('get_servicios error: ' . $e->getMessage());
             return false;

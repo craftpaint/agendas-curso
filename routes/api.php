@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoadController;
+use App\Http\Controllers\Dashboard\SedesController;
+use App\Http\Controllers\Dashboard\EmpresasController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,4 +23,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::controller(LoadController::class)->group(function () {
     Route::get('detalles-cita/{id}', 'getDetallesCita');
+});
+
+Route::controller(sedesController::class)->group(function () {
+    Route::get('obtener-ubicaciones', 'obtenerUbicaciones');
+});
+
+Route::controller(EmpresasController::class)->group(function () {
+    Route::post('verificar-empresa', 'validarExistenciaEmpresa');
+    Route::post('registrar-empresa-paquete', 'registrarEmpresaPaquete');
 });

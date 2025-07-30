@@ -13,6 +13,7 @@
     --color-azul-700: #0186a3;
     --color-azul-800: #036074;
     --color-verde: #d3d93b;
+    --color-verde-texto: #b5ba30;
 }
 
 .morado {
@@ -31,6 +32,10 @@
 
 .p-0 {
     padding: 0 !important;
+}
+
+.verde{
+    color: var(--color-verde-texto);
 }
 
 .content_form_horarios {

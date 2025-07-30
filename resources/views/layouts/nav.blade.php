@@ -34,6 +34,30 @@
         </li>
 
         <?php
+        if ($user->can('empresa.dashboard.v') || $user->can('empresa.listado.v')) {
+        ?>
+            <li class="menu-item <?= ($page == 'Empresa') ? 'active' : '' ?>">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
+                    <i class="menu-icon tf-icons ti ti-building-skyscraper"></i>
+                    <div>Módulo Empresa</div>
+                </a>
+                <ul class="menu-sub">
+                    <li class="menu-item <?= ($page == 'Empresa' && $subpage == 'Dashboard') ? 'active' : '' ?>">
+                        <a href="{{ url('dashboard/empresa') }}" class="menu-link">
+                            <div>Dashboard</div>
+                        </a>
+                    </li>
+                    <?php if ($user->can('empresa.listado.v')) { ?>
+                        <li class="menu-item <?= ($page == 'Configuracion' && $subpage == 'Empresa') ? 'active' : '' ?>">
+                            <a href="{{ url('dashboard/empresas') }}" class="menu-link">
+                                <div>Empresas</div>
+                            </a>
+                        </li>
+                    <?php } ?>
+                </ul>
+            </li>
+        <?php
+        }
         // Módulo sedes: se muestra si el usuario tiene permiso para ver el listado de sedes (sede.listado.v)
         if (auth()->user()->can('sede.listado.v')) {
         ?>
@@ -55,6 +79,23 @@
                             </a>
                         </li>
                     <?php } ?>
+                </ul>
+            </li>
+        <?php
+        }
+        if ($user->can('paquete.listado.v')) {
+        ?>
+            <li class="menu-item <?= ($page == 'Paquete') ? 'active open' : '' ?>">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
+                    <i class="menu-icon tf-icons ti ti-package"></i>
+                    <div>Módulo Paquetes</div>
+                </a>
+                <ul class="menu-sub">
+                    <li class="menu-item <?= ($page == 'Paquete' && $subpage == 'Listado') ? 'active' : '' ?>">
+                        <a href="{{ url('dashboard/paquetes') }}" class="menu-link">
+                            <div>Todos los paquetes</div>
+                        </a>
+                    </li>
                 </ul>
             </li>
         <?php
@@ -224,14 +265,6 @@
                             </a>
                         </li>
                     <?php } ?>
-                    <?php if ($user->can('empresa.listado.v')) { ?>
-                        <li class="menu-item <?= ($page == 'Configuracion' && $subpage == 'Empresa') ? 'active' : '' ?>">
-                            <a href="{{ url('dashboard/empresas') }}" class="menu-link">
-                                <div>Empresas</div>
-                            </a>
-                        </li>
-                    <?php } ?>
-
                 </ul>
             </li>
         <?php
