@@ -4960,9 +4960,10 @@ $(function () {
         + '<th>Cliente</th>'
         + '<th>Documento</th>'
         + '<th>Sede</th>'
-        + '<th>Fecha Reserva</th>'
+        + '<th>Fecha de creación</th>'
+        + '<th>Fecha de reserva</th>'
         + '<th>Horario</th>'
-        + '<th>Estado</th>'
+        + '<th>Estado verificado</th>'
         + '</tr></thead><tbody></tbody>');
 
     // Inicializar la nueva instancia de DataTable
@@ -4986,27 +4987,39 @@ $(function () {
             }
         },
         columns: [
-            {
-                data: null,
-                render: function (data) {
-                    return data.nombre_cliente + ' ' + data.apellido_cliente;
-                }
-            },
-            {
-                data: null,
-                render: function (data) {
-                    return data.tipo_doc_cliente + ' ' + data.doc_cliente;
-                }
-            },
+            { data: null },
+            { data: null },
             { data: 'nombre_sede'},
-            { 
-                data: null,
-                render: function (data) {
-                    return data.reserva_cita.split(' ')[0];
-                }
-            },
+            { data: 'created_at' },
+            { data: 'reserva_cita' },
             { data: 'rango_horario' },
             { data: 'nombre_estado' }
+        ],
+        columnDefs: [
+            {
+                targets: 0,
+                render: function (data, type, full, meta) {
+                    return full.nombre_cliente + ' ' + full.apellido_cliente;
+                }
+            },
+            {
+               targets: 1,
+                render: function (data, type, full, meta) {
+                    return full.tipo_doc_cliente + ' ' + full.doc_cliente;
+                }
+            },
+            {
+               targets: 3,
+                render: function (data, type, full, meta) {
+                    return data.split(' ')[0];
+                }
+            },
+            {
+               targets: 4,
+                render: function (data, type, full, meta) {
+                    return data.split(' ')[0];
+                }
+            }
         ],
         pagingType: "simple"
     });
