@@ -118,7 +118,7 @@
                                 <?php } ?>
                                 <?php if ($user->can('cita.Ver Tipo Paquete.v')) { ?>
                                     <div class="form-group form-group-grow">
-                                        <select id="filtro-tipo-paquete" class="select2 form-select" multiple="multiple" placeholder="Seleccionar el tipo paquete">
+                                        <select id="filtro-tipo-paquete-cita" class="select2 form-select" multiple="multiple" placeholder="Seleccionar el tipo paquete">
                                             <option value="">Todas los tipos de paquete</option>
                                             <option value="PREPAGO">PREPAGO</option>
                                             <option value="POSPAGO">POSPAGO</option>

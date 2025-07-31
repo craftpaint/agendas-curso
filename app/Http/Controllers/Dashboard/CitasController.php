@@ -109,6 +109,7 @@ class CitasController extends Controller
                 $filtro_responsable = $request->input('filtro_responsable');
                 $filtro_origen = $request->input('filtro_origen');
                 $filtro_agente = $request->input('filtro_agente');
+                $filtro_tipo_paquete_cita = $request->input('filtro_tipo_paquete_cita');
                 $filtro_search = $request->input('filtro_search');
                 $fecha_actual = date('Y-m-d');
 
@@ -250,6 +251,14 @@ class CitasController extends Controller
                         $query->whereIn('t1.id_agente_callcenter', $filtro_agente);
                     } else {
                         $query->where('t1.id_agente_callcenter', $filtro_agente);
+                    }
+                }
+
+                if ($filtro_tipo_paquete_cita) {
+                    if (is_array($filtro_tipo_paquete_cita)) {
+                        $query->whereIn('tb_paquete.tipo_paquete', $filtro_tipo_paquete_cita);
+                    } else {
+                        $query->where('tb_paquete.tipo_paquete', $filtro_tipo_paquete_cita);
                     }
                 }
 

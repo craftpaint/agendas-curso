@@ -59,6 +59,7 @@ $(function () {
     let filtroSearch = '';
     let tipoCita = '';
     let filtroAgente = '';
+    let filtroTipoPaqueteCita = '';
 
     //Filtros de paquetes
     let filtroNombre = '';
@@ -1255,6 +1256,7 @@ $(function () {
                     d.filtro_origen = filtroOrigen;
                     d.filtro_search = filtroSearch;
                     d.filtro_agente = filtroAgente;
+                    d.filtro_tipo_paquete_cita = filtroTipoPaqueteCita;
                     d.tipo_cita = tipoCita;
                     // Parámetros necesarios para ordenamiento
                     d.order = d.order;
@@ -1315,15 +1317,6 @@ $(function () {
                             badgeAnotaciones = `<span class="badge rounded-pill text-bg-danger badge-notifications px-1">${full.total_anotaciones}</span>`;
                             iconColorAnotaciones = 'text-success';
                         }
-
-                        if (data.tipo_paquete == "PREPAGO") {
-                            data.tipo_paquete = "PRE";
-                        } else if (data.tipo_paquete == "POSPAGO") {
-                            data.tipo_paquete = "POS";
-                        } else if (data.tipo_paquete == "AUXILIAR") {
-                            data.tipo_paquete = "AUX";
-                        }
-
                         return `
                         <div style="position:relative; display:inline-block;">
                             <button type="button"
@@ -1334,11 +1327,6 @@ $(function () {
                             </button>
                             ${badgeAnotaciones}
                         </div>
-                        ${canViewTipoPaquete && data.tipo_paquete
-                            ? `<div class="mt-1">
-                                    <span class="badge bg-label-warning mb-3">${data.tipo_paquete}</span>
-                                </div>`
-                            : ''}
                         `;
                     }
                 },
@@ -1350,9 +1338,19 @@ $(function () {
                         var headerCell = table_citas.column(2).header(); // Cambia 7 al índice correcto
                         let html = '';
                         // Verificamos si el usuario tiene permiso para ver la sede
+                        if (canViewTipoPaquete && full.tipo_paquete) {
+                            if (full.tipo_paquete == "PREPAGO") {
+                                full.tipo_paquete = "PRE";
+                            } else if (full.tipo_paquete == "POSPAGO") {
+                                full.tipo_paquete = "POS";
+                            } else if (full.tipo_paquete == "AUXILIAR") {
+                                full.tipo_paquete = "AUX";
+                            }
+                            html = `<span class="badge bg-label-warning mb-1 m-auto" style="margin-right:5px !important;">${full.tipo_paquete}</span>`;
+                        }
                         if (canViewSedeCita) {
                             headerCell.innerHTML = "Sede - Comparendo";
-                            html = `<span class="badge bg-label-dark mb-1">${full.nombre_sede}</span>`;
+                            html += `<span class="badge bg-label-dark mb-1">${full.nombre_sede}</span>`;
                         } else {
                             headerCell.innerHTML = "comparendo";
                         }
@@ -1591,6 +1589,10 @@ $(function () {
             filtroOrigen = $(this).val();
             table_citas.ajax.reload();
         });
+         $('#filtro-tipo-paquete-cita').on('change', function () {
+            filtroTipoPaqueteCita = $(this).val();
+            table_citas.ajax.reload();
+         });
         $('#woow-search-citas').on('keyup', function () {
             filtroSearch = $(this).val();
             table_citas.ajax.reload();
@@ -1603,6 +1605,7 @@ $(function () {
             filtroEstadoVerificado = '';
             filtroResponsable = '';
             filtroOrigen = '';
+            filtroTipoPaquete = '';
             filtroSearch = '';
             $('#filtro-dia').val("").trigger('input');
             $('#filtro-dia-end').val("").trigger('input');
@@ -1611,6 +1614,7 @@ $(function () {
             $('#filtro-responsable').val("").trigger('change');
             $('#filtro-estado-verificado').val("").trigger('change');
             $('#filtro-origen').val("").trigger('change');
+            $('#filtro-tipo-paquete-cita').val("").trigger('change');
             $('#woow-search-citas').val("").trigger('input');
             table_citas.ajax.reload();
         });
