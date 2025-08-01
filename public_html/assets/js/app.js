@@ -212,6 +212,10 @@ $(function () {
     });
 
     $('.send_form').on('submit', function (event) {
+        // SE VALIDA EL POP-UP DE PAQUETES
+        if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+            validarPaqueteActivo();
+        }
         event.preventDefault(); // Evita que el formulario se envíe inmediatamente
         let isValid = true;
         let action = $(this).attr('action');
@@ -1772,6 +1776,10 @@ $(function () {
             // Se obtiene el ID de la cita desde el atributo data-id-cita del botón
             let idCita = $(this).data('id-cita');
 
+            // SE VALIDA EL POP-UP DE PAQUETES
+            if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+                validarPaqueteActivo();
+            }
             // Se realiza la petición AJAX para obtener el HTML del seguimiento y el formulario
             $.ajax({
                 url: url + '/dashboard/citas/get_seguimiento_cita_con_actualizacion', // Asegúrate de que 'url' está definida con la ruta base
@@ -1888,6 +1896,11 @@ $(function () {
         }
         //ELIMINAR SEDE
         $('.datatables-citas').on('click', '.btn_delete_cita', function () {
+            // SE VALIDA EL POP-UP DE PAQUETES
+            if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+                validarPaqueteActivo();
+            }
+
             let id = $(this).data('id');
             Swal.fire({
                 title: '¿Estas seguro?',
@@ -1920,6 +1933,10 @@ $(function () {
         });
         //Cambiamos el estado
         $('.datatables-citas').on('click', '.change_estado_cita', function () {
+            // SE VALIDA EL POP-UP DE PAQUETES
+            if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+                validarPaqueteActivo();
+            }
             let id_estado = $(this).data('id_estado');
             let id_cita = $(this).data('id_cita');
             $.ajax({
@@ -1936,6 +1953,10 @@ $(function () {
         });
         //Cambiamos el estado verificado
         $('.datatables-citas').on('click', '.change_estado_cita_verificado', function () {
+            // SE VALIDA EL POP-UP DE PAQUETES
+            if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+                validarPaqueteActivo();
+            }
             let id_estado = $(this).data('id_estado');
             let id_cita = $(this).data('id_cita');
             $.ajax({
@@ -1952,6 +1973,10 @@ $(function () {
         });
         //Cambiamos el estado verificado
         $('.datatables-citas').on('click', '.change_agente_call', function () {
+            // SE VALIDA EL POP-UP DE PAQUETES
+            if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+                validarPaqueteActivo();
+            }
             let id_agente = $(this).data('id_agente');
             let id_cita = $(this).data('id_cita');
             $.ajax({
@@ -1968,6 +1993,10 @@ $(function () {
         });
         //Cambiamos el servicio
         $('.datatables-citas').on('click', '.change_servicio_liquidador', function () {
+            // SE VALIDA EL POP-UP DE PAQUETES
+            if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+                validarPaqueteActivo();
+            }
             let id_servicio_liquidador = $(this).data('id_servicio_liquidador');
             let id_cita = $(this).data('id_cita');
             $.ajax({
@@ -3642,6 +3671,11 @@ $(function () {
         }
         //Cambiamos el estado
         $('.datatables-citas').on('click', '.change_estado_cita_verificado', function () {
+            // SE VALIDA EL POP-UP DE PAQUETES
+            if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+                validarPaqueteActivo();
+            }
+
             let id_estado = $(this).data('id_estado');
             let id_cita = $(this).data('id_cita');
             $.ajax({
@@ -4395,7 +4429,7 @@ $(function () {
                     if (response.Data) {
                         $('#nombre-paquete-activo-dashboard-empresa').html(`Nombre: <strong>${response.Data.nombre_paquete}</strong>`);
                         $('#numero-citas-paquete-activo-dashboard-empresa').html(`Número de citas: <strong>${response.Data.numero_citas}</strong>`);
-                        $('#estado-paquete-activo-dashboard-empresa').html(`Estado: <strong>${response.Data.estado}</strong>`);
+                        $('#estado-paquete-activo-dashboard-empresa').html(`Estado:<span class="badge bg-label-info"><strong>${response.Data.estado}</strong></span>`);
                         $('#citas-consumidas-paquete-activo-dashboard-empresa').html(`<strong>${response.Data.citas_consumidas}</strong>`);
                         $('#citas-faltantes-paquete-activo-dashboard-empresa').html(`<strong>${response.Data.citas_faltantes}</strong>`);
                         $('#citas-confirmadas-paquete-activo-dashboard-empresa').text(`${response.Data.citasConfirmadas}`);
@@ -4487,7 +4521,7 @@ $(function () {
         });
     }
 
-    function actualizarGraficosHistorial(datos) {
+    function actualizarHistorial(datos) {
         const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorial');
 
         // Limpiar contenedor
@@ -4495,13 +4529,33 @@ $(function () {
 
         // Crear un gráfico por cada paquete
         datos.forEach((paquete, index) => {
-            const chartId = `chart${index + 1}`;
+            
+            // Crear contenedor principal para cada fila horizontal
+            const rowContainer = document.createElement('div');
+            rowContainer.className = 'd-flex flex-wrap align-item-center justify-content-center mb-5';
+            rowContainer.style.gap = '20px';
 
-            // Crear contenedor para el gráfico
+            // Crear contenedores para cada columna
             const chartContainer = document.createElement('div');
-            chartContainer.id = chartId;
-            chartContainer.className = 'mt-5 py-auto';
-            container.appendChild(chartContainer);
+            chartContainer.id = `chart${index + 1}`;
+            chartContainer.style.flex = '0 0 150px';
+
+            const infoContainer = document.createElement('div');
+            infoContainer.id = `info${index + 1}`;
+            infoContainer.style.flex = '1 1 300px';
+
+            const botonContainer = document.createElement('div');
+            botonContainer.id = `boton${index + 1}`;
+            botonContainer.style.flex = '0 0 80px';
+
+            // Agregar contenedores a la fila principal
+            rowContainer.appendChild(chartContainer);
+            rowContainer.appendChild(infoContainer);
+            rowContainer.appendChild(botonContainer);
+            
+            // Agregar la fila al contenedor principal
+            container.appendChild(rowContainer);
+
 
             // Configuración del gráfico
             const chartOptions = {
@@ -4544,67 +4598,33 @@ $(function () {
             };
 
             // Renderizar gráfico
-            const chart = new ApexCharts(document.querySelector(`#${chartId}`), chartOptions);
+            const chart = new ApexCharts(chartContainer, chartOptions);
             chart.render();
-        });
-    }
 
-    function actualizarInfoHistorial(datos) {
-        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorialInfo');
-
-        // Limpiar contenedor
-        container.innerHTML = '';
-
-        //Crea la informmación para cada paquete
-        datos.forEach((paquete, index) => {
-            const infoId = `info${index + 1}`;
-
-            const infoContainer = document.createElement('div');
-            infoContainer.id = infoId;
-            infoContainer.className = 'mb-5';
-            container.appendChild(infoContainer);
+            // Formatear fechas
             paquete.fecha_inicio = paquete.fecha_inicio.split(' ')[0];
+            paquete.fecha_fin = paquete.fecha_fin ? paquete.fecha_fin.split(' ')[0] : "ACTIVO";
 
-            if (!paquete.fecha_fin) {
-                paquete.fecha_fin = "ACTIVO";
-            } else {
-                paquete.fecha_fin = paquete.fecha_fin.split(' ')[0];
-            }
-
+            // Contenido de información
             infoContainer.innerHTML = `
-                <h5 class="text-info pt-5 mb-2">Nombre: <strong class="text-dark">${paquete.nombre_paquete}</strong></h5>
-                <h6 class="text-info mb-2"><strong>${paquete.fecha_inicio} - ${paquete.fecha_fin}</strong></h6>
-                <h6 class="text-info mb-2">Número de citas: <strong class="text-dark">${paquete.numero_citas}</strong></h6>
-                <h6 class="text-info mb-5">Precio: <strong class="text-dark">${paquete.valor}</strong></h6>
+                <div class="d-flex flex-column">
+                    <h5 class="text-info mb-2">Nombre: <strong class="text-dark">${paquete.nombre_paquete}</strong></h5>
+                    <h6 class="text-info mb-2">Periodo: <strong>${paquete.fecha_inicio} - ${paquete.fecha_fin}</strong></h6>
+                    <h6 class="text-info mb-2">Citas: <strong class="text-dark">${paquete.numero_citas}</strong></h6>
+                    <h6 class="text-info mb-0">Precio: <strong class="text-dark">${paquete.valor}</strong></h6>
+                </div>
             `;
-        });
-    }
 
-    function actualizarBotonesHistorial(datos) {
-        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorialBoton');
-
-        // Limpiar contenedor
-        container.innerHTML = '';
-
-        datos.forEach((paquete, index) => {
-            const botonId = `boton${index + 1}`;
-
-            const botonContainer = document.createElement('div');
-            botonContainer.id = botonId;
-            botonContainer.className = 'mt-5';
-            botonContainer.style.marginBottom = '100px';
-            container.appendChild(botonContainer);
-
+            // Botón para los detalles del paquete
             botonContainer.innerHTML = `
-                <button class="btn btn-icon btn-lg waves-effect btn-detalles-paquete w-100 text-center" 
-                    data-bs-toggle="tooltip" 
-                    data-bs-placement="top" 
-                    data-bs-custom-class="tooltip-info" 
-                    title="Editar"
-                    data-id-empresa-paquete="${paquete.id_empresa_paquete}"
-                    data-bs-target="#modalDetallesPaquete">
-                    <i class="ti ti-checkup-list me-2 text-info" style="font-size:50px;"></i>
-                </button>
+                <div class="d-flex align-items-center h-100">
+                    <button class="btn btn-icon btn-lg waves-effect btn-detalles-paquete"
+                        data-bs-toggle="tooltip" 
+                        data-id-empresa-paquete="${paquete.id_empresa_paquete}"
+                        title="Editar">
+                        <i class="ti ti-checkup-list text-info" style="font-size:50px;"></i>
+                    </button>
+                </div>
             `;
         });
     }
@@ -4619,9 +4639,7 @@ $(function () {
             success: function (response) {
                 if (response.Success) {
                     if (response.Data) {
-                        actualizarGraficosHistorial(response.Data);
-                        actualizarInfoHistorial(response.Data);
-                        actualizarBotonesHistorial(response.Data);
+                        actualizarHistorial(response.Data);
                     }
                 } else {
                     Swal.fire({
@@ -4817,9 +4835,6 @@ $(function () {
                 width: 1,
                 colors: ['#fff']
             },
-            title: {
-                text: '% de progreso del paquete',
-            },
             xaxis: {
                 categories: [''],
                 labels: {
@@ -4878,9 +4893,6 @@ $(function () {
             },
             stroke: {
                 width: [0, 4]
-            },
-            title: {
-                text: 'Citas Agendadas vs Asistidas del mes actual',
             },
             colors: ['#cecece', '#00d2ff'],
             dataLabels: {
@@ -4974,6 +4986,7 @@ $(function () {
         searching: false,
         info: false,
         pageLength: 10,
+        responsive: true,
         language: {
             url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json',
             infoEmpty: "No hay datos disponibles",
@@ -5005,7 +5018,7 @@ $(function () {
             {
                targets: 1,
                 render: function (data, type, full, meta) {
-                    return full.tipo_doc_cliente + ' ' + full.doc_cliente;
+                     return `<span class="badge bg-label-info">${full.tipo_doc_cliente + ' ' + full.doc_cliente}</span>`;
                 }
             },
             {
@@ -5018,6 +5031,12 @@ $(function () {
                targets: 4,
                 render: function (data, type, full, meta) {
                     return data.split(' ')[0];
+                }
+            },
+            {
+               targets: 6,
+                render: function (data, type, full, meta) {
+                    return `<span class="badge bg-label-success">${data}</span>`;
                 }
             }
         ],
