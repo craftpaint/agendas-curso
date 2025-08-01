@@ -370,7 +370,7 @@ $(function () {
     //TABLAS DE SEDES
     if ($('.datatables-sedes').length) {
         let table = $('.datatables-sedes').DataTable({
-            ordering: false,
+            ordering: true,
             processing: true,
             serverSide: true,
             ajax: {
@@ -388,7 +388,7 @@ $(function () {
                 {
                     targets: 1,
                     render: function (data, type, full, meta) {
-                        return full.idrun_sede;
+                        return full.Nombre_empresa;
                     }
                 },
                 {
@@ -400,7 +400,7 @@ $(function () {
                 {
                     targets: 3,
                     render: function (data, type, full, meta) {
-                        return full.tel_sede;
+                        return full.Nombre_ciudad;
                     }
                 },
                 {
@@ -468,8 +468,8 @@ $(function () {
     if ($('.datatables-horarios').length) {
         table_horarios = $('.datatables-horarios').DataTable({
             lengthChange: true,
-            searching: false,
-            ordering: false,
+            searching: true,
+            ordering: true,
             processing: true,
             serverSide: true,
             ajax: {
@@ -674,6 +674,132 @@ $(function () {
                     });
                 }
             });
+        });
+    }
+
+    //Tabla de CIUDADES
+    if ($('.datatables-ciudades').length) {
+        table_servicios = $('.datatables-ciudades').DataTable({
+            lengthChange: true,
+            searching: true,
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            info: true,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
+                info: "Mostrando _START_ a _END_ de _MAX_ registros",
+                infoEmpty: "No hay datos disponibles",
+                infoFiltered: "(filtrados de un total de _MAX_ registros)"
+            },
+            ajax: {
+                url: url + '/dashboard/sedes/get_ciudades',
+                type: "POST"
+            },
+            column: [{ data: '' }],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        return full.nombre;
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return full.latitud + ', ' + full.longitud;
+                    }
+                },
+                {
+                    targets: 2,
+                    render: function (data, type, full, meta) {
+                        return '<i class="tf-icons ti ti-zoom-scan ti-md"></i>' + full.nivel_zoom;
+                    }
+                },
+                {
+                    targets: 3,
+                    render: function (data, type, full, meta) {
+                        if (full.estado == 'ACTIVO') {
+                            return '<span class="badge bg-label-success">' + full.estado + '</span>';
+                        }
+                        return '<span class="badge bg-label-danger">' + full.estado + '</span>';
+                    }
+                },
+                {
+                    targets: 4,
+                    render: function (data, type, full, meta) {
+                        return `
+                        <div class="d-flex justify-content-end">
+                            ${(canEditCiudades) ? `
+                                <a href="#" data-id_ciudad="${full.id_ciudad}" class="btn_edit_ciudad btn btn-icon btn-label-primary waves-effect me-2">
+                                    <i class="tf-icons ti ti-edit ti-md"></i>
+                                </a>` : ``}
+                            ${(canDeleteCiudades) ? `
+                                <a href="#" data-id_ciudad="${full.id_ciudad}" data-estado="${full.estado}" class="btn_desactivar_ciudad btn btn-icon btn-label-danger waves-effect">
+                                    <i class="tf-icons ti ti-map-pin-x ti-md"></i>
+                                </a>` : ``}
+                        </div>`	;
+                    }
+                },
+
+            ],
+            pagingType: "simple"
+        });
+        //ELIMINAR SEDE
+        $('.datatables-ciudades').on('click', '.btn_desactivar_ciudad', function () {
+            let id_ciudad = $(this).data('id_ciudad');
+            let estado = $(this).data('estado');
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: '¡Todas las sedes asociadas a esta ciudad serán desactivadas!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '¡Sí, desactivar!',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-outline-danger ml-1'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url + '/dashboard/sedes/change_estado_ciudad',
+                        type: 'POST',
+                        data: { id_ciudad: id_ciudad, estado: estado },
+                        success: function (data) {
+                            if (data.validate) {
+                                table_servicios.ajax.reload();
+                            } else {
+                                alertNotify('¡Error!', data.text, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        //Editar usuario
+        $('.datatables-ciudades').on('click', '.btn_edit_ciudad', function () {
+            let id_ciudad = $(this).data('id_ciudad');
+            $.ajax({
+                url: url + '/dashboard/sedes/get_ciudad',
+                type: 'POST',
+                data: { id_ciudad: id_ciudad },
+                success: function (response) {
+                    $('.content_ciudad_edit input[name="id_ciudad"]').val(id_ciudad);
+                    $('.content_ciudad_edit input[name="nombre_ciudad"]').val(response.data.nombre);
+                    $('.content_ciudad_edit input[name="longitud_ciudad"]').val(response.data.longitud);
+                    $('.content_ciudad_edit input[name="latitud_ciudad"]').val(response.data.latitud);
+                    $('.content_ciudad_edit input[name="nivel_zoom_ciudad"]').val(response.data.nivel_zoom);
+                    $('.content_ciudad_add').hide();
+                    $('.content_ciudad_edit').fadeIn(200);
+
+                }
+            });
+        });
+        $('.add_ciudad').click(function () {
+            $('.content_ciudad_edit').hide();
+            $('.content_ciudad_add').fadeIn(200);
         });
     }
     //FIN: HORARIOS------------------------------------------------------------------------
@@ -1317,6 +1443,27 @@ $(function () {
                             badgeAnotaciones = `<span class="badge rounded-pill text-bg-danger badge-notifications px-1">${full.total_anotaciones}</span>`;
                             iconColorAnotaciones = 'text-success';
                         }
+
+                        // Corrección de fecha
+                        let fecha = data.reserva_cita.split(" ")[0];
+                        fecha = fecha.replace(/-/g, '/');
+
+                        // Correccion horario
+                        let horario = data.rango_horario.split('-')[0].trim()
+
+                        // Plantilla de mensaje para copiar
+                        let plantilla = `
+                            Buen día señor@ *${data.nombre_cliente + " " + data.apellido_cliente}* me comunico de curso comparendo, mi nombre es *${data.agente_callcenter}*. \n
+                            ✅ *_Le confirmo su cita_* \n
+                            🗓️ *_Fecha:_* ${fecha}
+                            🕐 *_Hora:_* ${horario}
+                            🏬 *_Sede:_* ${data.nombre_sede}
+                            📍 *_Dirección:_* ${data.direccion_sede} \n
+                            Por favor indicar que va por parte de Curso comparendo, *llegar 40 minutos* antes de la hora agendada para realizar el procedimiento. \n
+                            Es obligatorio llevar su cédula. \n
+                            Tan pronto salga del curso nos confirma, para registrar su asistencia. Recuerde consultar su comparendo en la pagina del Simit, este debe estar notificado.
+                        `;
+                        plantilla = plantilla.replace(/^[ \t]+/gm, '');
                         return `
                         <div style="position:relative; display:inline-block;">
                             <button type="button"
@@ -1327,7 +1474,17 @@ $(function () {
                             </button>
                             ${badgeAnotaciones}
                         </div>
-                        `;
+                        
+                        ${(rol == "superadmin" || rol == "admin" || rol == "lidercallcenter" || rol == "callcenter") ? `
+                        <div style="position:relative; margin-top: 5px;">
+                            <button type="button"
+                                class="btn btn-sm btn-label-success waves-effect btn-copiar-plantilla"
+                                title="Copiar plantilla"
+                                data-texto-plantilla="${plantilla}">
+                                <i class="ti ti-message-2"></i>
+                            </button>
+                        </div>` : ``}
+                      `;
                     }
                 },
                 {
@@ -1537,6 +1694,15 @@ $(function () {
                 }
             },
             pagingType: "simple"
+        });
+
+        // Evento botón plantilla
+        $(document).on('click', '.btn-copiar-plantilla', function () {
+            // Usa el atributo correcto: data-texto-plantilla
+            const texto = $(this).data('texto-plantilla');
+            if (texto) {
+                copiarContenido(texto);
+            }
         });
 
         // Eventos para los filtros
@@ -1837,9 +2003,9 @@ $(function () {
     //USUARIOS
     if ($('.datatables-usuarios').length) {
         table_usuarios = $('.datatables-usuarios').DataTable({
-            lengthChange: false,
-            searching: false,
-            ordering: false,
+            lengthChange: true,
+            searching: true,
+            ordering: true,
             processing: true,
             serverSide: true,
             ajax: {
@@ -1850,12 +2016,14 @@ $(function () {
             columnDefs: [
                 {
                     targets: 0,
+                    searchable: true,
                     render: function (data, type, full, meta) {
                         return '<h6 class="m-0">' + full.name + '</h6>';
                     }
                 },
                 {
                     targets: 1,
+                    searchable: true,
                     render: function (data, type, full, meta) {
                         return '<span class="badge bg-label-dark">' + full.email + '</span>';
                     }
@@ -4575,7 +4743,7 @@ $(function () {
                     if (response.Data) {
                         const citas_restantes = response.Data.numero_citas - response.Data.citas_consumidas;
                         // CUANDO NO TIENE UN PAQUETE ACTIVO
-                        if (rol == "Admin Empresa") {
+                        if (rol == "Admin Empresa PRE") {
                             if (citas_restantes <= 15 && citas_restantes > 0) {
                                 $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/aviso_paquetes.jpg`);
                                 $('#aviso-url').attr('href', `${page_wp_aliados}`);
@@ -4597,7 +4765,7 @@ $(function () {
                         }
                     } else {
                         // PARA CUANDO NO TIENE UN PAQUETE ACTIVO
-                        if ((rol == "Admin Empresa" && response.Data.tipo_paquete == "AUXILIAR") || (rol == "Admin Empresa")) {
+                        if ((rol == "Admin Empresa PRE" && response.Data.tipo_paquete == "AUXILIAR") || (rol == "Admin Empresa PRE")) {
                             $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/fin_paquetes.jpg`);
                             $('#aviso-url').attr('href', `${page_wp_aliados}`);
                             $('#popupPaquetes').find('.btn-close').hide();
@@ -4635,7 +4803,7 @@ $(function () {
     }
 
     // SE VALIDA EL POP-UP DE PAQUETES
-    if ($('#popupPaquetes').length) {
+    if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
         validarPaqueteActivo();
     }
 

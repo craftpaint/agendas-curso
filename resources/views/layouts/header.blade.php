@@ -134,12 +134,18 @@
 
         // Permisos para la gestión de Permisos
         var canManagePermissions = <?= json_encode($user->can('permissions.administrar.v')); ?>;
-        // Si prefieres separar en ver, crear, editar, eliminar, puedes crear variables similares.
-
+        
+         // Permisos para la gestión de ciudades
+        var canViewCiudades = <?= json_encode($user->can('sede.Ciudades.v')); ?>;
+        var canAddCiudades = <?= json_encode($user->can('sede.Ciudades.a')); ?>;
+        var canEditCiudades = <?= json_encode($user->can('sede.Ciudades.e')); ?>;
+        var canDeleteCiudades = <?= json_encode($user->can('sede.Ciudades.d')); ?>;
+        
         // Permisos para el módulo de paquetes
         var canAddPaquetes = <?= json_encode($user->can('paquete.listado.a')); ?>;
         var canEditPaquetes = <?= json_encode($user->can('paquete.listado.e')); ?>;
         var canDeletePaquetes = <?= json_encode($user->can('paquete.listado.d')); ?>;
+        
     </script>
 
 </head>
