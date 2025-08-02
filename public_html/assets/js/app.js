@@ -2183,7 +2183,6 @@ $(function () {
                 filtro_servicios_liquidador: filter.filtro_servicios_liquidador,
             },
             success: function (data) {
-                console.log("Data: " + data);
                 if (data.status === 'in_progress') {
                     // Si aún hay más datos por procesar, llama a la función con el siguiente bloque
                     dowloadFileCita(action, data.nextStart, filter);
@@ -2215,7 +2214,6 @@ $(function () {
             'filtro_estado_pago_liquidador': filtroEstadoPagoLiquidador,
         };
         dowloadFileCita(action, 0, filter); // Inicia con el primer bloque de datos
-        console.log(filter);
     });
     //Descargar boton
     function dowloadFile(action, start, type) {

@@ -1221,6 +1221,10 @@ class CitasController extends Controller
                     $query->where('t1.id_agente_callcenter', $filtros['filtro_agente']);
                 }
 
+                if (!empty($filtros['filtro_tipo_paquete_cita'])) {
+                    $query->where('tb_paquete.tipo_paquete', $filtros['filtro_tipo_paquete_cita']);
+                }
+
                 // Ejecutar la consulta
                 $records = $query->get();
 
@@ -1248,6 +1252,7 @@ class CitasController extends Controller
                     'ID Cita',
                     'Cliente',
                     'Estado',
+                    'Empresa',
                     'Sede',
                     'Horario',
                     'Fecha de Reserva',
@@ -1277,6 +1282,7 @@ class CitasController extends Controller
                         $record->id_cita,
                         $record->nombre_cliente . ' ' . $record->apellido_cliente,
                         $record->estado_verificado_nombre,
+                        $record->Nombre,
                         $record->nombre_sede,
                         $record->rango_horario,
                         $record->reserva_cita,
@@ -1366,6 +1372,7 @@ class CitasController extends Controller
                 's.nombre_servicio_liquidador',
                 's.valor_servicio_liquidador',
                 's.color_servicio_liquidador',
+                'tb_empresa.Nombre',
                 DB::raw("(SELECT GROUP_CONCAT(
                     CONCAT_WS(' - ', titulo_seguimiento, nota_seguimiento)
                     SEPARATOR '|'
@@ -1381,6 +1388,9 @@ class CitasController extends Controller
             ->leftJoin('tb_liquidador as l', 't1.id_cita', '=', 'l.id_cita')
             ->leftJoin('tb_vehiculo as v', 't1.id_vehiculo', '=', 'v.id_vehiculo')
             ->leftJoin('tb_servicio_liquidador as s', 't1.id_servicio_liquidador', '=', 's.id_servicio_liquidador')
+            ->leftJoin('tb_empresa_paquete', 't1.id_empresa_paquete', '=', 'tb_empresa_paquete.id_empresa_paquete')
+            ->leftJoin('tb_empresa', 'tb_empresa_paquete.id_empresa', '=', 'tb_empresa.id_empresa')
+            ->leftJoin('tb_paquete', 'tb_empresa_paquete.id_paquete', '=', 'tb_paquete.id_paquete')
             ->where('t1.id_cita', '>', 0)
             ->orderBy('t1.reserva_cita')
             ->orderBy('t1.rango_horario')
