@@ -4614,6 +4614,11 @@ $(function () {
                         $('#citas-erradas-paquete-activo-dashboard-empresa').text(`${response.Data.citasErradas}`);
                         $('#citas-validacion-paquete-activo-dashboard-empresa').text(`${response.Data.citasEnValidacion}`);
                         $('#citas-pendientes-paquete-activo-dashboard-empresa').text(`${response.Data.citasPendientes}`);
+                        
+                        if (response.Data.tipo_paquete == "POSPAGO") {
+                            $('#citas-faltantes-paquete-activo-dashboard-empresa').html(`<strong><i class="ti ti-infinity display-1"></i></strong>`);
+                        }
+
                         chart.updateSeries([
                             {
                                 data: [response.Data.citas_consumidas]

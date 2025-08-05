@@ -66,7 +66,7 @@
                 <div class="col-md-6">
                     <div class="card h-100">
                         <div class="card-body">
-                            <h3 class="mb-4 text-dark" style="font-size:22px;"><i class="ti ti-progress text-info fs-1 me-2"></i> Porcentaje de progreso del paquete</h3>
+                            <h3 class="mb-4 text-dark" style="font-size:22px;"><i class="ti ti-square-percentage text-info fs-1 me-2"></i> Progreso del paquete</h3>
                             <div id="ChartDashboardEmpresasProgressBar"></div>
                             <div class="row">
                                 <div class="col-md-6 mt-5">
@@ -103,7 +103,7 @@
                     <div class="col-md-7">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h3 style="font-size:22px;"><i class="ti ti-history text-primary fs-1 me-2"></i> Historial de paquetes</h3>
+                                <h3 style="font-size:22px;"><i class="ti ti-progress text-primary fs-1 me-2"></i> Historial de paquetes</h3>
                                 <div class="row">
                                     <div class="col-md-12 justify-content-center align-item-center">
                                         <div id="ChartRadialProgressDashboardEmpresasHistorial" class="col-12 h-100"></div>
@@ -115,7 +115,7 @@
                     <div class="col-md-5">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h4 style="font-size:22px;"><i class="ti ti-clipboard-list text-warning fs-1 me-2"></i> Paquetes pendientes de activación</h4>
+                                <h4 style="font-size:22px;"><i class="ti ti-history text-warning fs-1 me-2"></i> Paquetes pendientes de activación</h4>
                                 <div id="ListadopaquetesPendientes"></div>
                             </div>
                         </div>
