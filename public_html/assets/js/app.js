@@ -1305,7 +1305,7 @@ $(function () {
                         return `
                         <div class="d-flex justify-content-end">
                             ${(canEditEstadoCitas) ? `
-								<a href="${url}/dashboard/citas/edit_estados/${full.id_estado}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <a href="${url}/dashboard/citas/edit_estados/${full.id_estado}" class="btn btn-icon btn-label-primary waves-effect me-2">
                                     <i class="tf-icons ti ti-edit ti-md"></i>
                                 </a>` : ``}
                             ${(canDeleteEstadoCitas) ? `
@@ -1474,7 +1474,7 @@ $(function () {
                             </button>
                             ${badgeAnotaciones}
                         </div>
-                        
+
                         ${(rol == "superadmin" || rol == "admin" || rol == "lidercallcenter" || rol == "callcenter") ? `
                         <div style="position:relative; margin-top: 5px;">
                             <button type="button"
@@ -1755,10 +1755,10 @@ $(function () {
             filtroOrigen = $(this).val();
             table_citas.ajax.reload();
         });
-         $('#filtro-tipo-paquete-cita').on('change', function () {
+        $('#filtro-tipo-paquete-cita').on('change', function () {
             filtroTipoPaqueteCita = $(this).val();
             table_citas.ajax.reload();
-         });
+        });
         $('#woow-search-citas').on('keyup', function () {
             filtroSearch = $(this).val();
             table_citas.ajax.reload();
@@ -3077,6 +3077,7 @@ $(function () {
             });
         });
 
+
         $('#btnClearFilters').on('click', () => {
             location.reload();
         });
@@ -3113,6 +3114,166 @@ $(function () {
             .trigger('change');
 
 
+        // Gráfico de citas agendadas vs atendidas (global)
+        var chartCitasAtendidas = new ApexCharts(document.querySelector("#ChartCitasAtendidasGlobal"), {
+            chart: { type: 'bar', height: 350, stacked: false },
+            series: [],
+            xaxis: { categories: [] },
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    borderRadiusApplication: 'end',
+                    horizontal: false,
+                }
+            },
+            legend: {
+                fontFamily: 'Roboto, sans-serif',
+                markers: { radius: 12, width: 12, height: 12 },
+                position: 'top'
+            },
+            tooltip: {
+                theme: 'light',
+                style: { fontFamily: 'Roboto, sans-serif' },
+                onDatasetHover: { highlightDataSeries: true },
+            },
+            theme: {
+                mode: 'light',
+                palette: 'palette1'
+            },
+            colors: ['#adb5bd', '#00bbe3'],
+        });
+        chartCitasAtendidas.render();
+
+        // Función para cargar datos desde el backend y actualizar el gráfico
+        function fetchCitasAtendidas(agentId = null, chartInstance = null) {
+            const fecha = $('#datePicker').val();
+            const r = +$('#select-rango-fechas-estadisticas').val();
+            const m = moment(fecha, 'YYYY-MM-DD');
+            console.log('fetchCitasAtendidas', m, r);
+
+            let startMoment, rangeDays;
+
+
+            switch (r) {
+                case 1: // Semana actual: lunes → domingo
+                    startMoment = m.clone().startOf('isoWeek');
+                    rangeDays = 6;
+                    break;
+
+                case 2: // Últimas 2 semanas: lunes semana anterior → domingo semana actual
+                    startMoment = m.clone().startOf('isoWeek').subtract(7, 'days');
+                    rangeDays = 13;
+                    break;
+
+                case 3: // Mes actual: 1ro mes → fin mes
+                    startMoment = m.clone().startOf('month');
+                    rangeDays = startMoment.daysInMonth() - 1;
+                    break;
+
+                case 4: // Trimestre: primer día del mes -2 meses → fin del mes actual
+                    startMoment = m.clone().startOf('month').subtract(2, 'months');
+                    // diferencia en días entre start y fin de mes actual
+                    const endOfCurrent = m.clone().endOf('month');
+                    rangeDays = endOfCurrent.diff(startMoment, 'days');
+                    break;
+
+                default:
+                    startMoment = m.clone().startOf('isoWeek');
+                    rangeDays = 6;
+            }
+
+            const start_date = startMoment.format('YYYY-MM-DD');
+            console.log('fetchCitasAtendidas', start_date, rangeDays, agentId);
+            let params = {
+                start_date,
+                rangeDays: rangeDays // por defecto semana
+            };
+            if (agentId) params.agent_id = agentId;
+
+            $.getJSON('agentes/citasAtendidas', params)
+                .done(function (resp) {
+                    if (chartInstance) {
+                        chartInstance.updateOptions({
+                            xaxis: { categories: resp.categories },
+                            series: resp.series
+                        });
+                    } else {
+                        chartCitasAtendidas.updateOptions({
+                            xaxis: { categories: resp.categories },
+                            series: resp.series
+                        });
+                    }
+                })
+                .fail(function () {
+                    if (chartInstance) {
+                        chartInstance.updateOptions({
+                            xaxis: { categories: [] },
+                            series: []
+                        });
+                    } else {
+                        chartCitasAtendidas.updateOptions({
+                            xaxis: { categories: [] },
+                            series: []
+                        });
+                    }
+                });
+        }
+
+        // Inicializar el gráfico global al cargar la página
+        fetchCitasAtendidas();
+
+        // Inicializar los gráficos por agente
+        agentes.forEach(function (ag) {
+            var chartDivId = '#ChartCitasAtendidasAgente-' + ag.id;
+            var chartDiv = document.querySelector(chartDivId);
+            if (chartDiv) {
+                var chartAgente = new ApexCharts(chartDiv, {
+                    chart: { type: 'bar', height: 350, stacked: false },
+                    series: [],
+                    xaxis: { categories: [] },
+                    plotOptions: {
+                        bar: {
+                            borderRadius: 4,
+                            borderRadiusApplication: 'end',
+                            horizontal: false,
+                        }
+                    },
+                    legend: {
+                        fontFamily: 'Roboto, sans-serif',
+                        markers: { radius: 12, width: 12, height: 12 },
+                        position: 'top'
+                    },
+                    tooltip: {
+                        theme: 'light',
+                        style: { fontFamily: 'Roboto, sans-serif' },
+                        onDatasetHover: { highlightDataSeries: true },
+                    },
+                    theme: {
+                        mode: 'light',
+                        palette: 'palette1'
+                    },
+                    colors: ['#adb5bd', '#00bbe3'],
+                });
+                chartAgente.render();
+                // Guardar instancia en el div para poder actualizar luego
+                chartDiv._apexchartsInstance = chartAgente;
+                // Cargar datos iniciales
+                fetchCitasAtendidas(ag.id, chartAgente);
+            }
+        });
+
+        // Actualizar al cambiar filtros
+        $('#select-rango-fechas-estadisticas, #datePicker').on('change', function () {
+            fetchCitasAtendidas();
+            // Actualizar todos los gráficos de agentes
+            agentes.forEach(function (ag) {
+                var chartDivId = '#ChartCitasAtendidasAgente-' + ag.id;
+                var chartDiv = document.querySelector(chartDivId);
+                if (chartDiv && chartDiv._apexchartsInstance) {
+                    fetchCitasAtendidas(ag.id, chartDiv._apexchartsInstance);
+                }
+            });
+        });
     }
 
     if ($('#estadisticas-Sedes').length) {
@@ -4613,10 +4774,10 @@ $(function () {
             container.appendChild(botonContainer);
 
             botonContainer.innerHTML = `
-                <button class="btn btn-icon btn-lg waves-effect btn-detalles-paquete w-100 text-center" 
-                    data-bs-toggle="tooltip" 
-                    data-bs-placement="top" 
-                    data-bs-custom-class="tooltip-info" 
+                <button class="btn btn-icon btn-lg waves-effect btn-detalles-paquete w-100 text-center"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    data-bs-custom-class="tooltip-info"
                     title="Editar"
                     data-id-empresa-paquete="${paquete.id_empresa_paquete}"
                     data-bs-target="#modalDetallesPaquete">

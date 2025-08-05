@@ -535,4 +535,80 @@ class EstadisticasController extends Controller
             'dataPie'    => $dataPie,
         ]);
     }
+    /**
+     * Gráfico de citas agendadas vs atendidas por día (general y por agente)
+     * Filtros: fecha (reserva_cita), agente (opcional)
+     * Una cita se considera atendida si tiene al menos una anotación válida en tb_seguimiento
+     */
+    public function getCitasAtendidasPorDia(Request $r)
+    {
+        $start      = Carbon::parse($r->start_date)->startOfDay();
+        $range      = $r->rangeDays ?? 6;
+        $end        = $start->copy()->addDays($range)->endOfDay();
+        $agentId    = $r->agent_id ?? null;
+
+        // Títulos de anotaciones a excluir
+        $excluir = [
+            "Cambio de estado cita",
+            "Actualización de cita",
+            "El estado de la cita ha cambiado",
+            "El estado verificado de la cita ha cambiado",
+            "El agente de la cita ha cambiado"
+        ];
+
+        // Obtener todas las citas en el rango
+        $citasQuery = DB::table('tb_cita')
+            ->select('id_cita', DB::raw('DATE(reserva_cita) as fecha'))
+            ->whereBetween('reserva_cita', [$start, $end]);
+        if ($agentId) {
+            $citasQuery->where('id_agente_callcenter', $agentId);
+        }
+        $citas = $citasQuery->get();
+
+        // Agrupar citas por fecha
+        $citasPorFecha = [];
+        foreach ($citas as $cita) {
+            $citasPorFecha[$cita->fecha][] = $cita->id_cita;
+        }
+
+        // Obtener anotaciones válidas para las citas en el rango
+        $idsCitas = collect($citas)->pluck('id_cita')->all();
+        $anotaciones = DB::table('tb_seguimiento')
+            ->select('id_cita')
+            ->whereIn('id_cita', $idsCitas)
+            ->whereNotIn('titulo_seguimiento', $excluir)
+            ->groupBy('id_cita')
+            ->get()
+            ->pluck('id_cita')
+            ->all();
+
+        // Para cada fecha, contar citas y atendidas
+        $fechas = [];
+        $totalCitas = [];
+        $totalAtendidas = [];
+        for ($i = 0; $i <= $range; $i++) {
+            $fecha = $start->copy()->addDays($i)->toDateString();
+            $fechas[] = $fecha;
+            $ids = $citasPorFecha[$fecha] ?? [];
+            $totalCitas[] = count($ids);
+            // Citas atendidas: intersección con anotaciones válidas
+            $atendidas = array_intersect($ids, $anotaciones);
+            $totalAtendidas[] = count($atendidas);
+        }
+        return response()->json([
+            'categories' => $fechas,
+            'series' => [
+                [
+                    'name' => 'Citas agendadas',
+                    'data' => $totalCitas,
+                    'color' => '#adb5bd'
+                ],
+                [
+                    'name' => 'Citas atendidas',
+                    'data' => $totalAtendidas,
+                    'color' => '#00bbe3'
+                ]
+            ]
+        ]);
+    }
 }
