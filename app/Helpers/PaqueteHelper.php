@@ -425,6 +425,11 @@ class PaqueteHelper {
     }
 
     public static function consultarCitasEmpresaPaquete($id_empresa_paquete) {
+        $estadoAsistio = DB::table('tb_estado')
+            ->select('tb_estado.*')
+            ->where('tb_estado.nombre_estado', 'Asistió')
+            ->first();
+
         $citasPaquete = DB::table('tb_cita')
             ->select(
                 'tb_cita.reserva_cita',
@@ -435,13 +440,15 @@ class PaqueteHelper {
                 'tb_cliente.tipo_doc_cliente',
                 'tb_cliente.doc_cliente',
                 'tb_sede.nombre_sede',
-                'tb_estado.nombre_estado'
+                'tb_estado.nombre_estado',
+                'tb_cita.created_at'
             )
             ->join('tb_empresa_paquete', 'tb_cita.id_empresa_paquete', '=', 'tb_empresa_paquete.id_empresa_paquete')
             ->join('tb_cliente', 'tb_cita.id_cliente', '=', 'tb_cliente.id_cliente')
             ->join('tb_sede', 'tb_cita.id_sede', '=', 'tb_sede.id_sede')
             ->join('tb_estado', 'tb_cita.id_estado_verificado', '=', 'tb_estado.id_estado')
             ->where('tb_cita.id_empresa_paquete', $id_empresa_paquete)
+            ->where('tb_cita.id_estado_verificado', $estadoAsistio->id_estado)
             ->get();
         
         if ($citasPaquete) {
