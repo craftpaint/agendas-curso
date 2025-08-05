@@ -78,10 +78,14 @@ Route::controller(EstadisticasController::class)->group(function () {
 
 
 
+
     // Listado de estadísticas: por agentes
     Route::get('dashboard/estadisticas/agentes', 'estadisticasAgentes')
         ->middleware(['auth', 'verified', 'permission:estadisticas.panel2.v']);
     Route::get('dashboard/estadisticas/agentes/getStatsPorEstadoAgentes', 'getStatsPorEstadoAgentes')
+        ->middleware(['auth', 'verified', 'permission:estadisticas.panel2.v']);
+    // Endpoint para gráfico de citas agendadas vs atendidas (global y por agente)
+    Route::get('dashboard/estadisticas/agentes/citasAtendidas', 'getCitasAtendidasPorDia')
         ->middleware(['auth', 'verified', 'permission:estadisticas.panel2.v']);
 
     // Listado de estadísticas: por sedes
@@ -458,16 +462,16 @@ Route::controller(EmpresasController::class)->group(function () {
 // Rutas para Paquetes
 Route::controller(PaquetesController::class)->group(function () {
     Route::get('dashboard/paquetes', 'index')
-    ->middleware(['auth', 'verified', 'permission:paquete.listado.v'])
-    ->name('paquetes.index');
+        ->middleware(['auth', 'verified', 'permission:paquete.listado.v'])
+        ->name('paquetes.index');
     Route::post('dashboard/paquetes/obtener_paquetes', 'obtenerPaquetes')
-    ->middleware(['auth', 'verified', 'permission:paquete.listado.v']);
+        ->middleware(['auth', 'verified', 'permission:paquete.listado.v']);
     Route::post('dashboard/paquetes/cambio_estado', 'cambioEstadoPaquete')
-    ->middleware(['auth', 'verified', 'permission:paquete.listado.d']);
+        ->middleware(['auth', 'verified', 'permission:paquete.listado.d']);
     Route::post('dashboard/paquetes/guardar', 'guardarPaquete')
-    ->middleware(['auth', 'verified', 'permission:paquete.listado.a']);
+        ->middleware(['auth', 'verified', 'permission:paquete.listado.a']);
     Route::post('dashboard/paquetes/actualizar/{id}', 'actualizarPaquete')
-    ->middleware(['auth', 'verified', 'permission:paquete.listado.e']);
+        ->middleware(['auth', 'verified', 'permission:paquete.listado.e']);
 })->name('paquetes');
 
 require __DIR__ . '/auth.php';
