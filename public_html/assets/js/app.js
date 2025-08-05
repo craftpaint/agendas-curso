@@ -4291,6 +4291,8 @@ $(function () {
         $('#createEmpresaForm').attr('action', url + '/dashboard/empresas/guardar');
         $('#createEmpresaForm')[0].reset();
         $('#create-empresa-plan').val('').trigger('change');
+        $('#create-empresa-phone-number').val('');
+        $('#create-empresa-email').val('');
         $('#create-empresa-file').val('');
         $('#preview-image').attr('src', '');
         $('#preview-container').hide();
@@ -4407,6 +4409,8 @@ $(function () {
         const tipo_documento = $(this).data('empresa-tipo-documento');
         const numero_documento = $(this).data('empresa-documento');
         const plan = $(this).data('empresa-plan');
+        const telefono = $(this).data('telefono-empresa');
+        const correo = $(this).data('correo-empresa');
         const logo = $(this).data('empresa-logo');
         const plantilla = $(this).data('empresa-plantilla');
 
@@ -4417,6 +4421,8 @@ $(function () {
         $('#create-empresa-document-type').val(tipo_documento);
         $('#create-empresa-document-number').val(numero_documento);
         $('#create-empresa-plan').val(plan);
+        $('#create-empresa-phone-number').val(telefono);
+        $('#create-empresa-email').val(correo);
         $('#create-empresa-template').val(plantilla);
 
         if (logo && logo !== '') {
