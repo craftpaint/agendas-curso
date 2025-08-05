@@ -59,6 +59,7 @@ $(function () {
     let filtroSearch = '';
     let tipoCita = '';
     let filtroAgente = '';
+    let filtroTipoPaqueteCita = '';
 
     //Filtros de paquetes
     let filtroNombre = '';
@@ -1385,6 +1386,7 @@ $(function () {
                     d.filtro_origen = filtroOrigen;
                     d.filtro_search = filtroSearch;
                     d.filtro_agente = filtroAgente;
+                    d.filtro_tipo_paquete_cita = filtroTipoPaqueteCita;
                     d.tipo_cita = tipoCita;
                     // Parámetros necesarios para ordenamiento
                     d.order = d.order;
@@ -1466,10 +1468,8 @@ $(function () {
                             Tan pronto salga del curso nos confirma, para registrar su asistencia. Recuerde consultar su comparendo en la pagina del Simit, este debe estar notificado.
                         `;
                         plantilla = plantilla.replace(/^[ \t]+/gm, '');
-
                         return `
                         <div style="position:relative; display:inline-block;">
-                            <!-- Botón para ver el seguimiento -->
                             <button type="button"
                                 class="btn btn-sm btn-light btn-open-seguimiento-modal ${iconColorAnotaciones}"
                                 data-id-cita="${full.id_cita}"
@@ -1478,6 +1478,7 @@ $(function () {
                             </button>
                             ${badgeAnotaciones}
                         </div>
+                        
                         ${(rol == "superadmin" || rol == "admin" || rol == "lidercallcenter" || rol == "callcenter") ? `
                         <div style="position:relative; margin-top: 5px;">
                             <button type="button"
@@ -1498,9 +1499,19 @@ $(function () {
                         var headerCell = table_citas.column(2).header(); // Cambia 7 al índice correcto
                         let html = '';
                         // Verificamos si el usuario tiene permiso para ver la sede
+                        if (canViewTipoPaquete && full.tipo_paquete) {
+                            if (full.tipo_paquete == "PREPAGO") {
+                                full.tipo_paquete = "PRE";
+                            } else if (full.tipo_paquete == "POSPAGO") {
+                                full.tipo_paquete = "POS";
+                            } else if (full.tipo_paquete == "AUXILIAR") {
+                                full.tipo_paquete = "AUX";
+                            }
+                            html = `<span class="badge bg-label-warning mb-1 m-auto" style="margin-right:5px !important;">${full.tipo_paquete}</span>`;
+                        }
                         if (canViewSedeCita) {
                             headerCell.innerHTML = "Sede - Comparendo";
-                            html = `<span class="badge bg-label-dark mb-1">${full.nombre_sede}</span>`;
+                            html += `<span class="badge bg-label-dark mb-1">${full.nombre_sede}</span>`;
                         } else {
                             headerCell.innerHTML = "comparendo";
                         }
@@ -1748,6 +1759,10 @@ $(function () {
             filtroOrigen = $(this).val();
             table_citas.ajax.reload();
         });
+         $('#filtro-tipo-paquete-cita').on('change', function () {
+            filtroTipoPaqueteCita = $(this).val();
+            table_citas.ajax.reload();
+         });
         $('#woow-search-citas').on('keyup', function () {
             filtroSearch = $(this).val();
             table_citas.ajax.reload();
@@ -1760,6 +1775,7 @@ $(function () {
             filtroEstadoVerificado = '';
             filtroResponsable = '';
             filtroOrigen = '';
+            filtroTipoPaquete = '';
             filtroSearch = '';
             $('#filtro-dia').val("").trigger('input');
             $('#filtro-dia-end').val("").trigger('input');
@@ -1768,6 +1784,7 @@ $(function () {
             $('#filtro-responsable').val("").trigger('change');
             $('#filtro-estado-verificado').val("").trigger('change');
             $('#filtro-origen').val("").trigger('change');
+            $('#filtro-tipo-paquete-cita').val("").trigger('change');
             $('#woow-search-citas').val("").trigger('input');
             table_citas.ajax.reload();
         });
@@ -4345,7 +4362,7 @@ $(function () {
                         $('#logo-empresa-dashboard').attr('src', `${url}/${response.Data.logo}`);
                         $('#nombre-empresa-dashboard').html(`Nombre: <strong>${response.Data.Nombre}</strong>`);
                         $('#documento-empresa-dashboard').html(`Documento: <strong>${response.Data.tipo_documento_empresa} ${response.Data.documento_empresa}</strong>`);
-                       if (rol == 'superadmin' || rol == 'admin') {
+                        if (rol == 'superadmin' || rol == 'admin') {
                             $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
                         }
                     }
@@ -4730,7 +4747,7 @@ $(function () {
         });
     }
 
-    function validarPaqueteActivo (id_empresa = null) {
+    function validarPaqueteActivo(id_empresa = null) {
         $.ajax({
             url: url + '/dashboard/empresa/obtener_datos_barra_progreso',
             type: 'POST',
@@ -4754,7 +4771,7 @@ $(function () {
                             } else if (citas_restantes == 0 || response.Data.tipo_paquete == "AUXILIAR") {
                                 $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/fin_paquetes.jpg`);
                                 $('#aviso-url').attr('href', `${page_wp_aliados}`);
-                                 $('#popupPaquetes').find('.btn-close').hide();
+                                $('#popupPaquetes').find('.btn-close').hide();
                                 $('#popupPaquetes').modal({
                                     backdrop: 'static',
                                     keyboard: false
@@ -4769,9 +4786,9 @@ $(function () {
                             $('#aviso-url').attr('href', `${page_wp_aliados}`);
                             $('#popupPaquetes').find('.btn-close').hide();
                             $('#popupPaquetes').modal({
-                                    backdrop: 'static',
-                                    keyboard: false
-                                });
+                                backdrop: 'static',
+                                keyboard: false
+                            });
                             $('#popupPaquetes').modal('show');
                         }
                     }
@@ -4944,6 +4961,22 @@ $(function () {
         $('#citas-erradas-paquete-activo-dashboard-empresa').text(``);
         $('#citas-validacion-paquete-activo-dashboard-empresa').text(``);
         $('#citas-pendientes-paquete-activo-dashboard-empresa').text(``);
+        $('#ChartRadialProgressDashboardEmpresasHistorial').html(``);
+        $('#ChartRadialProgressDashboardEmpresasHistorialInfo').html(``);
+        $('#ChartRadialProgressDashboardEmpresasHistorialBoton').html(``);
+        $('#ListadopaquetesPendientes').html(``);
+        ChartDashboardEmpresasProgressBar.updateSeries([
+            { data: [] },
+            { data: [] }
+        ]);
+        ChartDashboardEmpresasProgressBar.render();
+        ChartDashboardEmpresasLineBarMixed.updateSeries([
+            { data: [] },
+            { data: [] }
+        ]);
+        ChartDashboardEmpresasLineBarMixed.render();
+
+
 
         // Se consulta la nueva empresa
         const empresaSeleccionada = $(this).val();
@@ -4955,15 +4988,15 @@ $(function () {
     });
 
     // Boton de detalles del paquete
-    $(document).on('click', '.btn-detalles-paquete', function() {
-    const id_empresa_paquete = $(this).data('id-empresa-paquete');
-    const $table = $('.datatables-detalles-paquete');
+    $(document).on('click', '.btn-detalles-paquete', function () {
+        const id_empresa_paquete = $(this).data('id-empresa-paquete');
+        const $table = $('.datatables-detalles-paquete');
 
-    // Destruir la tabla existente si ya está inicializada
-    if ($.fn.DataTable.isDataTable($table)) {
-        $table.DataTable().destroy();
-        $table.empty();
-    }
+        // Destruir la tabla existente si ya está inicializada
+        if ($.fn.DataTable.isDataTable($table)) {
+            $table.DataTable().destroy();
+            $table.empty();
+        }
 
     // Reconstruir la estructura básica de la tabla
     $table.html('<thead><tr>'
@@ -5041,8 +5074,8 @@ $(function () {
         pagingType: "simple"
     });
 
-    $('#modalDetallesPaquete').modal('show');
-});
+        $('#modalDetallesPaquete').modal('show');
+    });
 
     // TABLAS DE PAQUETES
     var table_paquetes;
