@@ -59,6 +59,7 @@ $(function () {
     let filtroSearch = '';
     let tipoCita = '';
     let filtroAgente = '';
+    let filtroTipoPaqueteCita = '';
 
     //Filtros de paquetes
     let filtroNombre = '';
@@ -212,6 +213,10 @@ $(function () {
     });
 
     $('.send_form').on('submit', function (event) {
+        // SE VALIDA EL POP-UP DE PAQUETES
+        if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+            validarPaqueteActivo();
+        }
         event.preventDefault(); // Evita que el formulario se envíe inmediatamente
         let isValid = true;
         let action = $(this).attr('action');
@@ -1304,7 +1309,7 @@ $(function () {
                         return `
                         <div class="d-flex justify-content-end">
                             ${(canEditEstadoCitas) ? `
-								<a href="${url}/dashboard/citas/edit_estados/${full.id_estado}" class="btn btn-icon btn-label-primary waves-effect me-2">
+                                <a href="${url}/dashboard/citas/edit_estados/${full.id_estado}" class="btn btn-icon btn-label-primary waves-effect me-2">
                                     <i class="tf-icons ti ti-edit ti-md"></i>
                                 </a>` : ``}
                             ${(canDeleteEstadoCitas) ? `
@@ -1381,6 +1386,7 @@ $(function () {
                     d.filtro_origen = filtroOrigen;
                     d.filtro_search = filtroSearch;
                     d.filtro_agente = filtroAgente;
+                    d.filtro_tipo_paquete_cita = filtroTipoPaqueteCita;
                     d.tipo_cita = tipoCita;
                     // Parámetros necesarios para ordenamiento
                     d.order = d.order;
@@ -1462,10 +1468,8 @@ $(function () {
                             Tan pronto salga del curso nos confirma, para registrar su asistencia. Recuerde consultar su comparendo en la pagina del Simit, este debe estar notificado.
                         `;
                         plantilla = plantilla.replace(/^[ \t]+/gm, '');
-
                         return `
                         <div style="position:relative; display:inline-block;">
-                            <!-- Botón para ver el seguimiento -->
                             <button type="button"
                                 class="btn btn-sm btn-light btn-open-seguimiento-modal ${iconColorAnotaciones}"
                                 data-id-cita="${full.id_cita}"
@@ -1474,6 +1478,7 @@ $(function () {
                             </button>
                             ${badgeAnotaciones}
                         </div>
+
                         ${(rol == "superadmin" || rol == "admin" || rol == "lidercallcenter" || rol == "callcenter") ? `
                         <div style="position:relative; margin-top: 5px;">
                             <button type="button"
@@ -1494,9 +1499,19 @@ $(function () {
                         var headerCell = table_citas.column(2).header(); // Cambia 7 al índice correcto
                         let html = '';
                         // Verificamos si el usuario tiene permiso para ver la sede
+                        if (canViewTipoPaquete && full.tipo_paquete) {
+                            if (full.tipo_paquete == "PREPAGO") {
+                                full.tipo_paquete = "PRE";
+                            } else if (full.tipo_paquete == "POSPAGO") {
+                                full.tipo_paquete = "POS";
+                            } else if (full.tipo_paquete == "AUXILIAR") {
+                                full.tipo_paquete = "AUX";
+                            }
+                            html = `<span class="badge bg-label-warning mb-1 m-auto" style="margin-right:5px !important;">${full.tipo_paquete}</span>`;
+                        }
                         if (canViewSedeCita) {
                             headerCell.innerHTML = "Sede - Comparendo";
-                            html = `<span class="badge bg-label-dark mb-1">${full.nombre_sede}</span>`;
+                            html += `<span class="badge bg-label-dark mb-1">${full.nombre_sede}</span>`;
                         } else {
                             headerCell.innerHTML = "comparendo";
                         }
@@ -1744,6 +1759,10 @@ $(function () {
             filtroOrigen = $(this).val();
             table_citas.ajax.reload();
         });
+        $('#filtro-tipo-paquete-cita').on('change', function () {
+            filtroTipoPaqueteCita = $(this).val();
+            table_citas.ajax.reload();
+        });
         $('#woow-search-citas').on('keyup', function () {
             filtroSearch = $(this).val();
             table_citas.ajax.reload();
@@ -1756,6 +1775,7 @@ $(function () {
             filtroEstadoVerificado = '';
             filtroResponsable = '';
             filtroOrigen = '';
+            filtroTipoPaquete = '';
             filtroSearch = '';
             $('#filtro-dia').val("").trigger('input');
             $('#filtro-dia-end').val("").trigger('input');
@@ -1764,6 +1784,7 @@ $(function () {
             $('#filtro-responsable').val("").trigger('change');
             $('#filtro-estado-verificado').val("").trigger('change');
             $('#filtro-origen').val("").trigger('change');
+            $('#filtro-tipo-paquete-cita').val("").trigger('change');
             $('#woow-search-citas').val("").trigger('input');
             table_citas.ajax.reload();
         });
@@ -1772,6 +1793,10 @@ $(function () {
             // Se obtiene el ID de la cita desde el atributo data-id-cita del botón
             let idCita = $(this).data('id-cita');
 
+            // SE VALIDA EL POP-UP DE PAQUETES
+            if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+                validarPaqueteActivo();
+            }
             // Se realiza la petición AJAX para obtener el HTML del seguimiento y el formulario
             $.ajax({
                 url: url + '/dashboard/citas/get_seguimiento_cita_con_actualizacion', // Asegúrate de que 'url' está definida con la ruta base
@@ -1888,6 +1913,11 @@ $(function () {
         }
         //ELIMINAR SEDE
         $('.datatables-citas').on('click', '.btn_delete_cita', function () {
+            // SE VALIDA EL POP-UP DE PAQUETES
+            if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+                validarPaqueteActivo();
+            }
+
             let id = $(this).data('id');
             Swal.fire({
                 title: '¿Estas seguro?',
@@ -1920,6 +1950,10 @@ $(function () {
         });
         //Cambiamos el estado
         $('.datatables-citas').on('click', '.change_estado_cita', function () {
+            // SE VALIDA EL POP-UP DE PAQUETES
+            if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+                validarPaqueteActivo();
+            }
             let id_estado = $(this).data('id_estado');
             let id_cita = $(this).data('id_cita');
             $.ajax({
@@ -1936,6 +1970,10 @@ $(function () {
         });
         //Cambiamos el estado verificado
         $('.datatables-citas').on('click', '.change_estado_cita_verificado', function () {
+            // SE VALIDA EL POP-UP DE PAQUETES
+            if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+                validarPaqueteActivo();
+            }
             let id_estado = $(this).data('id_estado');
             let id_cita = $(this).data('id_cita');
             $.ajax({
@@ -1952,6 +1990,10 @@ $(function () {
         });
         //Cambiamos el estado verificado
         $('.datatables-citas').on('click', '.change_agente_call', function () {
+            // SE VALIDA EL POP-UP DE PAQUETES
+            if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+                validarPaqueteActivo();
+            }
             let id_agente = $(this).data('id_agente');
             let id_cita = $(this).data('id_cita');
             $.ajax({
@@ -1968,6 +2010,10 @@ $(function () {
         });
         //Cambiamos el servicio
         $('.datatables-citas').on('click', '.change_servicio_liquidador', function () {
+            // SE VALIDA EL POP-UP DE PAQUETES
+            if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+                validarPaqueteActivo();
+            }
             let id_servicio_liquidador = $(this).data('id_servicio_liquidador');
             let id_cita = $(this).data('id_cita');
             $.ajax({
@@ -2152,9 +2198,9 @@ $(function () {
                 filtro_sede: filter.filtro_sede,
                 tipo_cita: filter.tipo_cita,
                 filtro_servicios_liquidador: filter.filtro_servicios_liquidador,
+                filtro_tipo_paquete_cita: filter.filtro_tipo_paquete_cita
             },
             success: function (data) {
-                console.log("Data: " + data);
                 if (data.status === 'in_progress') {
                     // Si aún hay más datos por procesar, llama a la función con el siguiente bloque
                     dowloadFileCita(action, data.nextStart, filter);
@@ -2184,9 +2230,9 @@ $(function () {
             'filtro_servicios_liquidador': filtroServicioLiquidador,
             'filtro_estado_validacion_liquidador': filtroEstadoValidacionLiquidador,
             'filtro_estado_pago_liquidador': filtroEstadoPagoLiquidador,
+            'filtro_tipo_paquete_cita': filtroTipoPaqueteCita
         };
         dowloadFileCita(action, 0, filter); // Inicia con el primer bloque de datos
-        console.log(filter);
     });
     //Descargar boton
     function dowloadFile(action, start, type) {
@@ -3060,6 +3106,7 @@ $(function () {
             });
         });
 
+
         $('#btnClearFilters').on('click', () => {
             location.reload();
         });
@@ -3096,6 +3143,166 @@ $(function () {
             .trigger('change');
 
 
+        // Gráfico de citas agendadas vs atendidas (global)
+        var chartCitasAtendidas = new ApexCharts(document.querySelector("#ChartCitasAtendidasGlobal"), {
+            chart: { type: 'bar', height: 350, stacked: false },
+            series: [],
+            xaxis: { categories: [] },
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    borderRadiusApplication: 'end',
+                    horizontal: false,
+                }
+            },
+            legend: {
+                fontFamily: 'Roboto, sans-serif',
+                markers: { radius: 12, width: 12, height: 12 },
+                position: 'top'
+            },
+            tooltip: {
+                theme: 'light',
+                style: { fontFamily: 'Roboto, sans-serif' },
+                onDatasetHover: { highlightDataSeries: true },
+            },
+            theme: {
+                mode: 'light',
+                palette: 'palette1'
+            },
+            colors: ['#adb5bd', '#00bbe3'],
+        });
+        chartCitasAtendidas.render();
+
+        // Función para cargar datos desde el backend y actualizar el gráfico
+        function fetchCitasAtendidas(agentId = null, chartInstance = null) {
+            const fecha = $('#datePicker').val();
+            const r = +$('#select-rango-fechas-estadisticas').val();
+            const m = moment(fecha, 'YYYY-MM-DD');
+            console.log('fetchCitasAtendidas', m, r);
+
+            let startMoment, rangeDays;
+
+
+            switch (r) {
+                case 1: // Semana actual: lunes → domingo
+                    startMoment = m.clone().startOf('isoWeek');
+                    rangeDays = 6;
+                    break;
+
+                case 2: // Últimas 2 semanas: lunes semana anterior → domingo semana actual
+                    startMoment = m.clone().startOf('isoWeek').subtract(7, 'days');
+                    rangeDays = 13;
+                    break;
+
+                case 3: // Mes actual: 1ro mes → fin mes
+                    startMoment = m.clone().startOf('month');
+                    rangeDays = startMoment.daysInMonth() - 1;
+                    break;
+
+                case 4: // Trimestre: primer día del mes -2 meses → fin del mes actual
+                    startMoment = m.clone().startOf('month').subtract(2, 'months');
+                    // diferencia en días entre start y fin de mes actual
+                    const endOfCurrent = m.clone().endOf('month');
+                    rangeDays = endOfCurrent.diff(startMoment, 'days');
+                    break;
+
+                default:
+                    startMoment = m.clone().startOf('isoWeek');
+                    rangeDays = 6;
+            }
+
+            const start_date = startMoment.format('YYYY-MM-DD');
+            console.log('fetchCitasAtendidas', start_date, rangeDays, agentId);
+            let params = {
+                start_date,
+                rangeDays: rangeDays // por defecto semana
+            };
+            if (agentId) params.agent_id = agentId;
+
+            $.getJSON('agentes/citasAtendidas', params)
+                .done(function (resp) {
+                    if (chartInstance) {
+                        chartInstance.updateOptions({
+                            xaxis: { categories: resp.categories },
+                            series: resp.series
+                        });
+                    } else {
+                        chartCitasAtendidas.updateOptions({
+                            xaxis: { categories: resp.categories },
+                            series: resp.series
+                        });
+                    }
+                })
+                .fail(function () {
+                    if (chartInstance) {
+                        chartInstance.updateOptions({
+                            xaxis: { categories: [] },
+                            series: []
+                        });
+                    } else {
+                        chartCitasAtendidas.updateOptions({
+                            xaxis: { categories: [] },
+                            series: []
+                        });
+                    }
+                });
+        }
+
+        // Inicializar el gráfico global al cargar la página
+        fetchCitasAtendidas();
+
+        // Inicializar los gráficos por agente
+        agentes.forEach(function (ag) {
+            var chartDivId = '#ChartCitasAtendidasAgente-' + ag.id;
+            var chartDiv = document.querySelector(chartDivId);
+            if (chartDiv) {
+                var chartAgente = new ApexCharts(chartDiv, {
+                    chart: { type: 'bar', height: 350, stacked: false },
+                    series: [],
+                    xaxis: { categories: [] },
+                    plotOptions: {
+                        bar: {
+                            borderRadius: 4,
+                            borderRadiusApplication: 'end',
+                            horizontal: false,
+                        }
+                    },
+                    legend: {
+                        fontFamily: 'Roboto, sans-serif',
+                        markers: { radius: 12, width: 12, height: 12 },
+                        position: 'top'
+                    },
+                    tooltip: {
+                        theme: 'light',
+                        style: { fontFamily: 'Roboto, sans-serif' },
+                        onDatasetHover: { highlightDataSeries: true },
+                    },
+                    theme: {
+                        mode: 'light',
+                        palette: 'palette1'
+                    },
+                    colors: ['#adb5bd', '#00bbe3'],
+                });
+                chartAgente.render();
+                // Guardar instancia en el div para poder actualizar luego
+                chartDiv._apexchartsInstance = chartAgente;
+                // Cargar datos iniciales
+                fetchCitasAtendidas(ag.id, chartAgente);
+            }
+        });
+
+        // Actualizar al cambiar filtros
+        $('#select-rango-fechas-estadisticas, #datePicker').on('change', function () {
+            fetchCitasAtendidas();
+            // Actualizar todos los gráficos de agentes
+            agentes.forEach(function (ag) {
+                var chartDivId = '#ChartCitasAtendidasAgente-' + ag.id;
+                var chartDiv = document.querySelector(chartDivId);
+                if (chartDiv && chartDiv._apexchartsInstance) {
+                    fetchCitasAtendidas(ag.id, chartDiv._apexchartsInstance);
+                }
+            });
+        });
     }
 
     if ($('#estadisticas-Sedes').length) {
@@ -3642,6 +3849,11 @@ $(function () {
         }
         //Cambiamos el estado
         $('.datatables-citas').on('click', '.change_estado_cita_verificado', function () {
+            // SE VALIDA EL POP-UP DE PAQUETES
+            if ($('#popupPaquetes').length && rol == "Admin Empresa PRE") {
+                validarPaqueteActivo();
+            }
+
             let id_estado = $(this).data('id_estado');
             let id_cita = $(this).data('id_cita');
             $.ajax({
@@ -4313,7 +4525,7 @@ $(function () {
                         $('#logo-empresa-dashboard').attr('src', `${url}/${response.Data.logo}`);
                         $('#nombre-empresa-dashboard').html(`Nombre: <strong>${response.Data.Nombre}</strong>`);
                         $('#documento-empresa-dashboard').html(`Documento: <strong>${response.Data.tipo_documento_empresa} ${response.Data.documento_empresa}</strong>`);
-                       if (rol == 'superadmin' || rol == 'admin') {
+                        if (rol == 'superadmin' || rol == 'admin') {
                             $('#plan-empresa-dashboard').html(`Plan: <strong>${response.Data.plan_empresa}</strong>`);
                         }
                     }
@@ -4395,7 +4607,7 @@ $(function () {
                     if (response.Data) {
                         $('#nombre-paquete-activo-dashboard-empresa').html(`Nombre: <strong>${response.Data.nombre_paquete}</strong>`);
                         $('#numero-citas-paquete-activo-dashboard-empresa').html(`Número de citas: <strong>${response.Data.numero_citas}</strong>`);
-                        $('#estado-paquete-activo-dashboard-empresa').html(`Estado: <strong>${response.Data.estado}</strong>`);
+                        $('#estado-paquete-activo-dashboard-empresa').html(`Estado:<span class="badge bg-label-info"><strong>${response.Data.estado}</strong></span>`);
                         $('#citas-consumidas-paquete-activo-dashboard-empresa').html(`<strong>${response.Data.citas_consumidas}</strong>`);
                         $('#citas-faltantes-paquete-activo-dashboard-empresa').html(`<strong>${response.Data.citas_faltantes}</strong>`);
                         $('#citas-confirmadas-paquete-activo-dashboard-empresa').text(`${response.Data.citasConfirmadas}`);
@@ -4487,7 +4699,7 @@ $(function () {
         });
     }
 
-    function actualizarGraficosHistorial(datos) {
+    function actualizarHistorial(datos) {
         const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorial');
 
         // Limpiar contenedor
@@ -4495,13 +4707,33 @@ $(function () {
 
         // Crear un gráfico por cada paquete
         datos.forEach((paquete, index) => {
-            const chartId = `chart${index + 1}`;
+            
+            // Crear contenedor principal para cada fila horizontal
+            const rowContainer = document.createElement('div');
+            rowContainer.className = 'd-flex flex-wrap align-item-center justify-content-center mb-5';
+            rowContainer.style.gap = '20px';
 
-            // Crear contenedor para el gráfico
+            // Crear contenedores para cada columna
             const chartContainer = document.createElement('div');
-            chartContainer.id = chartId;
-            chartContainer.className = 'mt-5 py-auto';
-            container.appendChild(chartContainer);
+            chartContainer.id = `chart${index + 1}`;
+            chartContainer.style.flex = '0 0 150px';
+
+            const infoContainer = document.createElement('div');
+            infoContainer.id = `info${index + 1}`;
+            infoContainer.style.flex = '1 1 300px';
+
+            const botonContainer = document.createElement('div');
+            botonContainer.id = `boton${index + 1}`;
+            botonContainer.style.flex = '0 0 80px';
+
+            // Agregar contenedores a la fila principal
+            rowContainer.appendChild(chartContainer);
+            rowContainer.appendChild(infoContainer);
+            rowContainer.appendChild(botonContainer);
+            
+            // Agregar la fila al contenedor principal
+            container.appendChild(rowContainer);
+
 
             // Configuración del gráfico
             const chartOptions = {
@@ -4544,67 +4776,34 @@ $(function () {
             };
 
             // Renderizar gráfico
-            const chart = new ApexCharts(document.querySelector(`#${chartId}`), chartOptions);
+            const chart = new ApexCharts(chartContainer, chartOptions);
             chart.render();
-        });
-    }
 
-    function actualizarInfoHistorial(datos) {
-        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorialInfo');
-
-        // Limpiar contenedor
-        container.innerHTML = '';
-
-        //Crea la informmación para cada paquete
-        datos.forEach((paquete, index) => {
-            const infoId = `info${index + 1}`;
-
-            const infoContainer = document.createElement('div');
-            infoContainer.id = infoId;
-            infoContainer.className = 'mb-5';
-            container.appendChild(infoContainer);
+            // Formatear fechas
             paquete.fecha_inicio = paquete.fecha_inicio.split(' ')[0];
+            paquete.fecha_fin = paquete.fecha_fin ? paquete.fecha_fin.split(' ')[0] : "ACTIVO";
 
-            if (!paquete.fecha_fin) {
-                paquete.fecha_fin = "ACTIVO";
-            } else {
-                paquete.fecha_fin = paquete.fecha_fin.split(' ')[0];
-            }
-
+            // Contenido de información
             infoContainer.innerHTML = `
-                <h5 class="text-info pt-5 mb-2">Nombre: <strong class="text-dark">${paquete.nombre_paquete}</strong></h5>
-                <h6 class="text-info mb-2"><strong>${paquete.fecha_inicio} - ${paquete.fecha_fin}</strong></h6>
-                <h6 class="text-info mb-2">Número de citas: <strong class="text-dark">${paquete.numero_citas}</strong></h6>
-                <h6 class="text-info mb-5">Precio: <strong class="text-dark">${paquete.valor}</strong></h6>
+                <div class="d-flex flex-column">
+                    <h5 class="text-info mb-2">Nombre: <strong class="text-dark">${paquete.nombre_paquete}</strong></h5>
+                    <h6 class="text-info mb-2">Periodo: <strong>${paquete.fecha_inicio} - ${paquete.fecha_fin}</strong></h6>
+                    <h6 class="text-info mb-2">Citas: <strong class="text-dark">${paquete.numero_citas}</strong></h6>
+                    <h6 class="text-info mb-0">Precio: <strong class="text-dark">${paquete.valor}</strong></h6>
+                </div>
             `;
-        });
-    }
 
-    function actualizarBotonesHistorial(datos) {
-        const container = document.getElementById('ChartRadialProgressDashboardEmpresasHistorialBoton');
-
-        // Limpiar contenedor
-        container.innerHTML = '';
-
-        datos.forEach((paquete, index) => {
-            const botonId = `boton${index + 1}`;
-
-            const botonContainer = document.createElement('div');
-            botonContainer.id = botonId;
-            botonContainer.className = 'mt-5';
-            botonContainer.style.marginBottom = '100px';
-            container.appendChild(botonContainer);
-
+            // Botón para los detalles del paquete
             botonContainer.innerHTML = `
-                <button class="btn btn-icon btn-lg waves-effect btn-detalles-paquete w-100 text-center" 
-                    data-bs-toggle="tooltip" 
-                    data-bs-placement="top" 
-                    data-bs-custom-class="tooltip-info" 
-                    title="Editar"
-                    data-id-empresa-paquete="${paquete.id_empresa_paquete}"
-                    data-bs-target="#modalDetallesPaquete">
-                    <i class="ti ti-checkup-list me-2 text-info" style="font-size:50px;"></i>
-                </button>
+
+                <div class="d-flex align-items-center h-100">
+                    <button class="btn btn-icon btn-lg waves-effect btn-detalles-paquete"
+                        data-bs-toggle="tooltip" 
+                        data-id-empresa-paquete="${paquete.id_empresa_paquete}"
+                        title="Editar">
+                        <i class="ti ti-checkup-list text-info" style="font-size:50px;"></i>
+                    </button>
+                </div>
             `;
         });
     }
@@ -4619,9 +4818,7 @@ $(function () {
             success: function (response) {
                 if (response.Success) {
                     if (response.Data) {
-                        actualizarGraficosHistorial(response.Data);
-                        actualizarInfoHistorial(response.Data);
-                        actualizarBotonesHistorial(response.Data);
+                        actualizarHistorial(response.Data);
                     }
                 } else {
                     Swal.fire({
@@ -4714,7 +4911,7 @@ $(function () {
         });
     }
 
-    function validarPaqueteActivo (id_empresa = null) {
+    function validarPaqueteActivo(id_empresa = null) {
         $.ajax({
             url: url + '/dashboard/empresa/obtener_datos_barra_progreso',
             type: 'POST',
@@ -4738,7 +4935,7 @@ $(function () {
                             } else if (citas_restantes == 0 || response.Data.tipo_paquete == "AUXILIAR") {
                                 $('#img-pop-up-paquetes').attr('src', `${url}/assets/img/paquetes/fin_paquetes.jpg`);
                                 $('#aviso-url').attr('href', `${page_wp_aliados}`);
-                                 $('#popupPaquetes').find('.btn-close').hide();
+                                $('#popupPaquetes').find('.btn-close').hide();
                                 $('#popupPaquetes').modal({
                                     backdrop: 'static',
                                     keyboard: false
@@ -4753,9 +4950,9 @@ $(function () {
                             $('#aviso-url').attr('href', `${page_wp_aliados}`);
                             $('#popupPaquetes').find('.btn-close').hide();
                             $('#popupPaquetes').modal({
-                                    backdrop: 'static',
-                                    keyboard: false
-                                });
+                                backdrop: 'static',
+                                keyboard: false
+                            });
                             $('#popupPaquetes').modal('show');
                         }
                     }
@@ -4817,9 +5014,6 @@ $(function () {
                 width: 1,
                 colors: ['#fff']
             },
-            title: {
-                text: '% de progreso del paquete',
-            },
             xaxis: {
                 categories: [''],
                 labels: {
@@ -4879,9 +5073,6 @@ $(function () {
             stroke: {
                 width: [0, 4]
             },
-            title: {
-                text: 'Citas Agendadas vs Asistidas del mes actual',
-            },
             colors: ['#cecece', '#00d2ff'],
             dataLabels: {
                 enabled: true,
@@ -4934,6 +5125,22 @@ $(function () {
         $('#citas-erradas-paquete-activo-dashboard-empresa').text(``);
         $('#citas-validacion-paquete-activo-dashboard-empresa').text(``);
         $('#citas-pendientes-paquete-activo-dashboard-empresa').text(``);
+        $('#ChartRadialProgressDashboardEmpresasHistorial').html(``);
+        $('#ChartRadialProgressDashboardEmpresasHistorialInfo').html(``);
+        $('#ChartRadialProgressDashboardEmpresasHistorialBoton').html(``);
+        $('#ListadopaquetesPendientes').html(``);
+        ChartDashboardEmpresasProgressBar.updateSeries([
+            { data: [] },
+            { data: [] }
+        ]);
+        ChartDashboardEmpresasProgressBar.render();
+        ChartDashboardEmpresasLineBarMixed.updateSeries([
+            { data: [] },
+            { data: [] }
+        ]);
+        ChartDashboardEmpresasLineBarMixed.render();
+
+
 
         // Se consulta la nueva empresa
         const empresaSeleccionada = $(this).val();
@@ -4945,24 +5152,25 @@ $(function () {
     });
 
     // Boton de detalles del paquete
-    $(document).on('click', '.btn-detalles-paquete', function() {
-    const id_empresa_paquete = $(this).data('id-empresa-paquete');
-    const $table = $('.datatables-detalles-paquete');
+    $(document).on('click', '.btn-detalles-paquete', function () {
+        const id_empresa_paquete = $(this).data('id-empresa-paquete');
+        const $table = $('.datatables-detalles-paquete');
 
-    // Destruir la tabla existente si ya está inicializada
-    if ($.fn.DataTable.isDataTable($table)) {
-        $table.DataTable().destroy();
-        $table.empty();
-    }
+        // Destruir la tabla existente si ya está inicializada
+        if ($.fn.DataTable.isDataTable($table)) {
+            $table.DataTable().destroy();
+            $table.empty();
+        }
 
     // Reconstruir la estructura básica de la tabla
     $table.html('<thead><tr>'
         + '<th>Cliente</th>'
         + '<th>Documento</th>'
         + '<th>Sede</th>'
-        + '<th>Fecha Reserva</th>'
+        + '<th>Fecha de creación</th>'
+        + '<th>Fecha de reserva</th>'
         + '<th>Horario</th>'
-        + '<th>Estado</th>'
+        + '<th>Estado verificado</th>'
         + '</tr></thead><tbody></tbody>');
 
     // Inicializar la nueva instancia de DataTable
@@ -4973,6 +5181,7 @@ $(function () {
         searching: false,
         info: false,
         pageLength: 10,
+        responsive: true,
         language: {
             url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json',
             infoEmpty: "No hay datos disponibles",
@@ -4986,33 +5195,51 @@ $(function () {
             }
         },
         columns: [
-            {
-                data: null,
-                render: function (data) {
-                    return data.nombre_cliente + ' ' + data.apellido_cliente;
-                }
-            },
-            {
-                data: null,
-                render: function (data) {
-                    return data.tipo_doc_cliente + ' ' + data.doc_cliente;
-                }
-            },
+            { data: null },
+            { data: null },
             { data: 'nombre_sede'},
-            { 
-                data: null,
-                render: function (data) {
-                    return data.reserva_cita.split(' ')[0];
-                }
-            },
+            { data: 'created_at' },
+            { data: 'reserva_cita' },
             { data: 'rango_horario' },
             { data: 'nombre_estado' }
+        ],
+        columnDefs: [
+            {
+                targets: 0,
+                render: function (data, type, full, meta) {
+                    return full.nombre_cliente + ' ' + full.apellido_cliente;
+                }
+            },
+            {
+               targets: 1,
+                render: function (data, type, full, meta) {
+                     return `<span class="badge bg-label-info">${full.tipo_doc_cliente + ' ' + full.doc_cliente}</span>`;
+                }
+            },
+            {
+               targets: 3,
+                render: function (data, type, full, meta) {
+                    return data.split(' ')[0];
+                }
+            },
+            {
+               targets: 4,
+                render: function (data, type, full, meta) {
+                    return data.split(' ')[0];
+                }
+            },
+            {
+               targets: 6,
+                render: function (data, type, full, meta) {
+                    return `<span class="badge bg-label-success">${data}</span>`;
+                }
+            }
         ],
         pagingType: "simple"
     });
 
-    $('#modalDetallesPaquete').modal('show');
-});
+        $('#modalDetallesPaquete').modal('show');
+    });
 
     // TABLAS DE PAQUETES
     var table_paquetes;
