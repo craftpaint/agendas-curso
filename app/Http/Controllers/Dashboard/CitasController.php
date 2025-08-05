@@ -1235,7 +1235,7 @@ class CitasController extends Controller
                 }
 
                 if (!empty($filtros['filtro_tipo_paquete_cita'])) {
-                    $query->where('tb_paquete.tipo_paquete', $filtros['filtro_tipo_paquete_cita']);
+                    $query->whereIn('tb_paquete.tipo_paquete', $filtros['filtro_tipo_paquete_cita']);
                 }
 
                 // Ejecutar la consulta

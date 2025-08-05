@@ -2198,6 +2198,7 @@ $(function () {
                 filtro_sede: filter.filtro_sede,
                 tipo_cita: filter.tipo_cita,
                 filtro_servicios_liquidador: filter.filtro_servicios_liquidador,
+                filtro_tipo_paquete_cita: filter.filtro_tipo_paquete_cita
             },
             success: function (data) {
                 if (data.status === 'in_progress') {
@@ -2229,6 +2230,7 @@ $(function () {
             'filtro_servicios_liquidador': filtroServicioLiquidador,
             'filtro_estado_validacion_liquidador': filtroEstadoValidacionLiquidador,
             'filtro_estado_pago_liquidador': filtroEstadoPagoLiquidador,
+            'filtro_tipo_paquete_cita': filtroTipoPaqueteCita
         };
         dowloadFileCita(action, 0, filter); // Inicia con el primer bloque de datos
     });
