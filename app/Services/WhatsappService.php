@@ -50,13 +50,13 @@ class WhatsappService {
 
         $data = [
             "contact_id" => $recipientContactId,
-            "message" => {
+            "message" => [
                 "type" => "text",
-                "text" => {
+                "text" => [
                     "body" => $body
-                }
-            }
-        ]
+                ]
+            ]
+        ];
 
         try {
             $response = Http::withHeaders([
