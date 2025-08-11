@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\AdminHelper;
 use App\Helpers\PaqueteHelper;
+use App\Helpers\UtilsHelper;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
@@ -290,6 +291,13 @@ class LoadController extends Controller
                     // Obtener el ID de la cita recién creada
                     $ultimaCita = DB::table('tb_cita')->orderBy('id_cita', 'desc')->first();
                     $id_cita = $ultimaCita->id_cita;
+
+                    // Envía el mensaje de WhatsApp al cliente
+                    $whatsappEnviadoCliente = UtilsHelper::enviarWhatsappCliente($telefono_cliente);
+
+                    if (!$whatsappEnviadoCliente) {
+                        Log::error("Error al enviar el mensaje de WhatsApp al cliente por SendPulse.");
+                    }
 
                     try {
                         $saveliquidador = DB::table('tb_liquidador')->insert([
