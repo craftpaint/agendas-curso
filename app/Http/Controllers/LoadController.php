@@ -20,10 +20,12 @@ use Carbon\Carbon;
 class LoadController extends Controller
 {
     protected $sendPulse;
+    protected $utilsHelper;
 
-    public function __construct(SendPulseService $sendPulse)
+    public function __construct(SendPulseService $sendPulse, UtilsHelper $utilsHelper)
     {
         $this->sendPulse = $sendPulse;
+        $this->utilsHelper = $utilsHelper;
     }
 
     public function index(Request $request) {
@@ -293,11 +295,7 @@ class LoadController extends Controller
                     $id_cita = $ultimaCita->id_cita;
 
                     // Envía el mensaje de WhatsApp al cliente
-                    $whatsappEnviadoCliente = UtilsHelper::enviarWhatsappCliente($telefono_cliente);
-
-                    if (!$whatsappEnviadoCliente) {
-                        Log::error("Error al enviar el mensaje de WhatsApp al cliente por SendPulse.");
-                    }
+                    $this->utilsHelper->enviarConfirmacionWhatsappCliente($id_cita);
 
                     try {
                         $saveliquidador = DB::table('tb_liquidador')->insert([

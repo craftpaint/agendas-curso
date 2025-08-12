@@ -40,7 +40,7 @@ class WhatsappService {
         }
     }
 
-    public function sendWhatsappMessage($recipientContactId, $body) {
+    public function sendWhatsappTemplateByPhone($data) {
         $accessToken = $this->getAccessToken();
 
         if (!$accessToken) {
@@ -48,21 +48,11 @@ class WhatsappService {
             return false;
         }
 
-        $data = [
-            "contact_id" => $recipientContactId,
-            "message" => [
-                "type" => "text",
-                "text" => [
-                    "body" => $body
-                ]
-            ]
-        ];
-
         try {
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $accessToken,
                 'Content-Type'  => 'application/json'
-            ])->post(env('SENDPULSE_WHATSAPP_RUTA_BASE') . '/contacts/send', $data);
+            ])->post(env('SENDPULSE_WHATSAPP_RUTA_BASE') . '/contacts/sendTemplateByPhone', $data);
 
             if ($response->successful()) {
                 return true;
