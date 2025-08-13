@@ -74,6 +74,8 @@ class EmpresasController extends Controller
             $tipo_documento = $request->input('tipo-documento');
             $numero_documento = $request->input('numero-documento');
             $plan_empresa = $request->input('plan-empresa');
+            $telefono_empresa = $request->input('numero-telefono');
+            $correo_empresa = $request->input('email-empresa');
             $plantilla_empresa = $request->input('plantilla-empresa');
             $logo_url = $request->input('logo-url');
 
@@ -83,6 +85,8 @@ class EmpresasController extends Controller
                 'tipo_documento_empresa' => $tipo_documento,
                 'documento_empresa' => $numero_documento,
                 'plan_empresa' => $plan_empresa,
+                'telefono_empresa' => $telefono_empresa,
+                'correo_empresa' => $correo_empresa,
                 'logo' => $logo_url,
                 'id_plantilla' => $plantilla_empresa
             ]);
@@ -117,6 +121,8 @@ class EmpresasController extends Controller
             $tipo_documento = $request->input('tipo-documento');
             $numero_documento = $request->input('numero-documento');
             $plan_empresa = $request->input('plan-empresa');
+            $telefono_empresa = $request->input('numero-telefono');
+            $correo_empresa = $request->input('email-empresa');
             $plantilla_empresa = $request->input('plantilla-empresa');
             $logo_url = $request->input('logo-url');
 
@@ -130,6 +136,8 @@ class EmpresasController extends Controller
                 'tipo_documento_empresa' => $tipo_documento,
                 'documento_empresa' => $numero_documento,
                 'plan_empresa' => $plan_empresa,
+                'telefono_empresa' => $telefono_empresa,
+                'correo_empresa' => $correo_empresa,
                 'logo' => $logo_url,
                 'id_plantilla' => $plantilla_empresa
             ]);

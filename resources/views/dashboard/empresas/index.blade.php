@@ -59,6 +59,8 @@
                                         data-empresa-tipo-documento="{{ $empresa->tipo_documento_empresa }}"
                                         data-empresa-documento="{{ $empresa->documento_empresa }}"
                                         data-empresa-plan="{{ $empresa->plan_empresa }}"
+                                        data-telefono-empresa="{{ $empresa->telefono_empresa }}"
+                                        data-correo-empresa="{{ $empresa->correo_empresa }}"
                                         data-empresa-logo="{{ $empresa->logo }}"
                                         data-empresa-plantilla="{{ $empresa->id_plantilla }}">
                                         <i class="ti ti-edit"></i> Editar
@@ -124,6 +126,16 @@
                                 <div class="mb-3 col-md-6">
                                     <label for="create-empresa-document-number" class="form-label">Número de Documento</label>
                                     <input type="text" id="create-empresa-document-number" name="numero-documento" class="form-control" required>
+                                </div>
+                                <!-- Número de Telefono -->
+                                <div class="mb-3 col-md-6">
+                                    <label for="create-empresa-phone-number" class="form-label">Telefono de Empresa</label>
+                                    <input type="tel" id="create-empresa-phone-number" name="numero-telefono" class="form-control" required>
+                                </div>
+                                <!-- Correo Empresa -->
+                                <div class="mb-3 col-md-6">
+                                    <label for="create-empresa-email" class="form-label">Correo Electrónico</label>
+                                    <input type="email" id="create-empresa-email" name="email-empresa" class="form-control" required>
                                 </div>
                                 <!-- plantilla Empresa -->
                                 <div class="mb-3 col-md-12">

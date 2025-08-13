@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\AdminHelper;
 use App\Helpers\PaqueteHelper;
+use App\Helpers\UtilsHelper;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
@@ -19,10 +20,12 @@ use Carbon\Carbon;
 class LoadController extends Controller
 {
     protected $sendPulse;
+    protected $utilsHelper;
 
-    public function __construct(SendPulseService $sendPulse)
+    public function __construct(SendPulseService $sendPulse, UtilsHelper $utilsHelper)
     {
         $this->sendPulse = $sendPulse;
+        $this->utilsHelper = $utilsHelper;
     }
 
     public function index(Request $request) {
@@ -290,6 +293,9 @@ class LoadController extends Controller
                     // Obtener el ID de la cita recién creada
                     $ultimaCita = DB::table('tb_cita')->orderBy('id_cita', 'desc')->first();
                     $id_cita = $ultimaCita->id_cita;
+
+                    // Envía el mensaje de WhatsApp al cliente
+                    $this->utilsHelper->enviarConfirmacionWhatsappCliente($id_cita);
 
                     try {
                         $saveliquidador = DB::table('tb_liquidador')->insert([
