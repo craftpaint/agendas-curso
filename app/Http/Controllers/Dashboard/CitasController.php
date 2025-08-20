@@ -1700,6 +1700,7 @@ class CitasController extends Controller
                 $filtro_servicio_liquidador  = $request->input('filtro_servicio_liquidador');
                 $filtro_estado_validacion_liquidador = $request->input('filtro_estado_validacion_liquidador');
                 $filtro_estado_pago_liquidador      = $request->input('filtro_estado_pago_liquidador');
+                $filtro_tipo_paquete_cita_liquidador = $request->input('filtro_tipo_paquete_cita_liquidador');
 
                 // Ordenamiento: definición de columnas de referencia
                 $order_column_index = $request->input('order.0.column', 0);
@@ -1739,6 +1740,8 @@ class CitasController extends Controller
                     ->leftJoin('tb_liquidador as l', 't1.id_cita', '=', 'l.id_cita')
                     ->leftJoin('tb_vehiculo as v', 't1.id_vehiculo', '=', 'v.id_vehiculo')
                     ->leftJoin('tb_servicio_liquidador as s', 't1.id_servicio_liquidador', '=', 's.id_servicio_liquidador')
+                    ->leftJoin('tb_empresa_paquete', 't1.id_empresa_paquete', '=', 'tb_empresa_paquete.id_empresa_paquete')
+                    ->leftJoin('tb_paquete', 'tb_empresa_paquete.id_paquete', '=', 'tb_paquete.id_paquete')
                     ->select([
                         't1.*',
                         DB::raw('t1.created_at as fecha_create'),
@@ -1767,7 +1770,8 @@ class CitasController extends Controller
                         's.id_servicio_liquidador',
                         's.nombre_servicio_liquidador',
                         's.valor_servicio_liquidador',
-                        's.color_servicio_liquidador'
+                        's.color_servicio_liquidador',
+                        'tb_paquete.tipo_paquete'
                     ])
                     ->where('t1.id_cita', '>', 0)
                     ->where('t4.nombre_estado', 'Asistió')
@@ -1798,6 +1802,13 @@ class CitasController extends Controller
                 }
                 if (!empty($filtro_estado_pago_liquidador)) {
                     $baseQuery->where('l.pago_liquidador', $filtro_estado_pago_liquidador);
+                }
+                if (!empty($filtro_tipo_paquete_cita_liquidador)) {
+                    if (is_array($filtro_tipo_paquete_cita_liquidador)) {
+                        $baseQuery->whereIn('tb_paquete.tipo_paquete', $filtro_tipo_paquete_cita_liquidador);
+                    } else {
+                        $baseQuery->where('tb_paquete.tipo_paquete', $filtro_tipo_paquete_cita_liquidador);
+                    }
                 }
                 if (!empty($filtro_search)) {
                     $palabras = preg_split('/\\s+/', trim($filtro_search));
