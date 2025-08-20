@@ -76,6 +76,15 @@
                                         <option value="pendiente">Pendiente</option>
                                     </select>
                                 </div>
+                                <?php if ($user->can('liquidador.Ver Tipo Paquete.v')) { ?>
+                                    <div class="form-group form-group-grow">
+                                        <select id="filtro-tipo-paquete-cita-liquidador" class="select2 form-select" multiple="multiple" placeholder="Seleccionar el tipo paquete">
+                                            <option value="">Todas los tipos de paquete</option>
+                                            <option value="PREPAGO">PREPAGO</option>
+                                            <option value="POSPAGO">POSPAGO</option>
+                                        </select>
+                                    </div>
+                                <?php } ?>
                                 <div class="woow-input-wrapper form-group">
                                     <button class="woow-icon-search" type="button">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" height="25px" width="25px">

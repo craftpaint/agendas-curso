@@ -60,6 +60,7 @@ $(function () {
     let tipoCita = '';
     let filtroAgente = '';
     let filtroTipoPaqueteCita = '';
+    let filtroTipoPaqueteCitaLiquidador = '';
 
     //Filtros de paquetes
     let filtroNombre = '';
@@ -3437,6 +3438,7 @@ $(function () {
                     d.filtro_servicio_liquidador = filtroServicioLiquidador;
                     d.filtro_estado_validacion_liquidador = filtroEstadoValidacionLiquidador;
                     d.filtro_estado_pago_liquidador = filtroEstadoPagoLiquidador;
+                    d.filtro_tipo_paquete_cita_liquidador = filtroTipoPaqueteCitaLiquidador;
                     d.filtro_search = filtroSearch;
                     d.tipo_cita = tipoCita;
                     // Parámetros necesarios para ordenamiento
@@ -3495,7 +3497,21 @@ $(function () {
                 {
                     targets: 2, // Sede
                     render: function (data, type, full, meta) {
-                        return `<span class="badge bg-label-dark">${full.nombre_sede}</span>`;
+                        let html = '';
+
+                        if (canViewTipoPaqueteLiquidador && full.tipo_paquete) {
+                            if (full.tipo_paquete == "PREPAGO") {
+                                full.tipo_paquete = "PRE";
+                            } else if (full.tipo_paquete == "POSPAGO") {
+                                full.tipo_paquete = "POS";
+                            } else if (full.tipo_paquete == "AUXILIAR") {
+                                full.tipo_paquete = "AUX";
+                            }
+                            html = `<span class="badge bg-label-warning mb-1 m-auto" style="margin-right:5px !important;">${full.tipo_paquete}</span>`;
+                        }
+
+                        html+= `<span class="badge bg-label-dark">${full.nombre_sede}</span>`;
+                        return html;
                     }
                 },
                 {
@@ -3806,6 +3822,10 @@ $(function () {
             filtroEstadoPagoLiquidador = $(this).val();
             table.ajax.reload();
         });
+        $('#filtro-tipo-paquete-cita-liquidador').on('change', function () {
+            filtroTipoPaqueteCitaLiquidador = $(this).val();
+            table.ajax.reload();
+        });
         $('#woow-search-citas').on('keyup', function () {
             filtroSearch = $(this).val();
             table.ajax.reload();
@@ -3821,6 +3841,7 @@ $(function () {
             filtroEstadoVerificado = '';
             filtroResponsable = '';
             filtroOrigen = '';
+            filtroTipoPaqueteCitaLiquidador = '';
             filtroSearch = '';
             $('#filtro-dia').val("").trigger('input');
             $('#filtro-dia-end').val("").trigger('input');
@@ -3832,6 +3853,7 @@ $(function () {
             $('#filtro-responsable').val("").trigger('change');
             $('#filtro-estado-verificado').val("").trigger('change');
             $('#filtro-origen').val("").trigger('change');
+            $('#filtro-tipo-paquete-cita-liquidador').val("").trigger('change');
             $('#woow-search-citas').val("").trigger('input');
             table.ajax.reload();
         });
