@@ -121,6 +121,7 @@
         var canViewLiquidador = <?= json_encode($user->can('liquidador.Listado.v')); ?>;
         var canViewPagoMasivo = <?= json_encode($user->can('liquidador.Pago Masivo Realizado.v')); ?>;
         var canEditValidacionOpConfirmado = <?= json_encode($user->can('liquidador.validacion op(confirmado).e')); ?>;
+        var canViewTipoPaqueteLiquidador = <?= json_encode($user->can('liquidador.Ver Tipo Paquete.v')); ?>;
         // Puedes agregar más variables para los permisos de liquidador según lo necesites
 
         // Permisos para el módulo Estadísticas
