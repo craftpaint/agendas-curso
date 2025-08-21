@@ -28,7 +28,8 @@ class LoadController extends Controller
         $this->utilsHelper = $utilsHelper;
     }
 
-    public function index(Request $request) {
+    public function index(Request $request)
+    {
 
         // Capturar TODOS los parámetros de la URL
         $urlParams = $request->query->all();
@@ -41,7 +42,8 @@ class LoadController extends Controller
         $data = [];
         echo view('load/index', $data);
     }
-    public function createcita($id_sede, Request $request) {
+    public function createcita($id_sede, Request $request)
+    {
         // Capturar TODOS los parámetros de la URL
         $urlParams = $request->query->all();
 
@@ -61,7 +63,8 @@ class LoadController extends Controller
         echo view('load/createcita', $data);
     }
 
-    public function savecita(Request $request) {
+    public function savecita(Request $request)
+    {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -459,6 +462,8 @@ class LoadController extends Controller
                 'tb_cliente.apellido_cliente',
                 'tb_cliente.tipo_doc_cliente',
                 'tb_cliente.doc_cliente',
+                'tb_cliente.telefono_cliente',
+                'tb_cliente.email_cliente',
                 'tb_cita.reserva_cita',
                 'tb_cita.rango_horario',
                 'tb_sede.nombre_sede',
