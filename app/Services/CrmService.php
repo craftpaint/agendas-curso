@@ -5,8 +5,8 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class WhatsappService {
-    public function createContactWhatsapp($recipientPhone, $recipientName, $recipientTags = [], $recipientVariables = [], $chatbot) {
+class CrmService {
+    public function createContactCrm($recipientFirstName, $recipientLastName, $recipientResponsibleId, $recipientWhatsappContactId) {
         $accessToken = $this->getAccessToken();
 
         if (!$accessToken) {
@@ -15,32 +15,31 @@ class WhatsappService {
         }
 
         $data = [
-            "phone" => $recipientPhone,
-            "name" => $recipientName,
-            "bot_id" => $chatbot,
-            "tags" => $recipientTags,
-            "variables" => $recipientVariables
+            "responsibleId" => $recipientResponsibleId,
+            "firstName" => $recipientFirstName,
+            "lastName" => $recipientLastName,
+            "externalContactId" => $recipientWhatsappContactId
         ];
 
         try {
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $accessToken,
                 'Content-Type'  => 'application/json'
-            ])->post(env('SENDPULSE_WHATSAPP_RUTA_BASE') . '/contacts', $data);
+            ])->post(env('SENDPULSE_CRM_RUTA_BASE') . '/contacts/create', $data);
 
             if ($response->successful()) {
                 return true;
             } else {
-                Log::error("Error al crear el nuevo contacto de Whatsapp: " . $response->body());
+                Log::error("Error al crear el nuevo contacto en CRM de Whatsapp: " . $response->body());
                 return false;
             }
-        } catch (\Exception $e) {
-            Log::error("Excepción al crear el contacto con SendPulse: " . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error("Excepción al crear el contacto de CRM con SendPulse: " . $e->getMessage());
             return false;
         }
     }
 
-    public function sendWhatsappTemplateByPhone($data) {
+    public function createDealCrm($recipientResponsibleId, $recipientFirstName, $recipientLastName, $recipientSedeName, $recipientContactCrmId) {
         $accessToken = $this->getAccessToken();
 
         if (!$accessToken) {
@@ -49,50 +48,65 @@ class WhatsappService {
         }
 
         try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $accessToken,
-                'Content-Type'  => 'application/json'
-            ])->post(env('SENDPULSE_WHATSAPP_RUTA_BASE') . '/contacts/sendTemplateByPhone', $data);
-
-            if ($response->successful()) {
-                return true;
-            } else {
-                Log::error("Error al enviar el mensaje por Whatsapp: " . $response->body());
+            $dataPipeline = $this->searchPipeline();
+            if (!$dataPipeline) {
+                Log::error("Error al obtener el pipeline de CRM");
                 return false;
             }
-        } catch (\Exception $e) {
-            Log::error("Excepción al enviar el mensaje de Whatsapp con SendPulse: " . $e->getMessage());
-            return false;
-        }
-    }
 
-    public function searchContactByPhone($phone, $chatbot) {
-        $accessToken = $this->getAccessToken();
+            $stepId = null;
+            $dataPipeline->steps.forEach(function($step) {
+                if ($step->name === 'Agendado') {
+                    $stepId = $step->id;
+                }
+            });
 
-        if (!$accessToken) {
-            Log::error("Error al obtener token de acceso de SendPulse");
-            return false;
-        }
+            $data = [
+                "pipelineId" => env('SENDPULSE_CRM_PIPELINE_ID'),
+                "stepId" => $stepId,
+                "responsibleId" => $recipientResponsibleId,
+                "name" => $recipientFirstName . ' ' . $recipientLastName . ' - ' .$recipientSedeName,
+                "price" => 1,
+                "currency" => "COP",
+                "contactId" => [
+                    $recipientContactCrmId
+                ]
+            ];
 
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $accessToken,
-                'Content-Type'  => 'application/json'
-            ])->get(env('SENDPULSE_WHATSAPP_RUTA_BASE') . '/contacts/getByPhone?phone=' . $phone . '&bot_id=' . $chatbot);
             
+        } catch (\Throwable $th) {
+            Log::error("Excepción al crear el trato de CRM con SendPulse: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function searchPipeline() {
+        $accessToken = $this->getAccessToken();
+
+        if (!$accessToken) {
+            Log::error("Error al obtener token de acceso de SendPulse");
+            return false;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $accessToken,
+                'Content-Type'  => 'application/json'
+            ])->get(env('SENDPULSE_CRM_RUTA_BASE') . '/pipelines/' . env('SENDPULSE_CRM_PIPELINE_ID'));
+
             if ($response->successful()) {
                 return $response->json();
             } else {
-                Log::error("Error al consultar al contacto por número de telefono: " . $response->body());
+                Log::error("Error al consultar el pipeline de CRM con SendPulse: " . $response->body());
                 return false;
             }
         } catch (\Throwable $e) {
-            Log::error("Excepción al consultar el usuario de Whatsapp con SendPulse: " . $e->getMessage());
+            Log::error("Excepción al buscar el pipeline de CRM con SendPulse: " . $e->getMessage());
             return false;
         }
     }
 
-    public function assignOperatorToContact($contactId, $operatorId) {
+    public function searchContactByExternalContactId($externalContactId) {
         $accessToken = $this->getAccessToken();
 
         if (!$accessToken) {
@@ -100,25 +114,20 @@ class WhatsappService {
             return false;
         }
 
-        $data = [
-            "contact_id" => $contactId,
-            "operator_id" => $operatorId
-        ];
-
         try {
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $accessToken,
                 'Content-Type'  => 'application/json'
-            ])->post(env('SENDPULSE_WHATSAPP_RUTA_BASE') . '/contacts/operators/assign', $data);
+            ])->get(env('SENDPULSE_CRM_RUTA_BASE') . '/contacts/external/' . $externalContactId);
 
             if ($response->successful()) {
-                return true;
+                return $response->json();
             } else {
-                Log::error("Error al asignar el operador al contacto: " . $response->body());
+                Log::error("Error al consultar al contacto por número de contacto externo: " . $response->body());
                 return false;
             }
         } catch (\Throwable $e) {
-            Log::error("Excepción al asignar el operador al contacto: " . $e->getMessage());
+            Log::error("Excepción al consultar el usuario de CRM con SendPulse: " . $e->getMessage());
             return false;
         }
     }
