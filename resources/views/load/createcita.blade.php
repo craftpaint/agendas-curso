@@ -167,7 +167,7 @@
                             <rect mask="url(#checkbox-mask)" stroke-width="40" height="200" width="200"></rect>
                             <path stroke-width="15" d="M52 111.018L76.9867 136L149 64"></path>
                         </svg>
-                        <span class="text-center f18">Acepto las <a href="https://ciatran.com.co/assets/files/PD-DA-02-Politica-de-Tratamiento-de-Datos.pdf" target="_blank">politicas de tratamiento de datos.</a></span>
+                        <span class="text-center f18">Acepto las <a href="https://curso-comparendo.com/politica-tratamiento-de-datos/" target="_blank">politicas de tratamiento de datos.</a></span>
                     </label>
                 </div>
                 <div class="checkbox col-12 mx-auto my-4 px-4">
@@ -186,7 +186,9 @@
             </div>
             <input type="hidden" name="utm_source" value="{{ session('utm_source', 'Desconocido') }}">
             <input type="hidden" name="url_variables" value="{{ json_encode(request()->except('utm_source')) }}">
-            <button type="submit" class="btn btn-primary boton_submit">Agendar cita</button>
+            <div class="col-12 text-center">
+                <button type="submit" class="btn btn-primary boton_submit text-center">Agendar cita</button>
+            </div>
         </form>
     </div>
     <?php
