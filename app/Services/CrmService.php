@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class CrmService {
     public function createContactCrm($recipientFirstName, $recipientLastName, $recipientResponsibleId, $recipientWhatsappContactId) {
@@ -30,7 +31,7 @@ class CrmService {
             if ($response->successful()) {
                 return true;
             } else {
-                Log::error("Error al crear el nuevo contacto en CRM de Whatsapp: " . $response->body());
+                Log::error("Error al crear el nuevo contacto en CRM: " . $response->body());
                 return false;
             }
         } catch (\Throwable $e) {
@@ -55,17 +56,27 @@ class CrmService {
             }
 
             $stepId = null;
-            $dataPipeline->steps.forEach(function($step) {
-                if ($step->name === 'Agendado') {
-                    $stepId = $step->id;
+            foreach ($dataPipeline['data']['steps'] as $step) {
+                if ($step['name'] === 'Agendado') {
+                    $stepId = $step['id'];
+                    break;
                 }
-            });
+            }
+
+            if (!$stepId) {
+                Log::error("No se encontró el step 'Agendado' en el pipeline");
+                return false;
+            }
+
+            $fecha = Carbon::now();
+            $mes = $fecha->format('m');
+            $año = $fecha->format('Y');
 
             $data = [
                 "pipelineId" => env('SENDPULSE_CRM_PIPELINE_ID'),
                 "stepId" => $stepId,
                 "responsibleId" => $recipientResponsibleId,
-                "name" => $recipientFirstName . ' ' . $recipientLastName . ' - ' .$recipientSedeName,
+                "name" => $recipientFirstName . ' ' . $recipientLastName . ' - ' .$recipientSedeName . ' - ' . $mes . '/' . $año,
                 "price" => 1,
                 "currency" => "COP",
                 "contactId" => [
@@ -73,9 +84,80 @@ class CrmService {
                 ]
             ];
 
-            
-        } catch (\Throwable $th) {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $accessToken,
+                'Content-Type'  => 'application/json'
+            ])->post(env('SENDPULSE_CRM_RUTA_BASE') . '/deals', $data);
+
+            if ($response->successful()) {
+                return $response->json();
+            } else {
+                Log::error("Error al crear el nuevo trato con el contacto: " . $response->body());
+                return false;
+            }
+        } catch (\Throwable $e) {
             Log::error("Excepción al crear el trato de CRM con SendPulse: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function assignMessengerContactCrm($recipientPhoneNumber, $recipientBotId, $recipientContactWhatsappId, $recipientContactCrmId) {
+        $accessToken = $this->getAccessToken();
+
+        if (!$accessToken) {
+            Log::error("Error al obtener token de acceso de SendPulse");
+            return false;
+        }
+
+        $data = [
+            "typeId" => 5,
+            "login" => $recipientPhoneNumber,
+            "botId" => $recipientBotId,
+            "contactId" => $recipientContactWhatsappId,
+            "chatbotUrl" => env('SENDPULSE_CHATBOT_URL_BASE') . $recipientBotId . '/contacts/all/' . $recipientContactWhatsappId,
+            "isMainChatbot" => true
+        ];
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $accessToken,
+                'Content-Type'  => 'application/json'
+            ])->post(env('SENDPULSE_CRM_RUTA_BASE') . '/contacts/' . $recipientContactCrmId . '/messengers', $data);
+
+            if ($response->successful()) {
+                return true;
+            } else {
+                Log::error("Error al asignar el chat del bot al contacto de CRM: " . $response->body());
+                return false;
+            }
+        } catch (\Throwable $e) {
+            Log::error("Excepción al asignar el chat del bot al contacto con el CRM: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function assignDealToContact($recipientDealId, $recipientContactCrmId) {
+        $accessToken = $this->getAccessToken();
+
+        if (!$accessToken) {
+            Log::error("Error al obtener token de acceso de SendPulse");
+            return false;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $accessToken,
+                'Content-Type'  => 'application/json'
+            ])->post(env('SENDPULSE_CRM_RUTA_BASE') . '/deals/' . $recipientDealId . '/contacts/' . $recipientContactCrmId);
+
+            if ($response->successful()) {
+                return true;
+            } else {
+                Log::error("Error al asignar el trato al contacto de CRM: " . $response->body());
+                return false;
+            }
+        } catch (\Throwable $e) {
+            Log::error("Excepción al asignar trato a contacto en CRM con SendPulse: " . $e->getMessage());
             return false;
         }
     }
