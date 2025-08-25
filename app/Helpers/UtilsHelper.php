@@ -24,9 +24,9 @@ class UtilsHelper {
         $cliente = DB::table('tb_cliente')->where('id_cliente', $cita->id_cliente)->first();
         $agente = DB::table('users')->where('id', $cita->id_agente_callcenter)->first();
         $sede = DB::table('tb_sede')->where('id_sede', $cita->id_sede)->first();
-        $datosUsuario = $this->sendPulseWhatsapp->searchContactByPhone($cliente->telefono_cliente, $agente->id_chatbot_sendpulse);
 
         if ($agente->id_chatbot_sendpulse || $agente->id_user_sendpulse) {
+            $datosUsuario = $this->sendPulseWhatsapp->searchContactByPhone($cliente->telefono_cliente, $agente->id_chatbot_sendpulse);
             //Corrección de estructura de datos
             $fechaFormateada = date('Y/m/d', strtotime($cita->reserva_cita));
             $partes = explode('-', $cita->rango_horario);
@@ -122,6 +122,14 @@ class UtilsHelper {
                     return false;
                 }
 
+                // Se asigna el ID del trato en la cita
+                DB::table('tb_cita')
+                    ->where('tb_cita.id_cita', $id_cita)
+                    ->update([
+                        'tb_cita.id_trato_sendpulse' => $tratoCreado['data']['id'],
+                        'tb_cita.updated_at' => Carbon::now()
+                    ]);
+
                 $tratoAsignado = $this->sendPulseCrm->assignDealToContact($tratoCreado['data']['id'], $datosUsuarioCRM['data']['id']);
                 if (!$tratoAsignado) {
                     Log::error("No se pudo asignar el trato al contacto en el CRM.");
@@ -146,6 +154,14 @@ class UtilsHelper {
                     Log::error("No se pudo crear el trato en el CRM.");
                     return false;
                 }
+
+                // Se asigna el ID del trato en la cita
+                DB::table('tb_cita')
+                    ->where('tb_cita.id_cita', $id_cita)
+                    ->update([
+                        'tb_cita.id_trato_sendpulse' => $tratoCreado['data']['id'],
+                        'tb_cita.updated_at' => Carbon::now()
+                    ]);
 
                 $tratoAsignado = $this->sendPulseCrm->assignDealToContact($tratoCreado['data']['id'], $contactoCrmEncontrado['data']['id']);
                 if (!$tratoAsignado) {
