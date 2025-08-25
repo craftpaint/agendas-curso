@@ -4,6 +4,8 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 class WhatsappService {
     public function createContactWhatsapp($recipientPhone, $recipientName, $recipientTags = [], $recipientVariables = [], $chatbot) {
@@ -122,6 +124,22 @@ class WhatsappService {
             return false;
         }
     }
+
+    public function webhookWhatsapp(Request $request) {
+        $data = $request->all();
+
+        Log::info("El id del Whatsapp es: " . $data[0]['contact']['id']);
+
+        $ultimaCita = DB::table('tb_cita')
+            ->where('id_whatsapp_sendpulse', $data[0]['contact']['id'])
+            ->orderBy('fecha_cita', 'desc')
+            ->first();
+        
+        if ($ultimaCita) {
+            DB::table('tb_cita')
+                where('id_cita', $ultimaCita->id_cita)
+                ->update(['notificado_chatbot' => true]);
+        }
 
     /**
      * Obtiene el token de acceso de SendPulse usando client_id y client_secret.
