@@ -131,7 +131,7 @@ class WhatsappService {
         try {
             $ultimaCita = DB::table('tb_cita')
                 ->where('id_whatsapp_sendpulse', $data[0]['contact']['id'])
-                ->orderBy('fecha_cita', 'desc')
+                ->orderBy('created_at', 'desc')
                 ->first();
             
             if ($ultimaCita) {

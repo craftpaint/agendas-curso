@@ -87,6 +87,14 @@ class UtilsHelper {
                     return false;
                 }
 
+                //Se asigna el id de whatsapp a la cita
+                DB::table('tb_cita')
+                    ->where('tb_cita.id_cita', $id_cita)
+                    ->update([
+                        'tb_cita.id_whatsapp_sendpulse' => $datosUsuario['data']['id'],
+                        'tb_cita.updated_at' => Carbon::now()
+                    ]);
+
                 $operadorAsignado = $this->sendPulseWhatsapp->assignOperatorToContact($datosUsuario['data']['id'], $agente->id_user_sendpulse);
                 if (!$operadorAsignado) {
                     Log::error("No se pudo asignar el operador al contacto de Whatsapp.");
@@ -99,12 +107,20 @@ class UtilsHelper {
                     Log::error("No se pudo crear el contacto de Whatsapp y tampoco enviar la plantilla de confirmación de cita al cliente");
                     return false;
                 }
-
+                
                 $datosUsuario = $this->sendPulseWhatsapp->searchContactByPhone($cliente->telefono_cliente, $agente->id_chatbot_sendpulse);
                 if (!$datosUsuario) {
                     Log::error("No se encontró el contacto de Whatsapp creado.");
                     return false;
                 }
+
+                //Se asigna el id de whatsapp a la cita
+                DB::table('tb_cita')
+                    ->where('tb_cita.id_cita', $id_cita)
+                    ->update([
+                        'tb_cita.id_whatsapp_sendpulse' => $datosUsuario['data']['id'],
+                        'tb_cita.updated_at' => Carbon::now()
+                    ]);
 
                 $operadorAsignado = $this->sendPulseWhatsapp->assignOperatorToContact($datosUsuario['data']['id'], $agente->id_user_sendpulse);
                 if (!$operadorAsignado) {
