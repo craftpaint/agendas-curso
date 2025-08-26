@@ -1428,11 +1428,9 @@ $(function () {
                     targets: 0,
                     render: function (data, type, full, meta) {
                         if (full.id_vehiculo) {
-                            texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.doc_cliente + '" target="_blank" rel="noreferrer">' + full.tipo_doc_cliente + full.doc_cliente + '</a> - Telf: <a href="https://wa.me/' + full.telefono_cliente + '" target="_blank">' + full.telefono_cliente + '</a></small><br><small class="text-muted">' + full.email_cliente + '</small><br><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.placa_vehiculo + '" target="_blank"> <span class="badge bg-label-dark">' + full.placa_vehiculo + '</span> </a> <small class="text-muted ml-2"> ' + full.tipo_vehiculo + '</small>';
-
-                            // texto = '<h6 class="m-0">' + full.nombre_cliente + $full.apellido_cliente + '</h6><small>' + full.tipo_doc_cliente + ' - Tipo: ' + full.tipo_vehiculo + ' - Modelo: ' + full.modelo_vehiculo + '</small>';
+                            texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.doc_cliente + '" target="_blank" rel="noreferrer">' + full.tipo_doc_cliente + full.doc_cliente + `</a> - Telf: <a href="${(full.id_trato_sendpulse) ? `https://login.sendpulse.com/crm/deals?dealId=${full.id_trato_sendpulse}` : `https://wa.me/${full.telefono_cliente}`}" target="_blank">` + full.telefono_cliente + '</a></small><br><small class="text-muted">' + full.email_cliente + '</small><br><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.placa_vehiculo + '" target="_blank"> <span class="badge bg-label-dark">' + full.placa_vehiculo + '</span> </a> <small class="text-muted ml-2"> ' + full.tipo_vehiculo + '</small>';
                         } else {
-                            texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.doc_cliente + '" target="_blank" rel="noreferrer">' + full.tipo_doc_cliente + full.doc_cliente + '</a> - Telf: <a href="https://wa.me/' + full.telefono_cliente + '" target="_blank">' + full.telefono_cliente + '</a></small><br><small class="text-muted">' + full.email_cliente + '</small>';
+                            texto = '<h6 class="m-0">' + full.nombre_cliente + ' ' + full.apellido_cliente + '</h6><small><a href="https://www.fcm.org.co/simit/#/estado-cuenta?numDocPlacaProp=' + full.doc_cliente + '" target="_blank" rel="noreferrer">' + full.tipo_doc_cliente + full.doc_cliente + `</a> - Telf: <a href="${(full.id_trato_sendpulse) ? `https://login.sendpulse.com/crm/deals?dealId=${full.id_trato_sendpulse}` : `https://wa.me/${full.telefono_cliente}`}" target="_blank">` + full.telefono_cliente + '</a></small><br><small class="text-muted">' + full.email_cliente + '</small>';
                         }
                         return texto;
                     }
@@ -1455,20 +1453,6 @@ $(function () {
 
                         // Correccion horario
                         let horario = data.rango_horario.split('-')[0].trim()
-
-                        // Plantilla de mensaje para copiar
-                        let plantilla = `
-                            Buen día señor@ *${data.nombre_cliente + " " + data.apellido_cliente}* me comunico de curso comparendo, mi nombre es *${data.agente_callcenter}*. \n
-                            ✅ *_Le confirmo su cita_* \n
-                            🗓️ *_Fecha:_* ${fecha}
-                            🕐 *_Hora:_* ${horario}
-                            🏬 *_Sede:_* ${data.nombre_sede}
-                            📍 *_Dirección:_* ${data.direccion_sede} \n
-                            Por favor indicar que va por parte de Curso comparendo, *llegar 40 minutos* antes de la hora agendada para realizar el procedimiento. \n
-                            Es obligatorio llevar su cédula. \n
-                            Tan pronto salga del curso nos confirma, para registrar su asistencia. Recuerde consultar su comparendo en la pagina del Simit, este debe estar notificado.
-                        `;
-                        plantilla = plantilla.replace(/^[ \t]+/gm, '');
                         return `
                         <div style="position:relative; display:inline-block;">
                             <button type="button"
@@ -1482,12 +1466,7 @@ $(function () {
 
                         ${(rol == "superadmin" || rol == "admin" || rol == "lidercallcenter" || rol == "callcenter") ? `
                         <div style="position:relative; margin-top: 5px;">
-                            <button type="button"
-                                class="btn btn-sm btn-label-success waves-effect btn-copiar-plantilla"
-                                title="Copiar plantilla"
-                                data-texto-plantilla="${plantilla}">
-                                <i class="ti ti-message-2"></i>
-                            </button>
+                            <span class="badge w-100 ${(full.notificado_chatbot) ? `bg-label-success` : `bg-label-secondary muted`} mb-1"><i class="ti ti-brand-whatsapp"></i></span>
                         </div>` : ``}
                       `;
                     }
@@ -1699,15 +1678,6 @@ $(function () {
                 }
             },
             pagingType: "simple"
-        });
-
-        // Evento botón plantilla
-        $(document).on('click', '.btn-copiar-plantilla', function () {
-            // Usa el atributo correcto: data-texto-plantilla
-            const texto = $(this).data('texto-plantilla');
-            if (texto) {
-                copiarContenido(texto);
-            }
         });
 
         // Eventos para los filtros

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoadController;
 use App\Http\Controllers\Dashboard\SedesController;
 use App\Http\Controllers\Dashboard\EmpresasController;
+use App\Services\WhatsappService;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,4 +33,8 @@ Route::controller(sedesController::class)->group(function () {
 Route::controller(EmpresasController::class)->group(function () {
     Route::post('verificar-empresa', 'validarExistenciaEmpresa');
     Route::post('registrar-empresa-paquete', 'registrarEmpresaPaquete');
+});
+
+Route::controller(WhatsappService::class)->group(function () {
+    Route::post('webhook-whatsapp', 'webhookWhatsapp');
 });

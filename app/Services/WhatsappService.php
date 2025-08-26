@@ -4,9 +4,11 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 class WhatsappService {
-    public function createContactWhatsapp($recipientPhone, $recipientName, $recipientTags = [], $recipientVariables = []) {
+    public function createContactWhatsapp($recipientPhone, $recipientName, $recipientTags = [], $recipientVariables = [], $chatbot) {
         $accessToken = $this->getAccessToken();
 
         if (!$accessToken) {
@@ -17,7 +19,7 @@ class WhatsappService {
         $data = [
             "phone" => $recipientPhone,
             "name" => $recipientName,
-            "bot_id" => env('SENDPULSE_WHATSAPP_BOT_ID'),
+            "bot_id" => $chatbot,
             "tags" => $recipientTags,
             "variables" => $recipientVariables
         ];
@@ -66,7 +68,7 @@ class WhatsappService {
         }
     }
 
-    public function searchContactByPhone($phone) {
+    public function searchContactByPhone($phone, $chatbot) {
         $accessToken = $this->getAccessToken();
 
         if (!$accessToken) {
@@ -78,7 +80,7 @@ class WhatsappService {
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $accessToken,
                 'Content-Type'  => 'application/json'
-            ])->get(env('SENDPULSE_WHATSAPP_RUTA_BASE') . '/contacts/getByPhone?phone=' . $phone . '&bot_id=' . env('SENDPULSE_WHATSAPP_BOT_ID'));
+            ])->get(env('SENDPULSE_WHATSAPP_RUTA_BASE') . '/contacts/getByPhone?phone=' . $phone . '&bot_id=' . $chatbot);
             
             if ($response->successful()) {
                 return $response->json();
@@ -88,6 +90,57 @@ class WhatsappService {
             }
         } catch (\Throwable $e) {
             Log::error("Excepción al consultar el usuario de Whatsapp con SendPulse: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function assignOperatorToContact($contactId, $operatorId) {
+        $accessToken = $this->getAccessToken();
+
+        if (!$accessToken) {
+            Log::error("Error al obtener token de acceso de SendPulse");
+            return false;
+        }
+
+        $data = [
+            "contact_id" => $contactId,
+            "operator_id" => $operatorId
+        ];
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $accessToken,
+                'Content-Type'  => 'application/json'
+            ])->post(env('SENDPULSE_WHATSAPP_RUTA_BASE') . '/contacts/operators/assign', $data);
+
+            if ($response->successful()) {
+                return true;
+            } else {
+                Log::error("Error al asignar el operador al contacto: " . $response->body());
+                return false;
+            }
+        } catch (\Throwable $e) {
+            Log::error("Excepción al asignar el operador al contacto: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function webhookWhatsapp(Request $request) {
+        $data = $request->all();
+
+        try {
+            $ultimaCita = DB::table('tb_cita')
+                ->where('id_whatsapp_sendpulse', $data[0]['contact']['id'])
+                ->orderBy('fecha_cita', 'desc')
+                ->first();
+            
+            if ($ultimaCita) {
+                DB::table('tb_cita')
+                    ->where('id_cita', $ultimaCita->id_cita)
+                    ->update(['notificado_chatbot' => true]);
+            }
+        } catch (\Throwable $e) {
+            Log::error("Excepción al procesar el webhook de Whatsapp: " . $e->getMessage());
             return false;
         }
     }

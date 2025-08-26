@@ -298,7 +298,10 @@ class LoadController extends Controller
                     $id_cita = $ultimaCita->id_cita;
 
                     // Envía el mensaje de WhatsApp al cliente
-                    $this->utilsHelper->enviarConfirmacionWhatsappCliente($id_cita);
+                    $whatsappEnviado = $this->utilsHelper->enviarConfirmacionWhatsappCliente($id_cita);
+                    if (!$whatsappEnviado) {
+                        Log::error("No se pudo enviar el mensaje de confirmación de Whatsapp al cliente o no se ha creado el trato de CRM.");
+                    }
 
                     try {
                         $saveliquidador = DB::table('tb_liquidador')->insert([
