@@ -128,18 +128,22 @@ class WhatsappService {
     public function webhookWhatsapp(Request $request) {
         $data = $request->all();
 
-        Log::info("El id del Whatsapp es: " . $data[0]['contact']['id']);
-
-        $ultimaCita = DB::table('tb_cita')
-            ->where('id_whatsapp_sendpulse', $data[0]['contact']['id'])
-            ->orderBy('fecha_cita', 'desc')
-            ->first();
-        
-        if ($ultimaCita) {
-            DB::table('tb_cita')
-                where('id_cita', $ultimaCita->id_cita)
-                ->update(['notificado_chatbot' => true]);
+        try {
+            $ultimaCita = DB::table('tb_cita')
+                ->where('id_whatsapp_sendpulse', $data[0]['contact']['id'])
+                ->orderBy('fecha_cita', 'desc')
+                ->first();
+            
+            if ($ultimaCita) {
+                DB::table('tb_cita')
+                    ->where('id_cita', $ultimaCita->id_cita)
+                    ->update(['notificado_chatbot' => true]);
+            }
+        } catch (\Throwable $e) {
+            Log::error("Excepción al procesar el webhook de Whatsapp: " . $e->getMessage());
+            return false;
         }
+    }
 
     /**
      * Obtiene el token de acceso de SendPulse usando client_id y client_secret.
