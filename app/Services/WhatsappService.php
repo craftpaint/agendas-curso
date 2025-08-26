@@ -134,7 +134,7 @@ class WhatsappService {
                 ->orderBy('created_at', 'desc')
                 ->first();
             
-            if ($ultimaCita) {
+            if ($ultimaCita && !$ultimaCita->notificado_chatbot) {
                 DB::table('tb_cita')
                     ->where('id_cita', $ultimaCita->id_cita)
                     ->update(['notificado_chatbot' => true]);
