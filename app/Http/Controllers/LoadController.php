@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\SendPulseService;
+use App\Services\CrmService;
 
 
 use Illuminate\Http\Request;
@@ -20,11 +21,13 @@ use Carbon\Carbon;
 class LoadController extends Controller
 {
     protected $sendPulse;
+    protected $crmService;
     protected $utilsHelper;
 
-    public function __construct(SendPulseService $sendPulse, UtilsHelper $utilsHelper)
+    public function __construct(SendPulseService $sendPulse, CrmService $crmService, UtilsHelper $utilsHelper)
     {
         $this->sendPulse = $sendPulse;
+        $this->crmService = $crmService;
         $this->utilsHelper = $utilsHelper;
     }
 
@@ -303,6 +306,26 @@ class LoadController extends Controller
                         Log::error("No se pudo enviar el mensaje de confirmación de Whatsapp al cliente o no se ha creado el trato de CRM.");
                     }
 
+                    // Coloca el trato del CRM en el estado respectivo si es un duplicado
+                    if ($citas_agendadas) {
+                        // Se consulta el ID del deal en CRM relacionado a la cita
+                        $idDealCrm = DB::table('tb_cita')
+                            ->where('id_cita', $id_cita)
+                            ->value('id_trato_sendpulse');
+
+                        // Se consulta el Step para duplicado
+                        $step_sendpulse = DB::table('tb_estado')
+                            ->where('nombre_estado', 'Duplicado')
+                            ->value('id_step_sendpulse');
+
+                        if ($step_sendpulse && $idDealCrm) {
+                            $dealActualizado = $this->crmService->updateStepDealCrm($idDealCrm, $step_sendpulse);
+
+                            if (!$dealActualizado) {
+                                Log::error("No se pudo actualizar el paso del trato en CRM para el estado Duplicado.");
+                            }
+                        }
+                    }
                     try {
                         $saveliquidador = DB::table('tb_liquidador')->insert([
                             'id_cita' => $id_cita,

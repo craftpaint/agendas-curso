@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Services\SendPulseService;
-
+use App\Services\CrmService;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -25,10 +25,12 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 class CitasController extends Controller
 {
     protected $sendPulse;
+    protected $crmService;
 
-    public function __construct(SendPulseService $sendPulse)
+    public function __construct(SendPulseService $sendPulse, CrmService $crmService)
     {
         $this->sendPulse = $sendPulse;
+        $this->crmService = $crmService;
     }
     public function index()
     {
@@ -798,7 +800,23 @@ class CitasController extends Controller
                     ]);
                 }
 
+                // Se consulta el ID del deal en CRM relacionado a la cita
+                $idDealCrm = DB::table('tb_cita')
+                    ->where('id_cita', $id_cita)
+                    ->value('id_trato_sendpulse');
 
+                // Se consulta el Step relacionado al estado
+                $step_sendpulse = DB::table('tb_estado')
+                    ->where('id_estado', $id_estado_verificado)
+                    ->value('id_step_sendpulse');
+
+                if ($step_sendpulse && $idDealCrm) {
+                    $dealActualizado = $this->crmService->updateStepDealCrm($idDealCrm, $step_sendpulse);
+
+                    if (!$dealActualizado) {
+                        Log::error("No se pudo actualizar el paso del trato en CRM.");
+                    }
+                }
 
                 $objLoad = [
                     'validate' => true,
@@ -910,6 +928,24 @@ class CitasController extends Controller
                     'created_at'         => Carbon::now(),
                     'updated_at'         => Carbon::now()
                 ]);
+
+                // Se consulta el ID del deal en CRM relacionado a la cita
+                $idDealCrm = DB::table('tb_cita')
+                    ->where('id_cita', $id_cita)
+                    ->value('id_trato_sendpulse');
+
+                // Se consulta el Step relacionado al estado
+                $step_sendpulse = DB::table('tb_estado')
+                    ->where('id_estado', $id_estado_verificado)
+                    ->value('id_step_sendpulse');
+
+                if ($step_sendpulse && $idDealCrm) {
+                    $dealActualizado = $this->crmService->updateStepDealCrm($idDealCrm, $step_sendpulse);
+
+                    if (!$dealActualizado) {
+                        Log::error("No se pudo actualizar el paso del trato en CRM.");
+                    }
+                }
 
                 $objLoad = [
                     'validate' => true,
