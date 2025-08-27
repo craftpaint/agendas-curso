@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Crypt;
 use Carbon\Carbon;
+use App\Jobs\WhatsappJob;
 
 class LoadController extends Controller
 {
@@ -301,31 +302,8 @@ class LoadController extends Controller
                     $id_cita = $ultimaCita->id_cita;
 
                     // Envía el mensaje de WhatsApp al cliente
-                    $whatsappEnviado = $this->utilsHelper->enviarConfirmacionWhatsappCliente($id_cita);
-                    if (!$whatsappEnviado) {
-                        Log::error("No se pudo enviar el mensaje de confirmación de Whatsapp al cliente o no se ha creado el trato de CRM.");
-                    }
+                    WhatsappJob::dispatch($id_cita, $citas_agendadas);
 
-                    // Coloca el trato del CRM en el estado respectivo si es un duplicado
-                    if ($citas_agendadas) {
-                        // Se consulta el ID del deal en CRM relacionado a la cita
-                        $idDealCrm = DB::table('tb_cita')
-                            ->where('id_cita', $id_cita)
-                            ->value('id_trato_sendpulse');
-
-                        // Se consulta el Step para duplicado
-                        $step_sendpulse = DB::table('tb_estado')
-                            ->where('nombre_estado', 'Duplicado')
-                            ->value('id_step_sendpulse');
-
-                        if ($step_sendpulse && $idDealCrm) {
-                            $dealActualizado = $this->crmService->updateStepDealCrm($idDealCrm, $step_sendpulse);
-
-                            if (!$dealActualizado) {
-                                Log::error("No se pudo actualizar el paso del trato en CRM para el estado Duplicado.");
-                            }
-                        }
-                    }
                     try {
                         $saveliquidador = DB::table('tb_liquidador')->insert([
                             'id_cita' => $id_cita,
