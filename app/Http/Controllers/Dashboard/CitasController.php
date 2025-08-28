@@ -812,7 +812,7 @@ class CitasController extends Controller
                     ->value('id_step_sendpulse');
 
                 if ($step_sendpulse && $idDealCrm) {
-                    updateStepDealCrm::dispatch($idDealCrm, $step_sendpulse);
+                    updateStepDealCrm::dispatch($idDealCrm, $step_sendpulse)->onQueue('crm');
                 }
 
                 $objLoad = [
@@ -937,7 +937,7 @@ class CitasController extends Controller
                     ->value('id_step_sendpulse');
 
                 if ($step_sendpulse && $idDealCrm) {
-                    updateStepDealCrm::dispatch($idDealCrm, $step_sendpulse);
+                    updateStepDealCrm::dispatch($idDealCrm, $step_sendpulse)->onQueue('crm');
                 }
 
                 $objLoad = [

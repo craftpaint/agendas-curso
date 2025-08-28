@@ -302,7 +302,7 @@ class LoadController extends Controller
                     $id_cita = $ultimaCita->id_cita;
 
                     // Envía el mensaje de WhatsApp al cliente
-                    WhatsappJob::dispatch($id_cita, $citas_agendadas);
+                    WhatsappJob::dispatch($id_cita, $citas_agendadas)->onQueue('Whatsapp');
 
                     try {
                         $saveliquidador = DB::table('tb_liquidador')->insert([
