@@ -14,6 +14,7 @@ use App\Helpers\AdminHelper;
 use App\Helpers\PaqueteHelper;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Jobs\UpdateStepDealCrm;
 
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -811,11 +812,7 @@ class CitasController extends Controller
                     ->value('id_step_sendpulse');
 
                 if ($step_sendpulse && $idDealCrm) {
-                    $dealActualizado = $this->crmService->updateStepDealCrm($idDealCrm, $step_sendpulse);
-
-                    if (!$dealActualizado) {
-                        Log::error("No se pudo actualizar el paso del trato en CRM.");
-                    }
+                    updateStepDealCrm::dispatch($idDealCrm, $step_sendpulse)->onQueue('crm');
                 }
 
                 $objLoad = [
@@ -940,11 +937,7 @@ class CitasController extends Controller
                     ->value('id_step_sendpulse');
 
                 if ($step_sendpulse && $idDealCrm) {
-                    $dealActualizado = $this->crmService->updateStepDealCrm($idDealCrm, $step_sendpulse);
-
-                    if (!$dealActualizado) {
-                        Log::error("No se pudo actualizar el paso del trato en CRM.");
-                    }
+                    updateStepDealCrm::dispatch($idDealCrm, $step_sendpulse)->onQueue('crm');
                 }
 
                 $objLoad = [
