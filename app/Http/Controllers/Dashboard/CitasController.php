@@ -15,6 +15,7 @@ use App\Helpers\PaqueteHelper;
 use App\Models\User;
 use Carbon\Carbon;
 use App\Jobs\UpdateStepDealCrm;
+use App\Jobs\UpdateOperatorDealCrm;
 
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -143,6 +144,8 @@ class CitasController extends Controller
                         't5.id_servicio',
                         't6.tipo_servicio',
                         'a.name as agente_callcenter',
+                        'a.id_user_sendpulse',
+                        'a.id_chatbot_sendpulse',
                         'l.id_liquidador',
                         'l.estado_liquidador',
                         'l.comentario_liquidador',
@@ -811,10 +814,12 @@ class CitasController extends Controller
                     ->where('id_estado', $id_estado_verificado)
                     ->value('id_step_sendpulse');
 
+                // Se ejecuta el cambio en el CRM.
                 if ($step_sendpulse && $idDealCrm) {
                     updateStepDealCrm::dispatch($idDealCrm, $step_sendpulse)->onQueue('crm');
                 }
 
+                UpdateOperatorDealCrm::dispatch($id_cita, $id_agente_callcenter)->onQueue('crm');
                 $objLoad = [
                     'validate' => true,
                     'text'     => 'Cita actualizada correctamente',
@@ -970,6 +975,8 @@ class CitasController extends Controller
                     ]);
 
                 if ($updated) {
+                    // Se ejecuta el cambio en el CRM.
+                    UpdateOperatorDealCrm::dispatch($id_cita, $id_agente)->onQueue('crm');
 
                     $nombre_agente = DB::table('users')
                         ->where('id', $id_agente)
