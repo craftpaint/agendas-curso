@@ -151,6 +151,57 @@ class CrmService {
         }
     }
 
+    public function updateResponsibleDealCrm($recipientDealId, $recipientResponsibleId) {
+        $accessToken = $this->getAccessToken();
+
+        if (!$accessToken) {
+            Log::error("Error al obtener token de acceso de SendPulse");
+            return false;
+        }
+
+        try {
+            $responseDeal = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $accessToken,
+                'Content-Type'  => 'application/json'
+            ])->get(env('SENDPULSE_CRM_RUTA_BASE') . '/deals/' . $recipientDealId);
+
+            if ($responseDeal->successful()) {
+                $dataDeal = $responseDeal->json();
+
+                $dataDealUpdate = [
+                    "pipelineId" => $dataDeal['data']['pipelineId'],
+                    "status" => $dataDeal['data']['status'],
+                    "stepId" => $dataDeal['data']['stepId'],
+                    "responsibleId" => $recipientResponsibleId,
+                    "name" => $dataDeal['data']['name'],
+                    "price" => $dataDeal['data']['price'],
+                    "currency" => $dataDeal['data']['currency'],
+                    "sourceId" => $dataDeal['data']['sourceId'],
+                    "order" => $dataDeal['data']['order']
+                ];
+
+                $responseUpdateDeal = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $accessToken,
+                    'Content-Type'  => 'application/json'
+                ])->put(env('SENDPULSE_CRM_RUTA_BASE') . '/deals/' . $recipientDealId, $dataDealUpdate);
+
+                if ($responseUpdateDeal->successful()) {
+                    return true;
+                } else {
+                    Log::error("Error al actualizar el trato en CRM: " . $responseUpdateDeal->body());
+                    return false;
+                }
+            } else {
+                Log::error("Error al consultar el trato del CRM para actualizar: " . $responseDeal->body());
+                return false;
+            }
+
+        } catch (\Throwable $e) {
+            Log::error("Excepción al actualizar el responsable del trato en CRM con SendPulse: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function assignMessengerContactCrm($recipientPhoneNumber, $recipientBotId, $recipientContactWhatsappId, $recipientContactCrmId) {
         $accessToken = $this->getAccessToken();
 
