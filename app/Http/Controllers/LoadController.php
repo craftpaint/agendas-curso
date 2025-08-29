@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\SendPulseService;
+use App\Services\CrmService;
 
 
 use Illuminate\Http\Request;
@@ -16,15 +17,18 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Crypt;
 use Carbon\Carbon;
+use App\Jobs\WhatsappJob;
 
 class LoadController extends Controller
 {
     protected $sendPulse;
+    protected $crmService;
     protected $utilsHelper;
 
-    public function __construct(SendPulseService $sendPulse, UtilsHelper $utilsHelper)
+    public function __construct(SendPulseService $sendPulse, CrmService $crmService, UtilsHelper $utilsHelper)
     {
         $this->sendPulse = $sendPulse;
+        $this->crmService = $crmService;
         $this->utilsHelper = $utilsHelper;
     }
 
@@ -298,7 +302,7 @@ class LoadController extends Controller
                     $id_cita = $ultimaCita->id_cita;
 
                     // Envía el mensaje de WhatsApp al cliente
-                    $this->utilsHelper->enviarConfirmacionWhatsappCliente($id_cita);
+                    WhatsappJob::dispatch($id_cita, $citas_agendadas)->onQueue('Whatsapp');
 
                     try {
                         $saveliquidador = DB::table('tb_liquidador')->insert([

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Services\SendPulseService;
-
+use App\Services\CrmService;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -14,6 +14,8 @@ use App\Helpers\AdminHelper;
 use App\Helpers\PaqueteHelper;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Jobs\UpdateStepDealCrm;
+use App\Jobs\UpdateOperatorDealCrm;
 
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -25,10 +27,12 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 class CitasController extends Controller
 {
     protected $sendPulse;
+    protected $crmService;
 
-    public function __construct(SendPulseService $sendPulse)
+    public function __construct(SendPulseService $sendPulse, CrmService $crmService)
     {
         $this->sendPulse = $sendPulse;
+        $this->crmService = $crmService;
     }
     public function index()
     {
@@ -140,6 +144,8 @@ class CitasController extends Controller
                         't5.id_servicio',
                         't6.tipo_servicio',
                         'a.name as agente_callcenter',
+                        'a.id_user_sendpulse',
+                        'a.id_chatbot_sendpulse',
                         'l.id_liquidador',
                         'l.estado_liquidador',
                         'l.comentario_liquidador',
@@ -798,8 +804,22 @@ class CitasController extends Controller
                     ]);
                 }
 
+                // Se consulta el ID del deal en CRM relacionado a la cita
+                $idDealCrm = DB::table('tb_cita')
+                    ->where('id_cita', $id_cita)
+                    ->value('id_trato_sendpulse');
 
+                // Se consulta el Step relacionado al estado
+                $step_sendpulse = DB::table('tb_estado')
+                    ->where('id_estado', $id_estado_verificado)
+                    ->value('id_step_sendpulse');
 
+                // Se ejecuta el cambio en el CRM.
+                if ($step_sendpulse && $idDealCrm) {
+                    updateStepDealCrm::dispatch($idDealCrm, $step_sendpulse)->onQueue('crm');
+                }
+
+                UpdateOperatorDealCrm::dispatch($id_cita, $id_agente_callcenter)->onQueue('crm');
                 $objLoad = [
                     'validate' => true,
                     'text'     => 'Cita actualizada correctamente',
@@ -911,6 +931,20 @@ class CitasController extends Controller
                     'updated_at'         => Carbon::now()
                 ]);
 
+                // Se consulta el ID del deal en CRM relacionado a la cita
+                $idDealCrm = DB::table('tb_cita')
+                    ->where('id_cita', $id_cita)
+                    ->value('id_trato_sendpulse');
+
+                // Se consulta el Step relacionado al estado
+                $step_sendpulse = DB::table('tb_estado')
+                    ->where('id_estado', $id_estado_verificado)
+                    ->value('id_step_sendpulse');
+
+                if ($step_sendpulse && $idDealCrm) {
+                    updateStepDealCrm::dispatch($idDealCrm, $step_sendpulse)->onQueue('crm');
+                }
+
                 $objLoad = [
                     'validate' => true,
                     'text' => 'Estado verificado actualizado correctamente'
@@ -941,6 +975,8 @@ class CitasController extends Controller
                     ]);
 
                 if ($updated) {
+                    // Se ejecuta el cambio en el CRM.
+                    UpdateOperatorDealCrm::dispatch($id_cita, $id_agente)->onQueue('crm');
 
                     $nombre_agente = DB::table('users')
                         ->where('id', $id_agente)
