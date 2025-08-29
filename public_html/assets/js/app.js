@@ -1307,6 +1307,12 @@ $(function () {
                 {
                     targets: 2,
                     render: function (data, type, full, meta) {
+                        return full.id_step_sendpulse;
+                    }
+                },
+                {
+                    targets: 3,
+                    render: function (data, type, full, meta) {
                         return `
                         <div class="d-flex justify-content-end">
                             ${(canEditEstadoCitas) ? `
@@ -2152,6 +2158,8 @@ $(function () {
                         $('#contenedor-rol-user-edit').removeClass('col-3');
                         $('#contenedor-habilitar-call-edit').hide();
                     }
+                    $('.content_users_edit input[name="id_user_sendpulse"]').val(response.usuario.id_user_sendpulse);
+                    $('.content_users_edit input[name="id_chatbot_sendpulse"]').val(response.usuario.id_chatbot_sendpulse);
                     if (response.usuario.callcenter_habilitado == 1) {
                         $('.content_users_edit input[name="callcenter_habilitado"]').prop('checked', true);
                     } else {
@@ -2205,7 +2213,8 @@ $(function () {
                 filtro_sede: filter.filtro_sede,
                 tipo_cita: filter.tipo_cita,
                 filtro_servicios_liquidador: filter.filtro_servicios_liquidador,
-                filtro_tipo_paquete_cita: filter.filtro_tipo_paquete_cita
+                filtro_tipo_paquete_cita: filter.filtro_tipo_paquete_cita,
+                filtro_search: filter.filtro_search
             },
             success: function (data) {
                 if (data.status === 'in_progress') {
@@ -2237,7 +2246,8 @@ $(function () {
             'filtro_servicios_liquidador': filtroServicioLiquidador,
             'filtro_estado_validacion_liquidador': filtroEstadoValidacionLiquidador,
             'filtro_estado_pago_liquidador': filtroEstadoPagoLiquidador,
-            'filtro_tipo_paquete_cita': filtroTipoPaqueteCita
+            'filtro_tipo_paquete_cita': filtroTipoPaqueteCita,
+            'filtro_search': filtroSearch
         };
         dowloadFileCita(action, 0, filter); // Inicia con el primer bloque de datos
     });

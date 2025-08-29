@@ -25,7 +25,9 @@ class User extends Authenticatable
         'email',
         'password',
         'id_sede',
-        'callcenter_habilitado'
+        'callcenter_habilitado',
+        'id_user_sendpulse',
+        'id_chatbot_sendpulse'
     ];
 
     /**

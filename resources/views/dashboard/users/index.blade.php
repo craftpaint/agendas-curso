@@ -65,6 +65,14 @@
                                     <span class="slider"></span>
                                 </label>
                             </div>
+                            <div class="col-6 mb-4" id="contenedor-id-usuario-sendpulse">
+                                <label class="form-label>">ID Usuario SendPulse </label>
+                                <input class="form-control" type="text" name="id_user_sendpulse">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-id-chatbot-sendpulse">
+                                <label class="form-label">ID Chatbot SendPulse </label>
+                                <input class="form-control" type="text" name="id_chatbot_sendpulse">
+                            </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Guardar usuario</button>
                             </div>
@@ -126,6 +134,14 @@
                                     <input type="checkbox" name="callcenter_habilitado">
                                     <span class="slider"></span>
                                 </label>
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-id-usuario-sendpulse-edit">
+                                <label class="form-label>">ID Usuario SendPulse </label>
+                                <input class="form-control" type="text" name="id_user_sendpulse">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-id-chatbot-sendpulse-edit">
+                                <label class="form-label">ID Chatbot SendPulse </label>
+                                <input class="form-control" type="text" name="id_chatbot_sendpulse">
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Actualizar usuario</button>
