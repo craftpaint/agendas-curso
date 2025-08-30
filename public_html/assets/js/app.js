@@ -1486,20 +1486,17 @@ $(function () {
                         </div>
 
                         ${(rol == "superadmin" || rol == "admin" || rol == "lidercallcenter" || rol == "callcenter") ? `
-                            ${(full.id_user_sendpulse && full.id_chatbot_sendpulse) ? `
-                                <div style="position:relative; margin-top: 5px;">
-                                    <span class="badge w-100 ${(full.notificado_chatbot) ? `bg-label-success` : `bg-label-secondary muted`} mb-1"><i class="ti ti-brand-whatsapp"></i></span>
-                                </div>
-                            ` : `
-                                <div style="position:relative; margin-top: 5px;">
-                                    <button type="button"
-                                        class="btn btn-sm btn-label-success waves-effect btn-copiar-plantilla"
-                                        title="Copiar plantilla"
-                                        data-texto-plantilla="${plantilla}">
-                                        <i class="ti ti-message-2"></i>
-                                    </button>
-                                </div>
-                            `}
+                            <div style="position:relative; margin-top:5px; ${(full.id_user_sendpulse && full.id_chatbot_sendpulse) ? `right:25px;` : ``}">
+                                <button type="button"
+                                    class="btn btn-sm btn-label-success waves-effect btn-copiar-plantilla"
+                                    title="Copiar plantilla"
+                                    data-texto-plantilla="${plantilla}">
+                                    <i class="ti ti-message-2"></i>
+                                </button>
+                                ${(full.id_user_sendpulse && full.id_chatbot_sendpulse) ? `
+                                    <span class="badge ${(full.notificado_chatbot) ? `bg-label-success` : `bg-label-secondary muted`} mb-1"><i class="ti ti-brand-whatsapp"></i></span>
+                            ` : ``}
+                            </div>
                         ` : ``}
                       `;
                     }
