@@ -18,9 +18,13 @@
                                 <label class="form-label">Estado <span class="required_flied">*</span></label>
                                 <input required class="form-control" type="text" name="nombre_estado" value="{{ $estado->nombre_estado }}">
                             </div>
-                            <div class=" col-4 mx-auto">
+                            <div class=" col-3 mx-auto">
                                 <label class="form-label">Descripción del servicio <span class="required_flied">*</span></label>
                                 <input required class="form-control" type="text" name="desc_estado" value="{{ $estado->desc_estado }}">
+                            </div>
+                            <div class="col-3 mx-auto">
+                                <label class="form-label">Id Step Sendpulse <span class="required_flied">*</span></label>
+                                <input required class="form-control" type="text" name="id_step_sendpulse" value="{{ $estado->id_step_sendpulse }}">
                             </div>
                             <div class="col mx-auto">
                                 <label class="form-label">Color del estado <span class="required_flied">*</span></label>

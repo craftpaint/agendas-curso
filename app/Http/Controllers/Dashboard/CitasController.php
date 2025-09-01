@@ -278,7 +278,8 @@ class CitasController extends Controller
                                 $q->where('t2.nombre_cliente', 'like', '%' . $palabra . '%')
                                     ->orWhere('t2.apellido_cliente', 'like', '%' . $palabra . '%')
                                     ->orWhere('t2.doc_cliente', 'like', '%' . $palabra . '%')
-                                    ->orWhere('t2.telefono_cliente', 'like', '%' . $palabra . '%');
+                                    ->orWhere('t2.telefono_cliente', 'like', '%' . $palabra . '%')
+                                    ->orWhere('t2.email_cliente', 'like', '%' . $palabra . '%');
                             });
                         }
                     }
@@ -721,6 +722,8 @@ class CitasController extends Controller
                 $desc_cita              = $request->input('desc_cita');
                 $id_agente_callcenter   = $request->input('id_agente_callcenter');
                 $codigo_comparendo      = $request->input('codigo_comparendo');
+                $id_whatsapp_sendpulse  = $request->input('id_whatsapp_sendpulse');
+                $id_trato_sendpulse     = $request->input('id_trato_sendpulse');
 
                 // Convertir la fecha de formato d/m/Y a Y-m-d
                 $date = \DateTime::createFromFormat('d/m/Y', $reserva_cita);
@@ -766,6 +769,8 @@ class CitasController extends Controller
                     'reserva_cita'           => $reserva_cita,
                     'rango_horario'          => $rango_horario,
                     'desc_cita'              => $desc_cita,
+                    'id_whatsapp_sendpulse'  => $id_whatsapp_sendpulse,
+                    'id_trato_sendpulse'     => $id_trato_sendpulse,
                     'updated_at'             => Carbon::now()
                 ];
 
@@ -1069,8 +1074,9 @@ class CitasController extends Controller
             try {
                 $nombre_estado = $request->request->get('nombre_estado');
                 $desc_estado = $request->request->get('desc_estado');
+                $id_step_sendpulse = $request->request->get('id_step_sendpulse');
                 $color_estado = $request->request->get('color_estado');
-                $sql = "INSERT INTO tb_estado (nombre_estado, desc_estado,color_estado) VALUES ('$nombre_estado', '$desc_estado', '$color_estado')";
+                $sql = "INSERT INTO tb_estado (nombre_estado, desc_estado, id_step_sendpulse, color_estado) VALUES ('$nombre_estado', '$desc_estado ', ' $id_step_sendpulse', '$color_estado')";
                 $save = DB::insert($sql);
                 if ($save) {
                     $objLoad = array(
@@ -1127,6 +1133,7 @@ class CitasController extends Controller
                     'id_estado' => 'required|integer|exists:tb_estado,id_estado',
                     'nombre_estado' => 'required|string|max:255',
                     'desc_estado' => 'required|string|max:255',
+                    'id_step_sendpulse' => 'required|nullable|integer',
                     'color_estado' => 'required|string|size:7' // Aseguramos que sea un color HEX
                 ]);
 
@@ -1136,6 +1143,7 @@ class CitasController extends Controller
                     ->update([
                         'nombre_estado' => $request->nombre_estado,
                         'desc_estado' => $request->desc_estado,
+                        'id_step_sendpulse' => $request->id_step_sendpulse,
                         'color_estado' => $request->color_estado,
                         'updated_at' =>  Carbon::now() // Actualizar la fecha de modificación
                     ]);
@@ -1245,12 +1253,14 @@ class CitasController extends Controller
 
                 // Filtro de búsqueda (nombre, apellido, documento o teléfono del cliente)
                 if (!empty($filtros['filtro_search'])) {
+                    $filtro_search = $filtros['filtro_search'];
                     $query->where(function ($q) use ($filtro_search) {
                         $searchTerm = '%' . $filtro_search . '%';
                         $q->where('t2.nombre_cliente', 'LIKE', $searchTerm)
                             ->orWhere('t2.apellido_cliente', 'LIKE', $searchTerm)
                             ->orWhere('t2.doc_cliente', 'LIKE', $searchTerm)
-                            ->orWhere('t2.telefono_cliente', 'LIKE', $searchTerm);
+                            ->orWhere('t2.telefono_cliente', 'LIKE', $searchTerm)
+                            ->orWhere('t2.email_cliente', 'LIKE', $searchTerm);
                     });
                 }
 
@@ -1855,7 +1865,8 @@ class CitasController extends Controller
                                     $sub->where('t2.nombre_cliente', 'like', "%{$palabra}%")
                                         ->orWhere('t2.apellido_cliente', 'like', "%{$palabra}%")
                                         ->orWhere('t2.doc_cliente', 'like', "%{$palabra}%")
-                                        ->orWhere('t2.telefono_cliente', 'like', "%{$palabra}%");
+                                        ->orWhere('t2.telefono_cliente', 'like', "%{$palabra}%")
+                                        ->orWhere('t2.email_cliente', 'like', "%{$palabra}%");
                                 });
                             }
                         }
@@ -2546,7 +2557,8 @@ class CitasController extends Controller
                         $q->where('t2.nombre_cliente', 'LIKE', $searchTerm)
                             ->orWhere('t2.apellido_cliente', 'LIKE', $searchTerm)
                             ->orWhere('t2.doc_cliente', 'LIKE', $searchTerm)
-                            ->orWhere('t2.telefono_cliente', 'LIKE', $searchTerm);
+                            ->orWhere('t2.telefono_cliente', 'LIKE', $searchTerm)
+                            ->orWhere('t2.email_cliente', 'LIKE', $searchTerm);
                     });
                 }
 
