@@ -37,7 +37,7 @@ class UpdateOperatorDealCrm implements ShouldQueue {
             ->where('users.id', $this->idAgente)
             ->first();
 
-        if (!empty($agentInfo->id_user_sendpulse) && !empty($agentInfo->id_chatbot_sendpulse)) {
+        if (!empty($idDealCrm) && !empty($agentInfo->id_user_sendpulse) && !empty($agentInfo->id_chatbot_sendpulse)) {
             $datosUsuario = $whatsappService->searchContactByPhone($phoneClient, $agentInfo->id_chatbot_sendpulse);
             if (!$datosUsuario) {
                 Log::error("No se encontró el usuario en WhatsApp.");

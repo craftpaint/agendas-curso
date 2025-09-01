@@ -161,6 +161,8 @@ class UsersController extends Controller
                 } else {
                     $callcenter_habilitado = 0;
                 }
+                $id_user_sendpulse = $request->request->get('id_user_sendpulse');
+                $id_chatbot_sendpulse = $request->request->get('id_chatbot_sendpulse');
                 //Guardamos al usuario
                 $user = new User();
                 $user->id_sede = $id_sede;
@@ -168,6 +170,8 @@ class UsersController extends Controller
                 $user->email = $email;
                 $user->password = bcrypt($password);
                 $user->callcenter_habilitado = $callcenter_habilitado;
+                $user->id_user_sendpulse = $id_user_sendpulse;
+                $user->id_chatbot_sendpulse = $id_chatbot_sendpulse;
                 $user->save();
                 $user->assignRole($role);
                 $objLoad = array(
@@ -202,6 +206,8 @@ class UsersController extends Controller
                 } else {
                     $callcenter_habilitado = 0;
                 }
+                $id_user_sendpulse = $request->request->get('id_user_sendpulse');
+                $id_chatbot_sendpulse = $request->request->get('id_chatbot_sendpulse');
                 $user = User::find($id_user);
                 $user->id_sede = $id_sede;
                 $user->name = $name;
@@ -209,6 +215,8 @@ class UsersController extends Controller
                 if ($password) {
                     $user->password = bcrypt($password);
                 }
+                $user->id_user_sendpulse = $id_user_sendpulse;
+                $user->id_chatbot_sendpulse = $id_chatbot_sendpulse;
                 $user->callcenter_habilitado = $callcenter_habilitado;
                 $user->save();
                 $user->syncRoles([$role]);
