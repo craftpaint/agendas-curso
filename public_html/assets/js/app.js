@@ -5513,5 +5513,80 @@ $(function () {
             }
         });
     });
+
+    //Switch de método de Scraping
+    $('#contenedor-switch-metodo-scraping').on('change', '#metodo_scraping', function () {
+        if ($(this).is(':checked')) {
+            $.ajax({
+                url: url + '/dashboard/citas/switch_metodo_scraping',
+                type: 'POST',
+                success: function (response) {
+                    if (response.Success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Exito!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al enviar los datos.'
+                    });
+                }
+            });
+        } else {
+            $.ajax({
+                url: url + '/dashboard/citas/switch_metodo_scraping',
+                type: 'POST',
+                success: function (response) {
+                    if (response.Success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Exito!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al enviar los datos.'
+                    });
+                }
+            });
+        }
+    });
 });
 

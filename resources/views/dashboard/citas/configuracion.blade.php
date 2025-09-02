@@ -72,6 +72,29 @@
                             </div>
                         </div>
                     </div>
+                    <?php if ($user->can('cita.Switch metodo scraping.e')) { ?>
+                    <div class="card accordion-item">
+                        <h1 class="accordion-header d-flex align-items-center">
+                            <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionWithIcon-3" aria-expanded="false">
+                                <i class="ti ti-filter-code me-2"></i>
+                                Web Scraping
+                            </button>
+                        </h1>
+                        <div id="accordionWithIcon-3" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <form>
+                                    <div class="col-3 mb-4" id="contenedor-switch-metodo-scraping">
+                                        <label class="form-label" style="margin-right: 8px;">Usar Agente ChatGPT: </label>
+                                        <label class="woow-switch">
+                                            <input type="checkbox" id="metodo_scraping">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <?php } ?>
                 </div>
             </div>
         </div>

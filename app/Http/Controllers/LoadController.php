@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Crypt;
 use Carbon\Carbon;
 use App\Jobs\WhatsappJob;
+use App\Jobs\ScrapingSimitJob;
 
 class LoadController extends Controller
 {
@@ -303,6 +304,9 @@ class LoadController extends Controller
 
                     // Envía el mensaje de WhatsApp al cliente
                     WhatsappJob::dispatch($id_cita, $citas_agendadas)->onQueue('Whatsapp');
+
+                    // Se envía la cita para validar en el SIMIT
+                    ScrapingSimitJob::dispatch($id_cita, $doc_cliente)->onQueue('Scraping');
 
                     try {
                         $saveliquidador = DB::table('tb_liquidador')->insert([

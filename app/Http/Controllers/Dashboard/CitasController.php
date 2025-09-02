@@ -2718,4 +2718,45 @@ class CitasController extends Controller
             ->orderBy('t1.rango_horario')
             ->orderBy('t1.id_sede');
     }
+
+    public function switch_metodo_scraping() {
+        $response = [
+            'Status' => 500,
+            'Message' => "Ocurrió un error al cambiar el método de Scraping.",
+            'Success' => false,
+            'Data' => null
+        ];
+        
+        try {
+            $metodo_actual = DB::table('tb_config')
+                ->where('config_key', 'switch_method_scraping')
+                ->value('config_value');
+        
+            if ($metodo_actual == 0) {
+                DB::table('tb_config')
+                    ->where('config_key', 'switch_method_scraping')
+                    ->update([
+                        'config_value' => 1,
+                        'updated_at' => Carbon::now()
+                    ]);
+            } else {
+                DB::table('tb_config')
+                    ->where('config_key', 'switch_method_scraping')
+                    ->update([
+                        'config_value' => 0,
+                        'updated_at' => Carbon::now()
+                    ]);
+            }
+
+            $response = [
+                'Status' => 200,
+                'Message' => "Se cambió el método de Scraping con exito.",
+                'Success' => true,
+                'Data' => null
+            ];
+        } catch (\Throwable $e) {
+            Log::error("Ocurrió un error al intentar cambiar el método de Scraping.");
+        }
+        return response()->json($response);
+    }
 }
