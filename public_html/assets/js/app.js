@@ -5515,78 +5515,84 @@ $(function () {
     });
 
     //Switch de método de Scraping
-    $('#contenedor-switch-metodo-scraping').on('change', '#metodo_scraping', function () {
-        if ($(this).is(':checked')) {
-            $.ajax({
-                url: url + '/dashboard/citas/switch_metodo_scraping',
-                type: 'POST',
-                success: function (response) {
-                    if (response.Success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Exito!',
-                            text: response.Message,
-                            confirmButtonText: 'OK',
-                            customClass: {
-                                confirmButton: 'btn btn-primary',
-                            }
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: '¡Error!',
-                            text: response.Message,
-                            confirmButtonText: 'OK',
-                            customClass: {
-                                confirmButton: 'btn btn-primary',
-                            }
-                        });
-                    }
-                },
-                error: function () {
+    $('#select-metodo-scraping').on('change', function () {
+        var valorSeleccionado = $(this).val();
+
+        $.ajax({
+            url: url + '/dashboard/citas/metodo_scraping',
+            type: 'POST',
+            data: {
+                metodoSeleccionado: valorSeleccionado
+            },
+            success: function (response) {
+                if (response.Success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Exito!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    });
+                } else {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error',
-                        text: 'Ocurrió un error al enviar los datos.'
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
                     });
                 }
-            });
-        } else {
-            $.ajax({
-                url: url + '/dashboard/citas/switch_metodo_scraping',
-                type: 'POST',
-                success: function (response) {
-                    if (response.Success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Exito!',
-                            text: response.Message,
-                            confirmButtonText: 'OK',
-                            customClass: {
-                                confirmButton: 'btn btn-primary',
-                            }
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: '¡Error!',
-                            text: response.Message,
-                            confirmButtonText: 'OK',
-                            customClass: {
-                                confirmButton: 'btn btn-primary',
-                            }
-                        });
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al enviar los datos para cambiar el método de scraping.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
                     }
-                },
-                error: function () {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Ocurrió un error al enviar los datos.'
-                    });
-                }
-            });
-        }
+                });
+            }
+        });
     });
+
+    if($('#select-metodo-scraping').length) {
+        $.ajax({
+            url: url + '/dashboard/citas/get_estado_metodo_scraping',
+            type: 'GET',
+            success: function (response) {
+                if (response.Success) {
+                    $('#select-metodo-scraping').val(response.Data);
+                    $('#select-metodo-scraping').trigger('change.select2');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al consultar el estado del método de scraping.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                    }
+                });
+            }
+        });
+    }
 });
 

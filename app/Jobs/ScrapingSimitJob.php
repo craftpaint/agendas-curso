@@ -22,10 +22,11 @@ class ScrapingSimitJob implements ShouldQueue {
     }
 
     public function handle(ScrapingService $scrapingService): void {
-        $scraping = $scrapingService->ScrapingNode($this->doc_cliente);
+        $scraping = $scrapingService->ScrapingNode($this->id_cita, $this->doc_cliente);
 
         if ($scraping) {
-            Log::info("EL scraping ha funcionado con exito: ", $scraping);
+            Log::info("El scraping ha funcionado con exito: ", $scraping);
+            $scrapingService->VerificarInformacion($this->id_cita, $scraping);
         } else {
             Log::error("El scraping para el documento " . $this->doc_cliente . " falló, por lo tanto se vuelve a agregar a la cola.");
             ScrapingSimitJob::dispatch($this->id_cita, $this->doc_cliente)->onQueue('Scraping');

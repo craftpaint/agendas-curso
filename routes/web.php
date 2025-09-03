@@ -287,8 +287,10 @@ Route::controller(CitasController::class)->group(function () {
         ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
     Route::get('dashboard/citas/get_new_records', 'get_new_records')
         ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
-    Route::post('dashboard/citas/switch_metodo_scraping', 'switch_metodo_scraping')
-        ->middleware(['auth', 'verified', 'permission:cita.Switch metodo scraping.e']);
+    Route::get('dashboard/citas/get_estado_metodo_scraping', 'get_estado_metodo_scraping')
+        ->middleware(['auth', 'verified', 'permission:cita.Metodo scraping.e']);
+    Route::post('dashboard/citas/metodo_scraping', 'metodo_scraping')
+        ->middleware(['auth', 'verified', 'permission:cita.Metodo scraping.e']);
 })->name('citas');
 
 // Usuarios
