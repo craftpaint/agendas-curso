@@ -25,8 +25,11 @@ class ScrapingSimitJob implements ShouldQueue {
         $scraping = $scrapingService->ScrapingNode($this->id_cita, $this->doc_cliente);
 
         if ($scraping) {
-            Log::info("El scraping ha funcionado con exito: ", $scraping);
-            $scrapingService->VerificarInformacion($this->id_cita, $scraping);
+            $verificado = $scrapingService->VerificarInformacion($this->id_cita, $scraping);
+
+            if (!$verificado) {
+                Log::error("Ocurrió un error al intentar verificar la información recolectada del Scraping.");
+            }
         } else {
             Log::error("El scraping para el documento " . $this->doc_cliente . " falló, por lo tanto se vuelve a agregar a la cola.");
             ScrapingSimitJob::dispatch($this->id_cita, $this->doc_cliente)->onQueue('Scraping');

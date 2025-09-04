@@ -37,21 +37,103 @@ class ScrapingService {
             $datosFiltradosNotificacion = [];
 
             // Se filtra primero por el tipo de infracción
-            foreach ($data['datosTablaFormateados'] as $index => &$registro) {
-                $partes_infraccion = explode(" ", $registro[4]);
+            $datosFiltradosInfraccion = $this->filtrarRegistrosInfraccion($cita, $data);
 
-                if ($cita->codigos_comparendo->value == $partes_infraccion[0]) {
-                    $datosFiltradosInfraccion[] = $registro;
-                }
+            if (!$datosFiltradosInfraccion) {
+                Log::info("Ocurrió un error al intentar filtrar por el tipo de infracción.");
+                return false;
             }
 
-            if (count($datosFiltradosInfraccion) > 1) {
-                foreach ($datosFiltradosInfraccion as $index => $registro) {
-                    // Se agrega la validación de las fechas para elegir el más reciente
-                }
+            Log::info("Registros encontrados con el mismo código de comparendo", ['Data' => $datosFiltradosInfraccion]);
+            $cantidadResultadosInfraccion = count($datosFiltradosInfraccion);
+
+            switch ($cantidadResultadosInfraccion) {
+                case $cantidadResultadosInfraccion > 1:
+                    $datosFiltradosNotificacion = $this->filtrarRegistrosNotificacion($cita, $datosFiltradosInfraccion);
+
+                    if (!$datosFiltradosNotificacion) {
+                        Log::info("Ocurrió un error al intentar filtrar por fecha de notificación más reciente.");
+                        return false;
+                    }
+
+                    break;
+                case $cantidadResultadosInfraccion == 1:
+                    Log::info("Se verificó en el SIMIT el comparendo.");
+                    break;
+                default:
+                    Log::info("No se encontró coincidencias con el código de comparendo registrado.");
+                    break;
             }
+
+            return true;
         } catch (\Throwable $e) {
             Log::error("Excepción al realizar el Scraping: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    private function filtrarRegistrosInfraccion($cita, $data) {
+        $resultado = [];
+
+        try {
+            if (!empty($cita->codigos_comparendo)) {
+                // Se extraen los códigos de comparendos relacionados en la cita
+                $codigos_comparendo = json_decode($cita->codigos_comparendo);
+                $valores_codigos = array_map(function($obj) { 
+                    return $obj->value; 
+                }, $codigos_comparendo);
+
+                foreach ($data['datosTablaFormateados'] as $index => &$registro) {
+                    $partes_infraccion = explode(" ", $registro[4]);
+
+                    if (json_last_error() === JSON_ERROR_NONE && in_array($partes_infraccion[0], $valores_codigos)) {
+                        $resultado[] = $registro;
+                    }
+                }
+            }
+
+            return $resultado;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    private function filtrarRegistrosNotificacion($cita, $registros) {
+        $resultado = [];
+        $registrosNoAplica = [];
+        $fechaMasReciente = null;
+        $registroMasReciente = null;
+
+        // Se extraen los códigos de comparendos relacionados en la cita
+        $codigos_comparendo = json_decode($cita->codigos_comparendo);
+        $valores_codigos = array_map(function($obj) { 
+            return $obj->value;
+        }, $codigos_comparendo);
+
+        try {
+            foreach ($valores_codigos as $indexCodigos => $codigo) {
+                foreach ($registros as $indexRegistros => $registro) {
+                    $partes_infraccion = explode(" ", $registro[4]);
+
+                    if ($registro[1] != "No aplica") {
+                        $fechaRegistro = strtotime($registro[1]);
+
+                        if (($fechaMasReciente == null && $partes_infraccion[0] == $codigo) || ($fechaRegistro > $fechaMasReciente && $partes_infraccion[0] == $codigo)) {
+                            $fechaMasReciente = $fechaRegistro;
+                            $registroMasReciente = $registro;
+                        }
+                    } else {
+                        $registrosNoAplica[] = $registro;
+                    }
+                }
+                $resultado[] = $registroMasReciente;
+                $fechaMasReciente = null;
+                $registroMasReciente = null;
+            }
+
+            $resultado = $resultado + $registrosNoAplica;
+            return $resultado;
+        } catch (\Throwable $e) {
             return false;
         }
     }
