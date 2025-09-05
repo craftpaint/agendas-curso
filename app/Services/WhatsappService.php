@@ -133,11 +133,25 @@ class WhatsappService {
                 ->where('id_whatsapp_sendpulse', $data[0]['contact']['id'])
                 ->orderBy('created_at', 'desc')
                 ->first();
-            
+
+            $sistema = DB::table('users')
+                ->select(['users.*'])
+                ->where('email', 'jrubio@zocodigital.com')
+                ->first();
+
             if ($ultimaCita && !$ultimaCita->notificado_chatbot) {
                 DB::table('tb_cita')
                     ->where('id_cita', $ultimaCita->id_cita)
                     ->update(['notificado_chatbot' => true]);
+
+                if ($sistema) {
+                    DB::table('tb_seguimiento')->insert([
+                        'titulo_seguimiento' => 'Mensaje de WhatsApp enviado por CRM',
+                        'nota_seguimiento'  => 'Se ha enviado mensaje automático de WhatsApp y el usuario ha respondido.',
+                        'id_cita'           => $ultimaCita->id_cita,
+                        'id_user'           => $sistema->id,
+                    ]);
+                }
             }
         } catch (\Throwable $e) {
             Log::error("Excepción al procesar el webhook de Whatsapp: " . $e->getMessage());

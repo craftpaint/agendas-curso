@@ -160,6 +160,8 @@ Route::controller(SedesController::class)->group(function () {
         ->middleware(['auth', 'verified', 'permission:sede.Ciudades.e']);
     Route::post('dashboard/sedes/save_ciudad', 'save_ciudad')
         ->middleware(['auth', 'verified', 'permission:sede.Ciudades.e']);
+
+    Route::get('no-api/obtener-ubicaciones', 'obtenerUbicaciones');
 })->name('sedes');
 
 // Clientes
