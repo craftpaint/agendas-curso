@@ -8,6 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use App\Services\ScrapingService;
 
 class ScrapingSimitJob implements ShouldQueue {
@@ -25,13 +26,14 @@ class ScrapingSimitJob implements ShouldQueue {
         $scraping = $scrapingService->ScrapingNode($this->id_cita, $this->doc_cliente);
 
         if ($scraping) {
-            $verificado = $scrapingService->VerificarInformacion($this->id_cita, $scraping);
-
-            if (!$verificado) {
-                Log::error("Ocurrió un error al intentar verificar la información recolectada del Scraping.");
-            }
+            DB::table('tb_cita')
+                ->where('id_cita', $this->id_cita)
+                ->update([
+                    'url_simit_imagen' => $scraping['Data']['urlImagen'],
+                    'metadata_simit' => $scraping['Data']
+                ]);
         } else {
-            Log::error("El scraping para el documento " . $this->doc_cliente . " falló, por lo tanto se vuelve a agregar a la cola.");
+            Log::error("El scraping para la cita " . $this->id_cita . " falló, por lo tanto se vuelve a agregar a la cola.");
             ScrapingSimitJob::dispatch($this->id_cita, $this->doc_cliente)->onQueue('Scraping');
         }
     }

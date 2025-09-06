@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Services\SendPulseService;
 use App\Services\CrmService;
+use App\Services\ScrapingService;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -29,10 +30,11 @@ class CitasController extends Controller
     protected $sendPulse;
     protected $crmService;
 
-    public function __construct(SendPulseService $sendPulse, CrmService $crmService)
+    public function __construct(SendPulseService $sendPulse, CrmService $crmService, ScrapingService $scrapingService)
     {
         $this->sendPulse = $sendPulse;
         $this->crmService = $crmService;
+        $this->scrapingService = $scrapingService;
     }
     public function index()
     {
@@ -2200,6 +2202,63 @@ class CitasController extends Controller
             }
             return response()->json($objLoad);
         }
+    }
+
+    public function get_informacion_simit(Request $request) {
+        $response = [
+            'Status' => 500,
+            'Message' => "Ocurrió un error al obtener la información del Simit.",
+            'Success' => false,
+            'Data' => null
+        ];
+        $id_cita = $request->input('id_cita');
+
+        if (empty($id_cita)) {
+            return response()->json($response);
+        }
+
+        try {
+            $cita = DB::table('tb_cita')
+                ->where('id_cita', $id_cita)
+                ->first();
+            $metadata = json_decode($cita->metadata_simit, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $response = [
+                    'Status' => 500,
+                    'Message' => "Ocurrió un error al convertir la metadata de la información del Simit.",
+                    'Success' => false,
+                    'Data' => null
+                ];
+                return response()->json($response); 
+            }
+
+            $verificacionSimit = $this->scrapingService->VerificarInformacion($id_cita, $metadata);
+
+            if (!$verificacionSimit) {
+                return response()->json($response);
+            }
+
+            $html = '<div class="row m-auto">';
+            $html .='<div class="col-md-6">';
+            foreach ($verificacionSimit[0] as $item) {
+                $html .= '<div>' . $item . '</div>';
+            }
+            $html .= '</div>';
+            $html .='<div class="col-md-5">';
+            $html .= '<img class="img-fluid" src="' . env('SCRAPING_RUTA_BASE') . $cita->url_simit_imagen . '">';
+            $html .= '</div>';
+            $html .= '</div>';
+            $response = [
+                'Status' => 200,
+                'Message' => "Se obtuvo la información del SIMIT correctamente.",
+                'Success' => true,
+                'Data' => $html
+            ];
+        } catch (\Throwable $e) {
+            Log::error("Ocurrió un error al intentar obtener la información del Simit:" . $e);
+        }
+        return response()->json($response);
     }
 
 

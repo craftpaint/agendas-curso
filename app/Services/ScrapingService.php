@@ -27,7 +27,7 @@ class ScrapingService {
     }
 
     public function VerificarInformacion($id_cita, $scraping) {
-        $data = $scraping['Data'];
+        $data = $scraping;
         $cita = DB::table('tb_cita')
             ->where('id_cita', $id_cita)
             ->first();
@@ -55,17 +55,15 @@ class ScrapingService {
                         Log::info("Ocurrió un error al intentar filtrar por fecha de notificación más reciente.");
                         return false;
                     }
-
+                    return $datosFiltradosNotificacion;
                     break;
                 case $cantidadResultadosInfraccion == 1:
-                    Log::info("Se verificó en el SIMIT el comparendo.");
+                    return $datosFiltradosInfraccion;
                     break;
                 default:
-                    Log::info("No se encontró coincidencias con el código de comparendo registrado.");
+                    return $datosFiltradosInfraccion;
                     break;
             }
-
-            return true;
         } catch (\Throwable $e) {
             Log::error("Excepción al realizar el Scraping: " . $e->getMessage());
             return false;

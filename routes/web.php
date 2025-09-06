@@ -281,6 +281,8 @@ Route::controller(CitasController::class)->group(function () {
     // Otros endpoints para seguimiento, etc.
     Route::post('dashboard/citas/get_seguimiento_cita', 'get_seguimiento_cita')
         ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
+    Route::post('dashboard/citas/get_informacion_simit', 'get_informacion_simit')
+        ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
     Route::post('dashboard/citas/get_seguimiento_cita_con_actualizacion', 'get_seguimiento_cita_con_actualizacion')
         ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
     Route::post('dashboard/citas/save_seguimiento', 'save_seguimiento')
