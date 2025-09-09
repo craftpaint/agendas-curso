@@ -2245,7 +2245,7 @@ class CitasController extends Controller
             ¡Atención! Tenga en cuenta que estos datos son solo una aproximación de resultados hechos por el sistema.
             Deberá de verificar que la información sea correcta en la imagen que se encuentra en el lado derecho <i class="ti ti-arrow-big-right"></i>
             </div>';
-            $html .= '<h5 class="text-center">Fecha de Captura: ' . $metadata['fechaCaptura'] . '</h5>';
+            $html .= '<h5 class="text-center">Fecha de Consulta: ' . $metadata['fechaCaptura'] . '</h5>';
             foreach ($verificacionSimit as $registro) {
                 $columna_tipo = explode(" ", $registro[0]);
                 $columna_infraccion = explode(" ", $registro[4]);
