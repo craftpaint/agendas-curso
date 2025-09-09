@@ -4,9 +4,19 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Eluceo\iCal\Domain\Entity\Event;
+use Eluceo\iCal\Domain\Entity\Calendar;
+use Eluceo\iCal\Domain\ValueObject\SingleDay;
+use Eluceo\iCal\Domain\ValueObject\Date;
+use Eluceo\iCal\Domain\ValueObject\Timestamp;
+use Eluceo\iCal\Domain\ValueObject\DateTime;
+use Eluceo\iCal\Domain\ValueObject\Location;
+use Eluceo\iCal\Domain\ValueObject\Organizer;
+use Eluceo\iCal\Domain\ValueObject\Uri;
+use Eluceo\iCal\Presentation\Factory\CalendarFactory;
+use DateTimeImmutable;
 
-class SendPulseService
-{
+class SendPulseService {
     /**
      * Envía un correo utilizando una plantilla de SendPulse.
      *
@@ -16,8 +26,7 @@ class SendPulseService
      * @param array  $templateVariables Variables para la plantilla.
      * @return bool
      */
-    public function sendEmailConfirmacion($recipientEmail, $recipientName, $subject, array $templateVariables)
-    {
+    public function sendEmailConfirmacion($recipientEmail, $recipientName, $subject, array $templateVariables) {
         $accessToken = $this->getAccessToken();
         if (!$accessToken) {
             Log::error("Error al obtener token de acceso de SendPulse");
@@ -29,7 +38,7 @@ class SendPulseService
             "email" => [
                 "subject"  => $subject,
                 "template" => [
-                    "id"        => 16046,
+                    "id"        => env('MAIL_PLANTILLA_ID'),
                     "variables" => $templateVariables,
                 ],
                 "from"     => [
@@ -61,6 +70,17 @@ class SendPulseService
             Log::error("Excepción al enviar correo con SendPulse: " . $e->getMessage());
             return false;
         }
+    }
+
+    private function generateIcsContent($eventData) {
+        $date = $eventData['reserva_cita'];
+        $start_time = explode("-", $eventData['rango_horario'])[0]; 
+        $end_time = explode("-", $eventData['rango_horario'])[1];
+
+        $event = new Event();
+        $event->setSummary("Curso comparendo - Cita")
+            ->setDescription("Cita para el curso de comparendos.");
+        
     }
 
     /**
