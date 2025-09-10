@@ -288,6 +288,7 @@ class LoadController extends Controller
                             $email_cliente,
                             $nombre_cliente,
                             $nombre_cliente . " Confirmamos tu cita",
+                            $doc_cliente,
                             $templateVariables
                         );
 
