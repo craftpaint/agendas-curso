@@ -40,21 +40,10 @@ class SendPulseService {
         }
 
         $icsContent = $this->generateIcsContent($templateVariables);
-        if ($icsContent) {
-
-            // Ruta de la subcarpeta específica
-            $rutaCarpeta = $doc_cliente;
-
-            // Crear la carpeta si no existe (con permisos 0755)
-            if (!Storage::disk('eventos')->exists($rutaCarpeta)) {
-                Storage::disk('eventos')->makeDirectory($rutaCarpeta, 0755, true);
-            }
-
-            // Guardar el archivo en la subcarpeta
-            $rutaArchivo = "{$rutaCarpeta}/evento.ics";
-            $url = Storage::disk('eventos')->put($rutaArchivo, $icsContent, 'public');
-            Log::info("Archivo ICS guardado en: " . Storage::disk('eventos')->url("{$rutaCarpeta}/evento.ics"));
-            $templateVariables['enlace'] = Storage::disk('eventos')->url("{$rutaCarpeta}/evento.ics");
+        
+        if (!$icsContent) {
+            Log::error("Error al generar contenido ICS");
+            return false;
         }
 
         // Armar el payload usando la plantilla
@@ -75,6 +64,9 @@ class SendPulseService {
                         "email" => $recipientEmail,
                     ]
                 ],
+                "attachments" => [
+                        "evento.ics"    => $icsContent,
+                ]
             ]
         ];
 
@@ -100,7 +92,7 @@ class SendPulseService {
         try {
             $event = new Event();
             $event->setSummary("Curso comparendo - Cita")
-                ->setDescription("Cita para el curso de comparendo.");
+                ->setDescription("Recuerda estar 30 minutos antes de tu cita.");
 
             // Extraer datos
             $date = $eventData['reserva_cita'];
@@ -114,7 +106,6 @@ class SendPulseService {
             $end_time_24h = date('H:i', strtotime($end_time));
             
             // Crear objetos Carbon para las fechas completas
-            // CAMBIO IMPORTANTE: Usar createFromFormat con solo fecha
             $startDateTime = Carbon::createFromFormat('Y-m-d', $date)->setTimeFromTimeString($start_time_24h);
             $endDateTime = Carbon::createFromFormat('Y-m-d', $date)->setTimeFromTimeString($end_time_24h);
 
@@ -144,11 +135,11 @@ class SendPulseService {
             $event->setOrganizer($organizer);
 
             // Agregar alarma para 30 minutos antes del evento
-            $alarma = new Alarm(
-                new DisplayAction('Recordatorio: Curso comparendo - Cita en 1 hora'),
-                new RelativeTrigger(new \DateInterval('PT1H'))
+            $alarma30Min = new Alarm(
+                new DisplayAction('Recordatorio: Curso comparendo - Cita en 30 minutos'),
+                new RelativeTrigger(new \DateInterval('PT30M'))
             );
-            $event->addAlarm($alarma);
+            $event->addAlarm($alarma30Min);
 
             // Crear calendario
             $calendar = new Calendar([$event]);
