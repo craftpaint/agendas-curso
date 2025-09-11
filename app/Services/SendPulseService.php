@@ -53,7 +53,7 @@ class SendPulseService {
             // Guardar el archivo en la subcarpeta
             $rutaArchivo = "{$rutaCarpeta}/evento.ics";
             $url = Storage::disk('eventos')->put($rutaArchivo, $icsContent, 'public');
-            //$url = Storage::disk('eventos')->put('evento.ics', $icsContent, 'public');
+            Log::info("Archivo ICS guardado en: " . Storage::disk('eventos')->url("{$rutaCarpeta}/evento.ics"));
             $templateVariables['enlace'] = Storage::disk('eventos')->url("{$rutaCarpeta}/evento.ics");
         }
 
