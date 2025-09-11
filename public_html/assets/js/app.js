@@ -1476,6 +1476,14 @@ $(function () {
 
                         return `
                         <div style="position:relative; display:inline-block;">
+                            ${(full.url_simit_imagen && full.metadata_simit) ? `
+                                <button type="button"
+                                    class="btn btn-sm btn-light text-info btn-open-informacion-simit-modal"
+                                    data-id-cita="${full.id_cita}"
+                                    title="Ver informacion simit">
+                                    <i class="ti ti-file-info"></i>
+                                </button>
+                            ` : ``}
                             <button type="button"
                                 class="btn btn-sm btn-light btn-open-seguimiento-modal ${iconColorAnotaciones}"
                                 data-id-cita="${full.id_cita}"
@@ -1486,7 +1494,7 @@ $(function () {
                         </div>
 
                         ${(rol == "superadmin" || rol == "admin" || rol == "lidercallcenter" || rol == "callcenter") ? `
-                            <div style="position:relative; margin-top:5px; ${(full.id_user_sendpulse && full.id_chatbot_sendpulse) ? `right:25px;` : ``}">
+                            <div style="position:relative; margin-top:5px;">
                                 <button type="button"
                                     class="btn btn-sm btn-label-success waves-effect btn-copiar-plantilla"
                                     title="Copiar plantilla"
@@ -1909,6 +1917,38 @@ $(function () {
             });
         });
 
+        // Cual se hace clic para abrir el modal de la información en SIMIT
+        
+        $('.datatables-citas').on('click', '.btn-open-informacion-simit-modal', function () {
+            let idCita = $(this).data('id-cita');
+
+            $.ajax({
+                url: url + '/dashboard/citas/get_informacion_simit',
+                method: 'POST',
+                data: { id_cita: idCita },
+                success: function (response) {
+                    if (response.Success) {
+                        Swal.fire({
+                            title: 'Información en el simit',
+                            html: response.Data,
+                            width: '80%',
+                            showCloseButton: true,
+                            closeButtonText: 'Cerrar',
+                            showCancelButton: false, 
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: { confirmButton: 'btn btn-primary' }
+                        });
+                    }
+                }
+            });
+        });
         // Función para formatear fecha en formato 'YYYY-MM-DD'
         function formatDate(date) {
             const d = new Date(date);
@@ -5513,5 +5553,86 @@ $(function () {
             }
         });
     });
+
+    //Switch de método de Scraping
+    $('#select-metodo-scraping').on('change', function () {
+        var valorSeleccionado = $(this).val();
+
+        $.ajax({
+            url: url + '/dashboard/citas/metodo_scraping',
+            type: 'POST',
+            data: {
+                metodoSeleccionado: valorSeleccionado
+            },
+            success: function (response) {
+                if (response.Success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Exito!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al enviar los datos para cambiar el método de scraping.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                    }
+                });
+            }
+        });
+    });
+
+    if($('#select-metodo-scraping').length) {
+        $.ajax({
+            url: url + '/dashboard/citas/get_estado_metodo_scraping',
+            type: 'GET',
+            success: function (response) {
+                if (response.Success) {
+                    $('#select-metodo-scraping').val(response.Data);
+                    $('#select-metodo-scraping').trigger('change.select2');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: response.Message,
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary',
+                        }
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al consultar el estado del método de scraping.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                    }
+                });
+            }
+        });
+    }
 });
 
