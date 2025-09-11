@@ -59,7 +59,7 @@ return [
         'eventos' => [
             'driver' => 'local',
             'root' => base_path('public_html/eventos'),
-            'url' => env('APP_URL') . '/public_html/eventos',
+            'url' => env('APP_URL') . '/eventos',
             'visibility' => 'public',
             'throw' => false,
         ],
