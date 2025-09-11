@@ -100,7 +100,7 @@ class SendPulseService {
         try {
             $event = new Event();
             $event->setSummary("Curso comparendo - Cita")
-                ->setDescription("Cita para el curso de comparendos.");
+                ->setDescription("Cita para el curso de comparendo.");
 
             // Extraer datos
             $date = $eventData['reserva_cita'];
@@ -145,8 +145,8 @@ class SendPulseService {
 
             // Agregar alarma para 30 minutos antes del evento
             $alarma = new Alarm(
-                new DisplayAction('Recordatorio: Curso comparendo'),
-                new RelativeTrigger(new \DateInterval('PT30M'))
+                new DisplayAction('Recordatorio: Curso comparendo - Cita en 1 hora'),
+                new RelativeTrigger(new \DateInterval('PT1H'))
             );
             $event->addAlarm($alarma);
 
