@@ -21,6 +21,7 @@ use Eluceo\iCal\Domain\ValueObject\Alarm;
 use Eluceo\iCal\Domain\ValueObject\Alarm\DisplayAction;
 use Eluceo\iCal\Domain\ValueObject\Alarm\RelativeTrigger;
 use DateTimeImmutable;
+use DateInterval;
 
 class SendPulseService {
     /**
@@ -42,10 +43,11 @@ class SendPulseService {
         $icsContent = $this->generateIcsContent($templateVariables);
         
         if (!$icsContent) {
-            Log::error("Error al generar contenido ICS");
+            Log::error("Error al generar contenido ICS: " . $icsContent);
             return false;
         }
 
+        Log::info("Contenido ICS generado: " . $icsContent);
         // Armar el payload usando la plantilla
         $data = [
             "email" => [
@@ -92,7 +94,7 @@ class SendPulseService {
         try {
             $event = new Event();
             $event->setSummary("Curso comparendo - Cita")
-                ->setDescription("Recuerda estar 30 minutos antes de tu cita.");
+                ->setDescription("Recuerda estar 50 minutos antes de tu cita.");
 
             // Extraer datos
             $date = $eventData['reserva_cita'];
@@ -119,13 +121,20 @@ class SendPulseService {
             $endDateTimeImmutable = \DateTimeImmutable::createFromMutable($endDateTime);
 
             // Crear objetos DateTime para eluceo/ical
-            $eventStartDateTime = new DateTime($startDateTimeImmutable, true);
-            $eventEndDateTime = new DateTime($endDateTimeImmutable, true);
+            $eventStartDateTime = new DateTime($startDateTimeImmutable->setTimezone(new \DateTimeZone('UTC')), true);
+            $eventEndDateTime = new DateTime($endDateTimeImmutable->setTimezone(new \DateTimeZone('UTC')), true);
 
             $event->setOccurrence(
                 new TimeSpan($eventStartDateTime, $eventEndDateTime)
             );
-            
+
+            // Agregar alarma para 50 minutos antes del evento
+            $alarm = new Alarm(
+                new DisplayAction("Recordatorio: Tu cita es en 50 minutos."),
+                (new RelativeTrigger(DateInterval::createFromDateString('-50 minutes')))->withRelationToStart()
+            );
+
+            $event->addAlarm($alarm);
             $event->setLocation(new Location($location));
 
             $organizer = new Organizer(
@@ -134,17 +143,12 @@ class SendPulseService {
             );
             $event->setOrganizer($organizer);
 
-            // Agregar alarma para 30 minutos antes del evento
-            $alarma30Min = new Alarm(
-                new DisplayAction('Recordatorio: Curso comparendo - Cita en 30 minutos'),
-                new RelativeTrigger(new \DateInterval('PT30M'))
-            );
-            $event->addAlarm($alarma30Min);
-
             // Crear calendario
             $calendar = new Calendar([$event]);
             $componentFactory = new CalendarFactory();
             $calendarComponent = $componentFactory->createCalendar($calendar);
+            header('Content-Type: text/calendar; charset=utf-8');
+            header('Content-Disposition: attachment; filename="evento.ics"');
 
             return (string) $calendarComponent;
         } catch (\Throwable $e) {
