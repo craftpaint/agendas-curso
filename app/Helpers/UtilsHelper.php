@@ -36,7 +36,7 @@ class UtilsHelper {
                 'bot_id' => $agente->id_chatbot_sendpulse,
                 'phone' => $cliente->telefono_cliente,
                 'template' => [
-                    'name' => 'utilidad_confirmacion_cita',
+                    'name' => env('SENDPULSE_WHATSAPP_PLANTILLA'),
                     'components' => [
                         [
                             'type' => 'body',
