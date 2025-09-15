@@ -33,21 +33,20 @@ class SendPulseService {
      * @param array  $templateVariables Variables para la plantilla.
      * @return bool
      */
-    public function sendEmailConfirmacion($recipientEmail, $recipientName, $subject, $doc_cliente, array $templateVariables) {
+    public function sendEmailConfirmacion($recipientEmail, $recipientName, $subject, $doc_cliente, $sede, array $templateVariables) {
         $accessToken = $this->getAccessToken();
         if (!$accessToken) {
             Log::error("Error al obtener token de acceso de SendPulse");
             return false;
         }
 
-        $icsContent = $this->generateIcsContent($templateVariables);
+        $icsContent = $this->generateIcsContent($sede, $templateVariables);
         
         if (!$icsContent) {
             Log::error("Error al generar contenido ICS: " . $icsContent);
             return false;
         }
 
-        Log::info("Contenido ICS generado: " . $icsContent);
         // Armar el payload usando la plantilla
         $data = [
             "email" => [
@@ -90,18 +89,18 @@ class SendPulseService {
         }
     }
 
-    private function generateIcsContent($eventData) {
+    private function generateIcsContent($sede, $eventData) {
         try {
             $event = new Event();
             $event->setSummary("Curso comparendo - Cita")
-                ->setDescription("Recuerda estar 50 minutos antes de tu cita.");
+                ->setDescription($eventData['nombre_sede'] . " - " . $eventData['direccion_sede'] . "\n" . "Recuerda llegar 40 minutos antes de la hora agendada para realizar el procedimiento y no olvides llevar tú cédula.");
 
             // Extraer datos
             $date = $eventData['reserva_cita'];
             $times = explode(" - ", $eventData['rango_horario']);
             $start_time = trim($times[0]); 
             $end_time = trim($times[1]);
-            $location = $eventData['nombre_sede'] . " - " . $eventData['direccion_sede'];
+            $location = new Location((string)$sede->latitud . ", " . (string)$sede->longitud);
 
             // Convertir horas a formato 24h
             $start_time_24h = date('H:i', strtotime($start_time));
@@ -128,14 +127,14 @@ class SendPulseService {
                 new TimeSpan($eventStartDateTime, $eventEndDateTime)
             );
 
-            // Agregar alarma para 50 minutos antes del evento
+            // Agregar alarma para 1 hora antes del evento
             $alarm = new Alarm(
-                new DisplayAction("Recordatorio: Tu cita es en 50 minutos."),
-                (new RelativeTrigger(DateInterval::createFromDateString('-50 minutes')))->withRelationToStart()
+                new DisplayAction("Recordatorio: Tu cita con curso comparendo es en 1 hora."),
+                (new RelativeTrigger(DateInterval::createFromDateString('-1 hour')))->withRelationToStart()
             );
 
             $event->addAlarm($alarm);
-            $event->setLocation(new Location($location));
+            $event->setLocation($location);
 
             $organizer = new Organizer(
                 new EmailAddress(config('mail.from.address')),
@@ -153,10 +152,6 @@ class SendPulseService {
             return (string) $calendarComponent;
         } catch (\Throwable $e) {
             Log::error("Error generando contenido ICS: " . $e->getMessage());
-            Log::error("Datos usados: ", [
-                'reserva_cita' => $eventData['reserva_cita'],
-                'rango_horario' => $eventData['rango_horario']
-            ]);
             return null;
         }
     }
