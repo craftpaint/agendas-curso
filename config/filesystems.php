@@ -56,13 +56,6 @@ return [
             'visibility' => 'public',
             'throw' => false,
         ],
-        'eventos' => [
-            'driver' => 'local',
-            'root' => base_path('public_html/eventos'),
-            'url' => env('APP_URL') . '/eventos',
-            'visibility' => 'public',
-            'throw' => false,
-        ],
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

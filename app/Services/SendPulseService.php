@@ -21,6 +21,7 @@ use Eluceo\iCal\Domain\ValueObject\Alarm;
 use Eluceo\iCal\Domain\ValueObject\Alarm\DisplayAction;
 use Eluceo\iCal\Domain\ValueObject\Alarm\RelativeTrigger;
 use DateTimeImmutable;
+use DateInterval;
 
 class SendPulseService {
     /**
@@ -32,29 +33,18 @@ class SendPulseService {
      * @param array  $templateVariables Variables para la plantilla.
      * @return bool
      */
-    public function sendEmailConfirmacion($recipientEmail, $recipientName, $subject, $doc_cliente, array $templateVariables) {
+    public function sendEmailConfirmacion($recipientEmail, $recipientName, $subject, $doc_cliente, $sede, array $templateVariables) {
         $accessToken = $this->getAccessToken();
         if (!$accessToken) {
             Log::error("Error al obtener token de acceso de SendPulse");
             return false;
         }
 
-        $icsContent = $this->generateIcsContent($templateVariables);
-        if ($icsContent) {
-
-            // Ruta de la subcarpeta específica
-            $rutaCarpeta = $doc_cliente;
-
-            // Crear la carpeta si no existe (con permisos 0755)
-            if (!Storage::disk('eventos')->exists($rutaCarpeta)) {
-                Storage::disk('eventos')->makeDirectory($rutaCarpeta, 0755, true);
-            }
-
-            // Guardar el archivo en la subcarpeta
-            $rutaArchivo = "{$rutaCarpeta}/evento.ics";
-            $url = Storage::disk('eventos')->put($rutaArchivo, $icsContent, 'public');
-            Log::info("Archivo ICS guardado en: " . Storage::disk('eventos')->url("{$rutaCarpeta}/evento.ics"));
-            $templateVariables['enlace'] = Storage::disk('eventos')->url("{$rutaCarpeta}/evento.ics");
+        $icsContent = $this->generateIcsContent($sede, $templateVariables);
+        
+        if (!$icsContent) {
+            Log::error("Error al generar contenido ICS: " . $icsContent);
+            return false;
         }
 
         // Armar el payload usando la plantilla
@@ -75,6 +65,9 @@ class SendPulseService {
                         "email" => $recipientEmail,
                     ]
                 ],
+                "attachments" => [
+                        "evento.ics"    => $icsContent,
+                ]
             ]
         ];
 
@@ -96,25 +89,24 @@ class SendPulseService {
         }
     }
 
-    private function generateIcsContent($eventData) {
+    private function generateIcsContent($sede, $eventData) {
         try {
             $event = new Event();
             $event->setSummary("Curso comparendo - Cita")
-                ->setDescription("Cita para el curso de comparendo.");
+                ->setDescription($eventData['nombre_sede'] . " - " . $eventData['direccion_sede'] . "\n" . "Recuerda llegar 40 minutos antes de la hora agendada para realizar el procedimiento y no olvides llevar tú cédula.");
 
             // Extraer datos
             $date = $eventData['reserva_cita'];
             $times = explode(" - ", $eventData['rango_horario']);
             $start_time = trim($times[0]); 
             $end_time = trim($times[1]);
-            $location = $eventData['nombre_sede'] . " - " . $eventData['direccion_sede'];
+            $location = new Location((string)$sede->latitud . ", " . (string)$sede->longitud);
 
             // Convertir horas a formato 24h
             $start_time_24h = date('H:i', strtotime($start_time));
             $end_time_24h = date('H:i', strtotime($end_time));
             
             // Crear objetos Carbon para las fechas completas
-            // CAMBIO IMPORTANTE: Usar createFromFormat con solo fecha
             $startDateTime = Carbon::createFromFormat('Y-m-d', $date)->setTimeFromTimeString($start_time_24h);
             $endDateTime = Carbon::createFromFormat('Y-m-d', $date)->setTimeFromTimeString($end_time_24h);
 
@@ -128,14 +120,21 @@ class SendPulseService {
             $endDateTimeImmutable = \DateTimeImmutable::createFromMutable($endDateTime);
 
             // Crear objetos DateTime para eluceo/ical
-            $eventStartDateTime = new DateTime($startDateTimeImmutable, true);
-            $eventEndDateTime = new DateTime($endDateTimeImmutable, true);
+            $eventStartDateTime = new DateTime($startDateTimeImmutable->setTimezone(new \DateTimeZone('UTC')), true);
+            $eventEndDateTime = new DateTime($endDateTimeImmutable->setTimezone(new \DateTimeZone('UTC')), true);
 
             $event->setOccurrence(
                 new TimeSpan($eventStartDateTime, $eventEndDateTime)
             );
-            
-            $event->setLocation(new Location($location));
+
+            // Agregar alarma para 1 hora antes del evento
+            $alarm = new Alarm(
+                new DisplayAction("Recordatorio: Tu cita con curso comparendo es en 1 hora."),
+                (new RelativeTrigger(DateInterval::createFromDateString('-1 hour')))->withRelationToStart()
+            );
+
+            $event->addAlarm($alarm);
+            $event->setLocation($location);
 
             $organizer = new Organizer(
                 new EmailAddress(config('mail.from.address')),
@@ -143,25 +142,16 @@ class SendPulseService {
             );
             $event->setOrganizer($organizer);
 
-            // Agregar alarma para 30 minutos antes del evento
-            $alarma = new Alarm(
-                new DisplayAction('Recordatorio: Curso comparendo - Cita en 1 hora'),
-                new RelativeTrigger(new \DateInterval('PT1H'))
-            );
-            $event->addAlarm($alarma);
-
             // Crear calendario
             $calendar = new Calendar([$event]);
             $componentFactory = new CalendarFactory();
             $calendarComponent = $componentFactory->createCalendar($calendar);
+            header('Content-Type: text/calendar; charset=utf-8');
+            header('Content-Disposition: attachment; filename="evento.ics"');
 
             return (string) $calendarComponent;
         } catch (\Throwable $e) {
             Log::error("Error generando contenido ICS: " . $e->getMessage());
-            Log::error("Datos usados: ", [
-                'reserva_cita' => $eventData['reserva_cita'],
-                'rango_horario' => $eventData['rango_horario']
-            ]);
             return null;
         }
     }
