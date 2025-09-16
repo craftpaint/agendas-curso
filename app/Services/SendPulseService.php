@@ -100,7 +100,9 @@ class SendPulseService {
             $times = explode(" - ", $eventData['rango_horario']);
             $start_time = trim($times[0]); 
             $end_time = trim($times[1]);
-            $location = new Location((string)$sede->latitud . ", " . (string)$sede->longitud);
+            $latitud = str_replace(',', '.', (string)$sede->latitud);
+            $longitud = str_replace(',', '.', (string)$sede->longitud);
+            $location = new Location($latitud . ", " . $longitud);
 
             // Convertir horas a formato 24h
             $start_time_24h = date('H:i', strtotime($start_time));
