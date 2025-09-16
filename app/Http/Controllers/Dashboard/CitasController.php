@@ -2205,6 +2205,7 @@ class CitasController extends Controller
     }
 
     public function get_informacion_simit(Request $request) {
+        
         $response = [
             'Status' => 500,
             'Message' => "Ocurrió un error al obtener la información del Simit.",

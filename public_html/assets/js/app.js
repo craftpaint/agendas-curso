@@ -1949,6 +1949,7 @@ $(function () {
                 }
             });
         });
+        
         // Función para formatear fecha en formato 'YYYY-MM-DD'
         function formatDate(date) {
             const d = new Date(date);

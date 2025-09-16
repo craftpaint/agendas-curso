@@ -99,7 +99,7 @@
                 </div>
             </div>
         </div>
-        <!-- / Content -->
+        <!-- / Content  -->
     </div>
     <!-- Content wrapper -->
 </div>
