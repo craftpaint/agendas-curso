@@ -477,3 +477,4 @@ Route::controller(PaquetesController::class)->group(function () {
 })->name('paquetes');
 
 require __DIR__ . '/auth.php';
+
