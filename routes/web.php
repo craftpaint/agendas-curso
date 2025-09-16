@@ -283,12 +283,18 @@ Route::controller(CitasController::class)->group(function () {
     // Otros endpoints para seguimiento, etc.
     Route::post('dashboard/citas/get_seguimiento_cita', 'get_seguimiento_cita')
         ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
+        Route::post('dashboard/citas/get_informacion_simit', 'get_informacion_simit')
+        ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
     Route::post('dashboard/citas/get_seguimiento_cita_con_actualizacion', 'get_seguimiento_cita_con_actualizacion')
         ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
     Route::post('dashboard/citas/save_seguimiento', 'save_seguimiento')
         ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
     Route::get('dashboard/citas/get_new_records', 'get_new_records')
         ->middleware(['auth', 'verified', 'permission:cita.listado.v']);
+    Route::get('dashboard/citas/get_estado_metodo_scraping', 'get_estado_metodo_scraping')
+        ->middleware(['auth', 'verified', 'permission:cita.Metodo scraping.e']);
+    Route::post('dashboard/citas/metodo_scraping', 'metodo_scraping')
+        ->middleware(['auth', 'verified', 'permission:cita.Metodo scraping.e']);
 })->name('citas');
 
 // Usuarios

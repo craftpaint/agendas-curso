@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Crypt;
 use Carbon\Carbon;
 use App\Jobs\WhatsappJob;
+use App\Jobs\ScrapingSimitJob;
 
 class LoadController extends Controller
 {
