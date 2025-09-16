@@ -314,6 +314,7 @@ class LoadController extends Controller
                         ->where('config_key', 'method_scraping')
                         ->value('config_value');
                     
+                    // SE un switch case para validar que método debe de usar
                     switch ($metodo_actual) {
                         case 1:
                             ScrapingSimitJob::dispatch($id_cita, $doc_cliente)->onQueue('Scraping');
