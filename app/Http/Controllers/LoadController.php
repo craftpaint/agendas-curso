@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Crypt;
 use Carbon\Carbon;
 use App\Jobs\WhatsappJob;
-use App\Jobs\ScrapingSimitJob;
 
 class LoadController extends Controller
 {
@@ -292,6 +291,7 @@ class LoadController extends Controller
                             $nombre_cliente . " Confirmamos tu cita",
                             $doc_cliente,
                             $sede,
+
                             $templateVariables
                         );
 

@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -23,7 +22,9 @@ use Eluceo\iCal\Domain\ValueObject\Alarm\RelativeTrigger;
 use DateTimeImmutable;
 use DateInterval;
 
-class SendPulseService {
+
+class SendPulseService
+{
     /**
      * Envía un correo utilizando una plantilla de SendPulse.
      *
@@ -33,7 +34,9 @@ class SendPulseService {
      * @param array  $templateVariables Variables para la plantilla.
      * @return bool
      */
+
     public function sendEmailConfirmacion($recipientEmail, $recipientName, $subject, $doc_cliente, $sede, array $templateVariables) {
+
         $accessToken = $this->getAccessToken();
         if (!$accessToken) {
             Log::error("Error al obtener token de acceso de SendPulse");
@@ -47,12 +50,13 @@ class SendPulseService {
             return false;
         }
 
+
         // Armar el payload usando la plantilla
         $data = [
             "email" => [
                 "subject"  => $subject,
                 "template" => [
-                    "id"        => env('MAIL_PLANTILLA_ID'),
+                    "id"        => 16046,
                     "variables" => $templateVariables,
                 ],
                 "from"     => [
