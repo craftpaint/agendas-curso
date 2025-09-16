@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Services\SendPulseService;
 use App\Services\CrmService;
-use App\Services\ScrapingService;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -30,11 +29,10 @@ class CitasController extends Controller
     protected $sendPulse;
     protected $crmService;
 
-    public function __construct(SendPulseService $sendPulse, CrmService $crmService, ScrapingService $scrapingService)
+    public function __construct(SendPulseService $sendPulse, CrmService $crmService)
     {
         $this->sendPulse = $sendPulse;
         $this->crmService = $crmService;
-        $this->scrapingService = $scrapingService;
     }
     public function index()
     {
@@ -2204,95 +2202,6 @@ class CitasController extends Controller
         }
     }
 
-    public function get_informacion_simit(Request $request) {
-        $response = [
-            'Status' => 500,
-            'Message' => "Ocurrió un error al obtener la información del Simit.",
-            'Success' => false,
-            'Data' => null
-        ];
-        $id_cita = $request->input('id_cita');
-
-        if (empty($id_cita)) {
-            return response()->json($response);
-        }
-
-        try {
-            $cita = DB::table('tb_cita')
-                ->where('id_cita', $id_cita)
-                ->first();
-            $metadata = json_decode($cita->metadata_simit, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $response = [
-                    'Status' => 500,
-                    'Message' => "Ocurrió un error al convertir la metadata de la información del Simit.",
-                    'Success' => false,
-                    'Data' => null
-                ];
-                return response()->json($response); 
-            }
-
-            $verificacionSimit = $this->scrapingService->VerificarInformacion($id_cita, $metadata);
-
-            if (!$verificacionSimit) {
-                return response()->json($response);
-            }
-
-            $html = '<div class="row m-auto">';
-            $html .='<div class="col-md-6">';
-            $html .= '<div class="alert alert-warning" role="alert"><i class="ti ti-info-circle"></i> 
-            ¡Atención! Tenga en cuenta que estos datos son solo una aproximación de resultados hechos por el sistema.
-            Deberá de verificar que la información sea correcta en la imagen que se encuentra en el lado derecho <i class="ti ti-arrow-big-right"></i>
-            </div>';
-            $html .= '<h5 class="text-center">Fecha de Consulta: ' . $metadata['fechaCaptura'] . '</h5>';
-            foreach ($verificacionSimit as $registro) {
-                $columna_tipo = explode(" ", $registro[0]);
-                $columna_infraccion = explode(" ", $registro[4]);
-                $numero_comparendo = $columna_tipo[0] ?? 'No se encontró el dato';
-                $tipo_infraccion = $columna_tipo[1] ?? 'No se encontró el dato';
-                $fecha_imposicion = $columna_tipo[4] ?? 'No se encontró la fecha';
-                $fecha_notificacion = $registro[1] ?? 'No se encontró la fecha';
-                $placa_vehiculo = $registro[2] ?? 'No se encontró la placa';
-                $secretaria = $registro[3] ?? 'No se encontró la secretaría';
-                $infraccion = $columna_infraccion[0] ?? 'No se encontró la infracción';
-
-                $html .= '<div class="card bg-info mt-3 mb-3">';
-                $html .= '<div class="row">';
-                $html .= '<div class="col-md-5">';
-                $html .= '<i class="card-img-top ti ti-checkup-list display-1" style="color:white;"></i>';
-                $html .= '<h5 style="color:white;"><span style="color:#d3d93b;">Número: </span>' . $numero_comparendo . '</h5>';
-                $html .= '</div>';
-                $html .= '<div class="col-md-7">';
-                $html .= '<div class="card-body text-start">';
-                $html .= '<h5 class="card-title" style="color:white;"><span style="color:#d3d93b;">Tipo: </span>' . $tipo_infraccion . '</h5>';
-                $html .= '<p class="card-text" style="color:white;"><span style="color:#d3d93b;">Fecha de imposición: </span>' . $fecha_imposicion . '</p>';
-                $html .= '<p class="card-text" style="color:white;"><span style="color:#d3d93b;">Fecha de notificación: </span>' . $fecha_notificacion . '</p>';
-                $html .= '<p class="card-text" style="color:white;"><span style="color:#d3d93b;">Placa del vehículo: </span>' . $placa_vehiculo . '</p>';
-                $html .= '<p class="card-text" style="color:white;"><span style="color:#d3d93b;">Secretaría: </span>' . $secretaria . '</p>';
-                $html .= '<p class="card-text" style="color:white;"><span style="color:#d3d93b;">Infracción: </span>' . $infraccion . '</p>';
-                $html .= '</div>';
-                $html .= '</div>';
-                $html .= '</div>';
-                $html .= '</div>';
-            }
-            $html .= '</div>';
-            $html .='<div class="col-md-5">';
-            $html .= '<img class="img-fluid" src="' . env('SCRAPING_RUTA_BASE') . $cita->url_simit_imagen . '">';
-            $html .= '</div>';
-            $html .= '</div>';
-            $response = [
-                'Status' => 200,
-                'Message' => "Se obtuvo la información del SIMIT correctamente.",
-                'Success' => true,
-                'Data' => $html
-            ];
-        } catch (\Throwable $e) {
-            Log::error("Ocurrió un error al intentar obtener la información del Simit:" . $e);
-        }
-        return response()->json($response);
-    }
-
 
     //Obtener las actividades de la base de datos
     public function get_servicio_liquidador(Request $request)
@@ -2808,60 +2717,5 @@ class CitasController extends Controller
             ->orderBy('t1.reserva_cita')
             ->orderBy('t1.rango_horario')
             ->orderBy('t1.id_sede');
-    }
-
-    public function get_estado_metodo_scraping() {
-        $response = [
-            'Status' => 500,
-            'Message' => "Ocurrió un error al consultar el estado del método de Scraping.",
-            'Success' => false,
-            'Data' => null
-        ];
-
-        try {
-            $metodo_actual = DB::table('tb_config')
-                ->where('config_key', 'method_scraping')
-                ->value('config_value');
-            
-            $response = [
-                'Status' => 200,
-                'Message' => "Se cambió el método de Scraping con exito.",
-                'Success' => true,
-                'Data' => $metodo_actual
-            ];
-        } catch (\Throwable $e) {
-            Log::error("Ocurrió un error al consultar el estado del método de Scraping.");
-        }
-        return response()->json($response);
-    }
-
-    public function metodo_scraping(Request $request) {
-        $response = [
-            'Status' => 500,
-            'Message' => "Ocurrió un error al cambiar el método de Scraping.",
-            'Success' => false,
-            'Data' => null
-        ];
-
-        $metodoSeleccionado = $request->input('metodoSeleccionado');
-        
-        try {
-            DB::table('tb_config')
-                ->where('config_key', 'method_scraping')
-                ->update([
-                    'config_value' => $metodoSeleccionado,
-                    'updated_at' => Carbon::now()
-                ]);
-
-            $response = [
-                'Status' => 200,
-                'Message' => "Se cambió el método de Scraping con exito.",
-                'Success' => true,
-                'Data' => null
-            ];
-        } catch (\Throwable $e) {
-            Log::error("Ocurrió un error al intentar cambiar el método de Scraping.");
-        }
-        return response()->json($response);
     }
 }
