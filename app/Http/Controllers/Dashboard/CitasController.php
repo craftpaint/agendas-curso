@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Services\SendPulseService;
 use App\Services\CrmService;
+use App\Services\ScrapingService;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -28,11 +29,13 @@ class CitasController extends Controller
 {
     protected $sendPulse;
     protected $crmService;
+    protected $scrapingService;
 
-    public function __construct(SendPulseService $sendPulse, CrmService $crmService)
+    public function __construct(SendPulseService $sendPulse, CrmService $crmService, ScrapingService $scrapingService )
     {
         $this->sendPulse = $sendPulse;
         $this->crmService = $crmService;
+        $this->scrapingService = $scrapingService;
     }
     public function index()
     {
@@ -2808,5 +2811,60 @@ class CitasController extends Controller
             ->orderBy('t1.reserva_cita')
             ->orderBy('t1.rango_horario')
             ->orderBy('t1.id_sede');
+    }
+
+    public function get_estado_metodo_scraping() {
+        $response = [
+            'Status' => 500,
+            'Message' => "Ocurrió un error al consultar el estado del método de Scraping.",
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            $metodo_actual = DB::table('tb_config')
+                ->where('config_key', 'method_scraping')
+                ->value('config_value');
+
+            $response = [
+                'Status' => 200,
+                'Message' => "Se cambió el método de Scraping con exito.",
+                'Success' => true,
+                'Data' => $metodo_actual
+            ];
+        } catch (\Throwable $e) {
+            Log::error("Ocurrió un error al consultar el estado del método de Scraping.");
+        }
+        return response()->json($response);
+    }
+
+    public function metodo_scraping(Request $request) {
+        $response = [
+            'Status' => 500,
+            'Message' => "Ocurrió un error al cambiar el método de Scraping.",
+            'Success' => false,
+            'Data' => null
+        ];
+
+        $metodoSeleccionado = $request->input('metodoSeleccionado');
+
+        try {
+            DB::table('tb_config')
+                ->where('config_key', 'method_scraping')
+                ->update([
+                    'config_value' => $metodoSeleccionado,
+                    'updated_at' => Carbon::now()
+                ]);
+
+            $response = [
+                'Status' => 200,
+                'Message' => "Se cambió el método de Scraping con exito.",
+                'Success' => true,
+                'Data' => null
+            ];
+        } catch (\Throwable $e) {
+            Log::error("Ocurrió un error al intentar cambiar el método de Scraping.");
+        }
+        return response()->json($response);
     }
 }
