@@ -1476,14 +1476,6 @@ $(function () {
 
                         return `
                         <div style="position:relative; display:inline-block;">
-                            ${(full.url_simit_imagen && full.metadata_simit) ? `
-                                <button type="button"
-                                    class="btn btn-sm btn-light text-info btn-open-informacion-simit-modal"
-                                    data-id-cita="${full.id_cita}"
-                                    title="Ver informacion simit">
-                                    <i class="ti ti-file-info"></i>
-                                </button>
-                            ` : ``}
                             <button type="button"
                                 class="btn btn-sm btn-light btn-open-seguimiento-modal ${iconColorAnotaciones}"
                                 data-id-cita="${full.id_cita}"
@@ -1494,7 +1486,7 @@ $(function () {
                         </div>
 
                         ${(rol == "superadmin" || rol == "admin" || rol == "lidercallcenter" || rol == "callcenter") ? `
-                            <div style="position:relative; margin-top:5px;">
+                            <div style="position:relative; margin-top:5px; ${(full.id_user_sendpulse && full.id_chatbot_sendpulse) ? `right:25px;` : ``}">
                                 <button type="button"
                                     class="btn btn-sm btn-label-success waves-effect btn-copiar-plantilla"
                                     title="Copiar plantilla"
@@ -1726,7 +1718,7 @@ $(function () {
                 copiarContenido(texto);
             }
         });
-        
+
         // Eventos para los filtros
         $('#filtro-ayer').on('click', function () {
             const ayer = new Date();
@@ -1918,7 +1910,7 @@ $(function () {
         });
 
         // Cual se hace clic para abrir el modal de la información en SIMIT
-        
+
         $('.datatables-citas').on('click', '.btn-open-informacion-simit-modal', function () {
             let idCita = $(this).data('id-cita');
 
@@ -1934,7 +1926,7 @@ $(function () {
                             width: '80%',
                             showCloseButton: true,
                             closeButtonText: 'Cerrar',
-                            showCancelButton: false, 
+                            showCancelButton: false,
                             showConfirmButton: false
                         });
                     } else {
@@ -1949,7 +1941,7 @@ $(function () {
                 }
             });
         });
-        
+
         // Función para formatear fecha en formato 'YYYY-MM-DD'
         function formatDate(date) {
             const d = new Date(date);
@@ -3564,7 +3556,7 @@ $(function () {
                             html = `<span class="badge bg-label-warning mb-1 m-auto" style="margin-right:5px !important;">${full.tipo_paquete}</span>`;
                         }
 
-                        html+= `<span class="badge bg-label-dark">${full.nombre_sede}</span>`;
+                        html += `<span class="badge bg-label-dark">${full.nombre_sede}</span>`;
                         return html;
                     }
                 },
@@ -4696,7 +4688,7 @@ $(function () {
                         $('#citas-erradas-paquete-activo-dashboard-empresa').text(`${response.Data.citasErradas}`);
                         $('#citas-validacion-paquete-activo-dashboard-empresa').text(`${response.Data.citasEnValidacion}`);
                         $('#citas-pendientes-paquete-activo-dashboard-empresa').text(`${response.Data.citasPendientes}`);
-                        
+
                         if (response.Data.tipo_paquete == "POSPAGO") {
                             $('#citas-faltantes-paquete-activo-dashboard-empresa').html(`<strong><i class="ti ti-infinity display-1"></i></strong>`);
                         }
@@ -4794,7 +4786,7 @@ $(function () {
 
         // Crear un gráfico por cada paquete
         datos.forEach((paquete, index) => {
-            
+
             // Crear contenedor principal para cada fila horizontal
             const rowContainer = document.createElement('div');
             rowContainer.className = 'd-flex flex-wrap align-item-center justify-content-center mb-5';
@@ -4817,7 +4809,7 @@ $(function () {
             rowContainer.appendChild(chartContainer);
             rowContainer.appendChild(infoContainer);
             rowContainer.appendChild(botonContainer);
-            
+
             // Agregar la fila al contenedor principal
             container.appendChild(rowContainer);
 
@@ -4885,7 +4877,7 @@ $(function () {
 
                 <div class="d-flex align-items-center h-100">
                     <button class="btn btn-icon btn-lg waves-effect btn-detalles-paquete"
-                        data-bs-toggle="tooltip" 
+                        data-bs-toggle="tooltip"
                         data-id-empresa-paquete="${paquete.id_empresa_paquete}"
                         title="Editar">
                         <i class="ti ti-checkup-list text-info" style="font-size:50px;"></i>
@@ -5249,81 +5241,81 @@ $(function () {
             $table.empty();
         }
 
-    // Reconstruir la estructura básica de la tabla
-    $table.html('<thead><tr>'
-        + '<th>Cliente</th>'
-        + '<th>Documento</th>'
-        + '<th>Sede</th>'
-        + '<th>Fecha de creación</th>'
-        + '<th>Fecha de reserva</th>'
-        + '<th>Horario</th>'
-        + '<th>Estado verificado</th>'
-        + '</tr></thead><tbody></tbody>');
+        // Reconstruir la estructura básica de la tabla
+        $table.html('<thead><tr>'
+            + '<th>Cliente</th>'
+            + '<th>Documento</th>'
+            + '<th>Sede</th>'
+            + '<th>Fecha de creación</th>'
+            + '<th>Fecha de reserva</th>'
+            + '<th>Horario</th>'
+            + '<th>Estado verificado</th>'
+            + '</tr></thead><tbody></tbody>');
 
-    // Inicializar la nueva instancia de DataTable
-    const table_detalles_paquete = $table.DataTable({
-        ordering: true,
-        processing: true,
-        serverSide: true,
-        searching: false,
-        info: false,
-        pageLength: 10,
-        responsive: true,
-        language: {
-            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json',
-            infoEmpty: "No hay datos disponibles",
-        },
-        dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
-        ajax: {
-            url: url + '/dashboard/empresa/consultar_citas_empresa_paquete/' + id_empresa_paquete,
-            type: 'GET',
-            dataSrc: function (json) {
-                return json.Data;
-            }
-        },
-        columns: [
-            { data: null },
-            { data: null },
-            { data: 'nombre_sede'},
-            { data: 'created_at' },
-            { data: 'reserva_cita' },
-            { data: 'rango_horario' },
-            { data: 'nombre_estado' }
-        ],
-        columnDefs: [
-            {
-                targets: 0,
-                render: function (data, type, full, meta) {
-                    return full.nombre_cliente + ' ' + full.apellido_cliente;
+        // Inicializar la nueva instancia de DataTable
+        const table_detalles_paquete = $table.DataTable({
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            searching: false,
+            info: false,
+            pageLength: 10,
+            responsive: true,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json',
+                infoEmpty: "No hay datos disponibles",
+            },
+            dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+            ajax: {
+                url: url + '/dashboard/empresa/consultar_citas_empresa_paquete/' + id_empresa_paquete,
+                type: 'GET',
+                dataSrc: function (json) {
+                    return json.Data;
                 }
             },
-            {
-               targets: 1,
-                render: function (data, type, full, meta) {
-                     return `<span class="badge bg-label-info">${full.tipo_doc_cliente + ' ' + full.doc_cliente}</span>`;
+            columns: [
+                { data: null },
+                { data: null },
+                { data: 'nombre_sede' },
+                { data: 'created_at' },
+                { data: 'reserva_cita' },
+                { data: 'rango_horario' },
+                { data: 'nombre_estado' }
+            ],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        return full.nombre_cliente + ' ' + full.apellido_cliente;
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return `<span class="badge bg-label-info">${full.tipo_doc_cliente + ' ' + full.doc_cliente}</span>`;
+                    }
+                },
+                {
+                    targets: 3,
+                    render: function (data, type, full, meta) {
+                        return data.split(' ')[0];
+                    }
+                },
+                {
+                    targets: 4,
+                    render: function (data, type, full, meta) {
+                        return data.split(' ')[0];
+                    }
+                },
+                {
+                    targets: 6,
+                    render: function (data, type, full, meta) {
+                        return `<span class="badge bg-label-success">${data}</span>`;
+                    }
                 }
-            },
-            {
-               targets: 3,
-                render: function (data, type, full, meta) {
-                    return data.split(' ')[0];
-                }
-            },
-            {
-               targets: 4,
-                render: function (data, type, full, meta) {
-                    return data.split(' ')[0];
-                }
-            },
-            {
-               targets: 6,
-                render: function (data, type, full, meta) {
-                    return `<span class="badge bg-label-success">${data}</span>`;
-                }
-            }
-        ],
-        pagingType: "simple"
-    });
+            ],
+            pagingType: "simple"
+        });
 
         $('#modalDetallesPaquete').modal('show');
     });
@@ -5554,86 +5546,5 @@ $(function () {
             }
         });
     });
-
-    //Switch de método de Scraping
-    $('#select-metodo-scraping').on('change', function () {
-        var valorSeleccionado = $(this).val();
-
-        $.ajax({
-            url: url + '/dashboard/citas/metodo_scraping',
-            type: 'POST',
-            data: {
-                metodoSeleccionado: valorSeleccionado
-            },
-            success: function (response) {
-                if (response.Success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Exito!',
-                        text: response.Message,
-                        confirmButtonText: 'OK',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        }
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: '¡Error!',
-                        text: response.Message,
-                        confirmButtonText: 'OK',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        }
-                    });
-                }
-            },
-            error: function () {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Ocurrió un error al enviar los datos para cambiar el método de scraping.',
-                    confirmButtonText: 'OK',
-                    customClass: {
-                        confirmButton: 'btn btn-primary',
-                    }
-                });
-            }
-        });
-    });
-
-    if($('#select-metodo-scraping').length) {
-        $.ajax({
-            url: url + '/dashboard/citas/get_estado_metodo_scraping',
-            type: 'GET',
-            success: function (response) {
-                if (response.Success) {
-                    $('#select-metodo-scraping').val(response.Data);
-                    $('#select-metodo-scraping').trigger('change.select2');
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: '¡Error!',
-                        text: response.Message,
-                        confirmButtonText: 'OK',
-                        customClass: {
-                            confirmButton: 'btn btn-primary',
-                        }
-                    });
-                }
-            },
-            error: function () {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Ocurrió un error al consultar el estado del método de scraping.',
-                    confirmButtonText: 'OK',
-                    customClass: {
-                        confirmButton: 'btn btn-primary',
-                    }
-                });
-            }
-        });
-    }
 });
 

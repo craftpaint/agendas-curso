@@ -4,6 +4,24 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Eluceo\iCal\Domain\Entity\Event;
+use Eluceo\iCal\Domain\Entity\Calendar;
+use Eluceo\iCal\Domain\ValueObject\SingleDay;
+use Eluceo\iCal\Domain\ValueObject\Date;
+use Eluceo\iCal\Domain\ValueObject\Timestamp;
+use Eluceo\iCal\Domain\ValueObject\TimeSpan;
+use Eluceo\iCal\Domain\ValueObject\DateTime;
+use Eluceo\iCal\Domain\ValueObject\Location;
+use Eluceo\iCal\Domain\ValueObject\Organizer;
+use Eluceo\iCal\Domain\ValueObject\EmailAddress;
+use Eluceo\iCal\Presentation\Factory\CalendarFactory;
+use Eluceo\iCal\Domain\ValueObject\Alarm;
+use Eluceo\iCal\Domain\ValueObject\Alarm\DisplayAction;
+use Eluceo\iCal\Domain\ValueObject\Alarm\RelativeTrigger;
+use DateTimeImmutable;
+use DateInterval;
+
 
 class SendPulseService
 {
@@ -16,13 +34,22 @@ class SendPulseService
      * @param array  $templateVariables Variables para la plantilla.
      * @return bool
      */
-    public function sendEmailConfirmacion($recipientEmail, $recipientName, $subject, array $templateVariables)
-    {
+
+    public function sendEmailConfirmacion($recipientEmail, $recipientName, $subject, $doc_cliente, $sede, array $templateVariables) {
+
         $accessToken = $this->getAccessToken();
         if (!$accessToken) {
             Log::error("Error al obtener token de acceso de SendPulse");
             return false;
         }
+
+        $icsContent = $this->generateIcsContent($sede, $templateVariables);
+        
+        if (!$icsContent) {
+            Log::error("Error al generar contenido ICS: " . $icsContent);
+            return false;
+        }
+
 
         // Armar el payload usando la plantilla
         $data = [
@@ -42,6 +69,9 @@ class SendPulseService
                         "email" => $recipientEmail,
                     ]
                 ],
+                "attachments" => [
+                        "evento.ics"    => $icsContent,
+                ]
             ]
         ];
 
@@ -60,6 +90,75 @@ class SendPulseService
         } catch (\Exception $e) {
             Log::error("Excepción al enviar correo con SendPulse: " . $e->getMessage());
             return false;
+        }
+    }
+
+    private function generateIcsContent($sede, $eventData) {
+        try {
+            $event = new Event();
+            $event->setSummary("Curso comparendo - Cita")
+                ->setDescription($eventData['nombre_sede'] . " - " . $eventData['direccion_sede'] . "\n" . "Recuerda llegar 40 minutos antes de la hora agendada para realizar el procedimiento y no olvides llevar tú cédula.");
+
+            // Extraer datos
+            $date = $eventData['reserva_cita'];
+            $times = explode(" - ", $eventData['rango_horario']);
+            $start_time = trim($times[0]); 
+            $end_time = trim($times[1]);
+            $latitud = str_replace(',', '.', (string)$sede->latitud);
+            $longitud = str_replace(',', '.', (string)$sede->longitud);
+            $location = new Location($latitud . ", " . $longitud);
+
+            // Convertir horas a formato 24h
+            $start_time_24h = date('H:i', strtotime($start_time));
+            $end_time_24h = date('H:i', strtotime($end_time));
+            
+            // Crear objetos Carbon para las fechas completas
+            $startDateTime = Carbon::createFromFormat('Y-m-d', $date)->setTimeFromTimeString($start_time_24h);
+            $endDateTime = Carbon::createFromFormat('Y-m-d', $date)->setTimeFromTimeString($end_time_24h);
+
+            // Verificar si la hora de fin es anterior a la de inicio (cruce de medianoche)
+            if ($endDateTime <= $startDateTime) {
+                $endDateTime->addDay();
+            }
+
+            // Convertir a DateTimeImmutable
+            $startDateTimeImmutable = \DateTimeImmutable::createFromMutable($startDateTime);
+            $endDateTimeImmutable = \DateTimeImmutable::createFromMutable($endDateTime);
+
+            // Crear objetos DateTime para eluceo/ical
+            $eventStartDateTime = new DateTime($startDateTimeImmutable->setTimezone(new \DateTimeZone('UTC')), true);
+            $eventEndDateTime = new DateTime($endDateTimeImmutable->setTimezone(new \DateTimeZone('UTC')), true);
+
+            $event->setOccurrence(
+                new TimeSpan($eventStartDateTime, $eventEndDateTime)
+            );
+
+            // Agregar alarma para 1 hora antes del evento
+            $alarm = new Alarm(
+                new DisplayAction("Recordatorio: Tu cita con curso comparendo es en 1 hora."),
+                (new RelativeTrigger(DateInterval::createFromDateString('-1 hour')))->withRelationToStart()
+            );
+
+            $event->addAlarm($alarm);
+            $event->setLocation($location);
+
+            $organizer = new Organizer(
+                new EmailAddress(config('mail.from.address')),
+                config('mail.from.name')
+            );
+            $event->setOrganizer($organizer);
+
+            // Crear calendario
+            $calendar = new Calendar([$event]);
+            $componentFactory = new CalendarFactory();
+            $calendarComponent = $componentFactory->createCalendar($calendar);
+            header('Content-Type: text/calendar; charset=utf-8');
+            header('Content-Disposition: attachment; filename="evento.ics"');
+
+            return (string) $calendarComponent;
+        } catch (\Throwable $e) {
+            Log::error("Error generando contenido ICS: " . $e->getMessage());
+            return null;
         }
     }
 

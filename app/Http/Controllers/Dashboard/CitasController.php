@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Services\SendPulseService;
 use App\Services\CrmService;
-use App\Services\ScrapingService;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -30,11 +29,10 @@ class CitasController extends Controller
     protected $sendPulse;
     protected $crmService;
 
-    public function __construct(SendPulseService $sendPulse, CrmService $crmService, ScrapingService $scrapingService)
+    public function __construct(SendPulseService $sendPulse, CrmService $crmService)
     {
         $this->sendPulse = $sendPulse;
         $this->crmService = $crmService;
-        $this->scrapingService = $scrapingService;
     }
     public function index()
     {
@@ -923,7 +921,7 @@ class CitasController extends Controller
                         'updated_at' => Carbon::now()
                     ]);
 
-                    
+
                 $nombre_estado = DB::table('tb_estado')
                     ->where('id_estado', $id_estado_verificado)
                     ->value('nombre_estado');
@@ -2204,8 +2202,9 @@ class CitasController extends Controller
         }
     }
 
-    public function get_informacion_simit(Request $request) {
-        
+    public function get_informacion_simit(Request $request)
+    {
+
         $response = [
             'Status' => 500,
             'Message' => "Ocurrió un error al obtener la información del Simit.",
@@ -2231,7 +2230,7 @@ class CitasController extends Controller
                     'Success' => false,
                     'Data' => null
                 ];
-                return response()->json($response); 
+                return response()->json($response);
             }
 
             $verificacionSimit = $this->scrapingService->VerificarInformacion($id_cita, $metadata);
@@ -2241,8 +2240,8 @@ class CitasController extends Controller
             }
 
             $html = '<div class="row m-auto">';
-            $html .='<div class="col-md-6">';
-            $html .= '<div class="alert alert-warning" role="alert"><i class="ti ti-info-circle"></i> 
+            $html .= '<div class="col-md-6">';
+            $html .= '<div class="alert alert-warning" role="alert"><i class="ti ti-info-circle"></i>
             ¡Atención! Tenga en cuenta que estos datos son solo una aproximación de resultados hechos por el sistema.
             Deberá de verificar que la información sea correcta en la imagen que se encuentra en el lado derecho <i class="ti ti-arrow-big-right"></i>
             </div>';
@@ -2278,7 +2277,7 @@ class CitasController extends Controller
                 $html .= '</div>';
             }
             $html .= '</div>';
-            $html .='<div class="col-md-5">';
+            $html .= '<div class="col-md-5">';
             $html .= '<img class="img-fluid" src="' . env('SCRAPING_RUTA_BASE') . $cita->url_simit_imagen . '">';
             $html .= '</div>';
             $html .= '</div>';
@@ -2809,60 +2808,5 @@ class CitasController extends Controller
             ->orderBy('t1.reserva_cita')
             ->orderBy('t1.rango_horario')
             ->orderBy('t1.id_sede');
-    }
-
-    public function get_estado_metodo_scraping() {
-        $response = [
-            'Status' => 500,
-            'Message' => "Ocurrió un error al consultar el estado del método de Scraping.",
-            'Success' => false,
-            'Data' => null
-        ];
-
-        try {
-            $metodo_actual = DB::table('tb_config')
-                ->where('config_key', 'method_scraping')
-                ->value('config_value');
-            
-            $response = [
-                'Status' => 200,
-                'Message' => "Se cambió el método de Scraping con exito.",
-                'Success' => true,
-                'Data' => $metodo_actual
-            ];
-        } catch (\Throwable $e) {
-            Log::error("Ocurrió un error al consultar el estado del método de Scraping.");
-        }
-        return response()->json($response);
-    }
-
-    public function metodo_scraping(Request $request) {
-        $response = [
-            'Status' => 500,
-            'Message' => "Ocurrió un error al cambiar el método de Scraping.",
-            'Success' => false,
-            'Data' => null
-        ];
-
-        $metodoSeleccionado = $request->input('metodoSeleccionado');
-        
-        try {
-            DB::table('tb_config')
-                ->where('config_key', 'method_scraping')
-                ->update([
-                    'config_value' => $metodoSeleccionado,
-                    'updated_at' => Carbon::now()
-                ]);
-
-            $response = [
-                'Status' => 200,
-                'Message' => "Se cambió el método de Scraping con exito.",
-                'Success' => true,
-                'Data' => null
-            ];
-        } catch (\Throwable $e) {
-            Log::error("Ocurrió un error al intentar cambiar el método de Scraping.");
-        }
-        return response()->json($response);
     }
 }

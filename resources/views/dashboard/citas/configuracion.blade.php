@@ -72,30 +72,6 @@
                             </div>
                         </div>
                     </div>
-                    <?php if ($user->can('cita.Metodo scraping.e')) { ?>
-                    <div class="card accordion-item">
-                        <h1 class="accordion-header d-flex align-items-center">
-                            <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionWithIcon-3" aria-expanded="false">
-                                <i class="ti ti-filter-code me-2"></i>
-                                Web Scraping
-                            </button>
-                        </h1>
-                        <div id="accordionWithIcon-3" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <form>
-                                    <div class="col-3 mb-4" id="contenedor-metodo-scraping">
-                                        <label class="form-label" style="margin-right: 8px;">Método: </label>
-                                        <select id="select-metodo-scraping" class="select2 form-select" name="select_metodo_select">
-                                            <option value="0">Desactivado</option>
-                                            <option value="1">Node.js</option>
-                                            <option value="2">N8N</option>
-                                        </select>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    <?php } ?>
                 </div>
             </div>
         </div>
