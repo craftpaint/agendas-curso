@@ -268,6 +268,8 @@ class LoadController extends Controller
                 if ($save) {
 
                     try {
+                        // Consulta la información de la sede
+                        $sede = DB::table('tb_sede')->where('id_sede', $id_sede)->first();
 
                         // Preparar los datos para la plantilla de SendPulse
                         $templateVariables = [
@@ -287,6 +289,9 @@ class LoadController extends Controller
                             $email_cliente,
                             $nombre_cliente,
                             $nombre_cliente . " Confirmamos tu cita",
+                            $doc_cliente,
+                            $sede,
+
                             $templateVariables
                         );
 
