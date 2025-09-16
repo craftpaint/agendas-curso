@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Crypt;
 use Carbon\Carbon;
 use App\Jobs\WhatsappJob;
+use App\Jobs\ScrapingSimitJob;
 
 class LoadController extends Controller
 {
@@ -308,6 +309,21 @@ class LoadController extends Controller
 
                     // Envía el mensaje de WhatsApp al cliente
                     WhatsappJob::dispatch($id_cita, $citas_agendadas)->onQueue('Whatsapp');
+
+                    // Se envía la cita para validar en el SIMIT
+                    $metodo_actual = DB::table('tb_config')
+                        ->where('config_key', 'method_scraping')
+                        ->value('config_value');
+                    
+                    // SE un switch case para validar que método debe de usar
+                    switch ($metodo_actual) {
+                        case 1:
+                            ScrapingSimitJob::dispatch($id_cita, $doc_cliente)->onQueue('Scraping');
+                            break;
+                        case 2:
+                            Log::info("Se enviaría al Agente ChatGPT para realizar el Scraping.");
+                            break;
+                    }
 
                     try {
                         $saveliquidador = DB::table('tb_liquidador')->insert([
