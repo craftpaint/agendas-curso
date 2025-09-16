@@ -1718,7 +1718,7 @@ $(function () {
                 copiarContenido(texto);
             }
         });
-        
+
         // Eventos para los filtros
         $('#filtro-ayer').on('click', function () {
             const ayer = new Date();
@@ -1905,6 +1905,39 @@ $(function () {
                             cancelButton: 'btn btn-outline-danger ml-1'
                         }
                     });
+                }
+            });
+        });
+
+        // Cual se hace clic para abrir el modal de la información en SIMIT
+
+        $('.datatables-citas').on('click', '.btn-open-informacion-simit-modal', function () {
+            let idCita = $(this).data('id-cita');
+
+            $.ajax({
+                url: url + '/dashboard/citas/get_informacion_simit',
+                method: 'POST',
+                data: { id_cita: idCita },
+                success: function (response) {
+                    if (response.Success) {
+                        Swal.fire({
+                            title: 'Información en el simit',
+                            html: response.Data,
+                            width: '80%',
+                            showCloseButton: true,
+                            closeButtonText: 'Cerrar',
+                            showCancelButton: false,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: { confirmButton: 'btn btn-primary' }
+                        });
+                    }
                 }
             });
         });
@@ -3523,7 +3556,7 @@ $(function () {
                             html = `<span class="badge bg-label-warning mb-1 m-auto" style="margin-right:5px !important;">${full.tipo_paquete}</span>`;
                         }
 
-                        html+= `<span class="badge bg-label-dark">${full.nombre_sede}</span>`;
+                        html += `<span class="badge bg-label-dark">${full.nombre_sede}</span>`;
                         return html;
                     }
                 },
@@ -4655,7 +4688,7 @@ $(function () {
                         $('#citas-erradas-paquete-activo-dashboard-empresa').text(`${response.Data.citasErradas}`);
                         $('#citas-validacion-paquete-activo-dashboard-empresa').text(`${response.Data.citasEnValidacion}`);
                         $('#citas-pendientes-paquete-activo-dashboard-empresa').text(`${response.Data.citasPendientes}`);
-                        
+
                         if (response.Data.tipo_paquete == "POSPAGO") {
                             $('#citas-faltantes-paquete-activo-dashboard-empresa').html(`<strong><i class="ti ti-infinity display-1"></i></strong>`);
                         }
@@ -4753,7 +4786,7 @@ $(function () {
 
         // Crear un gráfico por cada paquete
         datos.forEach((paquete, index) => {
-            
+
             // Crear contenedor principal para cada fila horizontal
             const rowContainer = document.createElement('div');
             rowContainer.className = 'd-flex flex-wrap align-item-center justify-content-center mb-5';
@@ -4776,7 +4809,7 @@ $(function () {
             rowContainer.appendChild(chartContainer);
             rowContainer.appendChild(infoContainer);
             rowContainer.appendChild(botonContainer);
-            
+
             // Agregar la fila al contenedor principal
             container.appendChild(rowContainer);
 
@@ -4844,7 +4877,7 @@ $(function () {
 
                 <div class="d-flex align-items-center h-100">
                     <button class="btn btn-icon btn-lg waves-effect btn-detalles-paquete"
-                        data-bs-toggle="tooltip" 
+                        data-bs-toggle="tooltip"
                         data-id-empresa-paquete="${paquete.id_empresa_paquete}"
                         title="Editar">
                         <i class="ti ti-checkup-list text-info" style="font-size:50px;"></i>
@@ -5208,81 +5241,81 @@ $(function () {
             $table.empty();
         }
 
-    // Reconstruir la estructura básica de la tabla
-    $table.html('<thead><tr>'
-        + '<th>Cliente</th>'
-        + '<th>Documento</th>'
-        + '<th>Sede</th>'
-        + '<th>Fecha de creación</th>'
-        + '<th>Fecha de reserva</th>'
-        + '<th>Horario</th>'
-        + '<th>Estado verificado</th>'
-        + '</tr></thead><tbody></tbody>');
+        // Reconstruir la estructura básica de la tabla
+        $table.html('<thead><tr>'
+            + '<th>Cliente</th>'
+            + '<th>Documento</th>'
+            + '<th>Sede</th>'
+            + '<th>Fecha de creación</th>'
+            + '<th>Fecha de reserva</th>'
+            + '<th>Horario</th>'
+            + '<th>Estado verificado</th>'
+            + '</tr></thead><tbody></tbody>');
 
-    // Inicializar la nueva instancia de DataTable
-    const table_detalles_paquete = $table.DataTable({
-        ordering: true,
-        processing: true,
-        serverSide: true,
-        searching: false,
-        info: false,
-        pageLength: 10,
-        responsive: true,
-        language: {
-            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json',
-            infoEmpty: "No hay datos disponibles",
-        },
-        dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
-        ajax: {
-            url: url + '/dashboard/empresa/consultar_citas_empresa_paquete/' + id_empresa_paquete,
-            type: 'GET',
-            dataSrc: function (json) {
-                return json.Data;
-            }
-        },
-        columns: [
-            { data: null },
-            { data: null },
-            { data: 'nombre_sede'},
-            { data: 'created_at' },
-            { data: 'reserva_cita' },
-            { data: 'rango_horario' },
-            { data: 'nombre_estado' }
-        ],
-        columnDefs: [
-            {
-                targets: 0,
-                render: function (data, type, full, meta) {
-                    return full.nombre_cliente + ' ' + full.apellido_cliente;
+        // Inicializar la nueva instancia de DataTable
+        const table_detalles_paquete = $table.DataTable({
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            searching: false,
+            info: false,
+            pageLength: 10,
+            responsive: true,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json',
+                infoEmpty: "No hay datos disponibles",
+            },
+            dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+            ajax: {
+                url: url + '/dashboard/empresa/consultar_citas_empresa_paquete/' + id_empresa_paquete,
+                type: 'GET',
+                dataSrc: function (json) {
+                    return json.Data;
                 }
             },
-            {
-               targets: 1,
-                render: function (data, type, full, meta) {
-                     return `<span class="badge bg-label-info">${full.tipo_doc_cliente + ' ' + full.doc_cliente}</span>`;
+            columns: [
+                { data: null },
+                { data: null },
+                { data: 'nombre_sede' },
+                { data: 'created_at' },
+                { data: 'reserva_cita' },
+                { data: 'rango_horario' },
+                { data: 'nombre_estado' }
+            ],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        return full.nombre_cliente + ' ' + full.apellido_cliente;
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return `<span class="badge bg-label-info">${full.tipo_doc_cliente + ' ' + full.doc_cliente}</span>`;
+                    }
+                },
+                {
+                    targets: 3,
+                    render: function (data, type, full, meta) {
+                        return data.split(' ')[0];
+                    }
+                },
+                {
+                    targets: 4,
+                    render: function (data, type, full, meta) {
+                        return data.split(' ')[0];
+                    }
+                },
+                {
+                    targets: 6,
+                    render: function (data, type, full, meta) {
+                        return `<span class="badge bg-label-success">${data}</span>`;
+                    }
                 }
-            },
-            {
-               targets: 3,
-                render: function (data, type, full, meta) {
-                    return data.split(' ')[0];
-                }
-            },
-            {
-               targets: 4,
-                render: function (data, type, full, meta) {
-                    return data.split(' ')[0];
-                }
-            },
-            {
-               targets: 6,
-                render: function (data, type, full, meta) {
-                    return `<span class="badge bg-label-success">${data}</span>`;
-                }
-            }
-        ],
-        pagingType: "simple"
-    });
+            ],
+            pagingType: "simple"
+        });
 
         $('#modalDetallesPaquete').modal('show');
     });
