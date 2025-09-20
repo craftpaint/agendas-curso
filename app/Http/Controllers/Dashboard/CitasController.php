@@ -282,7 +282,8 @@ class CitasController extends Controller
                                     ->orWhere('t2.apellido_cliente', 'like', '%' . $palabra . '%')
                                     ->orWhere('t2.doc_cliente', 'like', '%' . $palabra . '%')
                                     ->orWhere('t2.telefono_cliente', 'like', '%' . $palabra . '%')
-                                    ->orWhere('t2.email_cliente', 'like', '%' . $palabra . '%');
+                                    ->orWhere('t2.email_cliente', 'like', '%' . $palabra . '%')
+                                    ->orWhere('v.placa_vehiculo', 'like', '%' . $palabra . '%');
                             });
                         }
                     }
@@ -1270,7 +1271,8 @@ class CitasController extends Controller
                             ->orWhere('t2.apellido_cliente', 'LIKE', $searchTerm)
                             ->orWhere('t2.doc_cliente', 'LIKE', $searchTerm)
                             ->orWhere('t2.telefono_cliente', 'LIKE', $searchTerm)
-                            ->orWhere('t2.email_cliente', 'LIKE', $searchTerm);
+                            ->orWhere('t2.email_cliente', 'LIKE', $searchTerm)
+                            ->orWhere('v.placa_vehiculo', 'like', '%' . $searchTerm . '%');
                     });
                 }
 
@@ -1876,7 +1878,8 @@ class CitasController extends Controller
                                         ->orWhere('t2.apellido_cliente', 'like', "%{$palabra}%")
                                         ->orWhere('t2.doc_cliente', 'like', "%{$palabra}%")
                                         ->orWhere('t2.telefono_cliente', 'like', "%{$palabra}%")
-                                        ->orWhere('t2.email_cliente', 'like', "%{$palabra}%");
+                                        ->orWhere('t2.email_cliente', 'like', "%{$palabra}%")
+                                        ->orWhere('v.placa_vehiculo', 'like', "%{$palabra}%");
                                 });
                             }
                         }
@@ -2659,7 +2662,8 @@ class CitasController extends Controller
                             ->orWhere('t2.apellido_cliente', 'LIKE', $searchTerm)
                             ->orWhere('t2.doc_cliente', 'LIKE', $searchTerm)
                             ->orWhere('t2.telefono_cliente', 'LIKE', $searchTerm)
-                            ->orWhere('t2.email_cliente', 'LIKE', $searchTerm);
+                            ->orWhere('t2.email_cliente', 'LIKE', $searchTerm)
+                            ->orWhere('v.placa_vehiculo', 'LIKE', $searchTerm);
                     });
                 }
 
