@@ -25,7 +25,7 @@ class UtilsHelper {
         $agente = DB::table('users')->where('id', $cita->id_agente_callcenter)->first();
         $sede = DB::table('tb_sede')->where('id_sede', $cita->id_sede)->first();
 
-        if ($agente->id_chatbot_sendpulse || $agente->id_user_sendpulse) {
+        if ($agente->id_chatbot_sendpulse && $agente->id_user_sendpulse && $agente->id_plantilla_sendpulse) {
             $datosUsuario = $this->sendPulseWhatsapp->searchContactByPhone($cliente->telefono_cliente, $agente->id_chatbot_sendpulse);
             //Corrección de estructura de datos
             $fechaFormateada = date('Y/m/d', strtotime($cita->reserva_cita));
@@ -36,7 +36,7 @@ class UtilsHelper {
                 'bot_id' => $agente->id_chatbot_sendpulse,
                 'phone' => $cliente->telefono_cliente,
                 'template' => [
-                    'name' => env('SENDPULSE_WHATSAPP_PLANTILLA'),
+                    'name' => $agente->id_plantilla_sendpulse,
                     'components' => [
                         [
                             'type' => 'body',

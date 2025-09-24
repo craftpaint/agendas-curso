@@ -149,6 +149,7 @@ class CitasController extends Controller
                         'a.name as agente_callcenter',
                         'a.id_user_sendpulse',
                         'a.id_chatbot_sendpulse',
+                        'a.id_plantilla_sendpulse',
                         'l.id_liquidador',
                         'l.estado_liquidador',
                         'l.comentario_liquidador',

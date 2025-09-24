@@ -163,6 +163,7 @@ class UsersController extends Controller
                 }
                 $id_user_sendpulse = $request->request->get('id_user_sendpulse');
                 $id_chatbot_sendpulse = $request->request->get('id_chatbot_sendpulse');
+                $id_plantilla_sendpulse = $request->request->get('id_plantilla_sendpulse');
                 //Guardamos al usuario
                 $user = new User();
                 $user->id_sede = $id_sede;
@@ -172,6 +173,7 @@ class UsersController extends Controller
                 $user->callcenter_habilitado = $callcenter_habilitado;
                 $user->id_user_sendpulse = $id_user_sendpulse;
                 $user->id_chatbot_sendpulse = $id_chatbot_sendpulse;
+                $user->id_plantilla_sendpulse = $id_plantilla_sendpulse;
                 $user->save();
                 $user->assignRole($role);
                 $objLoad = array(
@@ -208,6 +210,7 @@ class UsersController extends Controller
                 }
                 $id_user_sendpulse = $request->request->get('id_user_sendpulse');
                 $id_chatbot_sendpulse = $request->request->get('id_chatbot_sendpulse');
+                $id_plantilla_sendpulse = $request->request->get('id_plantilla_sendpulse');
                 $user = User::find($id_user);
                 $user->id_sede = $id_sede;
                 $user->name = $name;
@@ -217,6 +220,7 @@ class UsersController extends Controller
                 }
                 $user->id_user_sendpulse = $id_user_sendpulse;
                 $user->id_chatbot_sendpulse = $id_chatbot_sendpulse;
+                $user->id_plantilla_sendpulse = $id_plantilla_sendpulse;
                 $user->callcenter_habilitado = $callcenter_habilitado;
                 $user->save();
                 $user->syncRoles([$role]);

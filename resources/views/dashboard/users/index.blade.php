@@ -65,13 +65,17 @@
                                     <span class="slider"></span>
                                 </label>
                             </div>
-                            <div class="col-6 mb-4" id="contenedor-id-usuario-sendpulse">
+                            <div class="col-6 mb-4" id="contenedor-id-usuario-sendpulse" style="display:none">
                                 <label class="form-label>">ID Usuario SendPulse </label>
                                 <input class="form-control" type="text" name="id_user_sendpulse">
                             </div>
-                            <div class="col-6 mb-4" id="contenedor-id-chatbot-sendpulse">
+                            <div class="col-6 mb-4" id="contenedor-id-chatbot-sendpulse" style="display:none">
                                 <label class="form-label">ID Chatbot SendPulse </label>
                                 <input class="form-control" type="text" name="id_chatbot_sendpulse">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-id-plantilla-sendpulse" style="display:none">
+                                <label class="form-label">ID Plantilla SendPulse </label>
+                                <input class="form-control" type="text" name="id_plantilla_sendpulse">
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Guardar usuario</button>
@@ -135,13 +139,17 @@
                                     <span class="slider"></span>
                                 </label>
                             </div>
-                            <div class="col-6 mb-4" id="contenedor-id-usuario-sendpulse-edit">
+                            <div class="col-6 mb-4" id="contenedor-id-usuario-sendpulse-edit" style="display:none">
                                 <label class="form-label>">ID Usuario SendPulse </label>
                                 <input class="form-control" type="text" name="id_user_sendpulse">
                             </div>
-                            <div class="col-6 mb-4" id="contenedor-id-chatbot-sendpulse-edit">
+                            <div class="col-6 mb-4" id="contenedor-id-chatbot-sendpulse-edit" style="display:none">
                                 <label class="form-label">ID Chatbot SendPulse </label>
                                 <input class="form-control" type="text" name="id_chatbot_sendpulse">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-id-plantilla-sendpulse-edit" style="display:none">
+                                <label class="form-label">ID Plantilla SendPulse </label>
+                                <input class="form-control" type="text" name="id_plantilla_sendpulse">
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Actualizar usuario</button>
