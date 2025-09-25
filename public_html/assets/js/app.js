@@ -1501,7 +1501,7 @@ $(function () {
                                     data-texto-plantilla="${plantilla}">
                                     <i class="ti ti-message-2"></i>
                                 </button>
-                                ${(full.id_user_sendpulse && full.id_chatbot_sendpulse) ? `
+                                ${(full.id_user_sendpulse && full.id_chatbot_sendpulse && full.id_plantilla_sendpulse) ? `
                                     <span class="badge ${(full.notificado_chatbot) ? `bg-label-success` : `bg-label-secondary muted`} mb-1"><i class="ti ti-brand-whatsapp"></i></span>
                             ` : ``}
                             </div>
@@ -2191,13 +2191,17 @@ $(function () {
                         $('#contenedor-rol-user-edit').addClass('col-3');
                         $('#contenedor-rol-user-edit').removeClass('col-6');
                         $('#contenedor-habilitar-call-edit').show();
+                        $('#contenedor-id-usuario-sendpulse-edit').show();
+                        $('#contenedor-id-chatbot-sendpulse-edit').show();
+                        $('#contenedor-id-plantilla-sendpulse-edit').show();
                     } else {
                         $('#contenedor-rol-user-edit').addClass('col-6');
                         $('#contenedor-rol-user-edit').removeClass('col-3');
                         $('#contenedor-habilitar-call-edit').hide();
+                        $('#contenedor-id-usuario-sendpulse-edit').hide();
+                        $('#contenedor-id-chatbot-sendpulse-edit').hide();
+                        $('#contenedor-id-plantilla-sendpulse-edit').hide();
                     }
-                    $('.content_users_edit input[name="id_user_sendpulse"]').val(response.usuario.id_user_sendpulse);
-                    $('.content_users_edit input[name="id_chatbot_sendpulse"]').val(response.usuario.id_chatbot_sendpulse);
                     if (response.usuario.callcenter_habilitado == 1) {
                         $('.content_users_edit input[name="callcenter_habilitado"]').prop('checked', true);
                     } else {
@@ -2205,7 +2209,9 @@ $(function () {
                     }
                     $('.content_users_add').hide();
                     $('.content_users_edit').fadeIn(200);
-
+                    $('.content_users_edit input[name="id_user_sendpulse"]').val(response.usuario.id_user_sendpulse);
+                    $('.content_users_edit input[name="id_chatbot_sendpulse"]').val(response.usuario.id_chatbot_sendpulse);
+                    $('.content_users_edit input[name="id_plantilla_sendpulse"]').val(response.usuario.id_plantilla_sendpulse);
                 }
             });
         });
@@ -2218,20 +2224,32 @@ $(function () {
                 $('#contenedor-rol-user').addClass('col-3');
                 $('#contenedor-rol-user').removeClass('col-6');
                 $('#contenedor-habilitar-call').show();
+                $('#contenedor-id-usuario-sendpulse').show();
+                $('#contenedor-id-chatbot-sendpulse').show();
+                $('#contenedor-id-plantilla-sendpulse').show();
             } else {
                 $('#contenedor-rol-user').addClass('col-6');
                 $('#contenedor-rol-user').removeClass('col-3');
                 $('#contenedor-habilitar-call').hide();
+                $('#contenedor-id-usuario-sendpulse').hide();
+                $('#contenedor-id-chatbot-sendpulse').hide();
+                $('#contenedor-id-plantilla-sendpulse').hide();
             }
         }); $('#rol-user-edit').change(function () {
             if ($(this).val() == 'callcenter' || $(this).val() == 'lidercallcenter') {
                 $('#contenedor-rol-user-edit').addClass('col-3');
                 $('#contenedor-rol-user-edit').removeClass('col-6');
                 $('#contenedor-habilitar-call-edit').show();
+                $('#contenedor-id-usuario-sendpulse-edit').show();
+                $('#contenedor-id-chatbot-sendpulse-edit').show();
+                $('#contenedor-id-plantilla-sendpulse-edit').show();
             } else {
                 $('#contenedor-rol-user-edit').addClass('col-6');
                 $('#contenedor-rol-user-edit').removeClass('col-3');
                 $('#contenedor-habilitar-call-edit').hide();
+                $('#contenedor-id-usuario-sendpulse-edit').hide();
+                $('#contenedor-id-chatbot-sendpulse-edit').hide();
+                $('#contenedor-id-plantilla-sendpulse-edit').hide();
             }
         });
     }
