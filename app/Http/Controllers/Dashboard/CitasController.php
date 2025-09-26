@@ -31,7 +31,7 @@ class CitasController extends Controller
     protected $crmService;
     protected $scrapingService;
 
-    public function __construct(SendPulseService $sendPulse, CrmService $crmService, ScrapingService $scrapingService )
+    public function __construct(SendPulseService $sendPulse, CrmService $crmService, ScrapingService $scrapingService)
     {
         $this->sendPulse = $sendPulse;
         $this->crmService = $crmService;
@@ -436,6 +436,8 @@ class CitasController extends Controller
                 $nombre_sede = $sede ? $sede->nombre_sede : 'Sede no encontrada';
                 $direccion_sede = $sede ? $sede->direccion_sede : 'Dirección no encontrada';
                 $id_servicio = $sede ? $sede->id_servicio : 'Servicio no encontrado';
+                $latitud = $sede ? $sede->latitud : '';
+                $longitud = $sede ? $sede->longitud : '';
 
                 $servicio = DB::table('tb_servicio')->where('id_servicio', $id_servicio)->first();
                 $nombre_servicio = $servicio ? $servicio->tipo_servicio : 'Servicio no encontrado';
@@ -566,6 +568,8 @@ class CitasController extends Controller
                             'origen'           => $origen,
                             'tipo_dispositivo' => $tipo_dispositivo,
                             'nombre_servicio'  => $nombre_servicio,
+                            'latitud'          => $latitud,
+                            'longitud'         => $longitud,
                         ];
                         // Enviar el correo al cliente
                         $enviadoCliente = $this->sendPulse->sendEmailConfirmacion(
@@ -2825,7 +2829,8 @@ class CitasController extends Controller
             ->orderBy('t1.id_sede');
     }
 
-    public function get_estado_metodo_scraping() {
+    public function get_estado_metodo_scraping()
+    {
         $response = [
             'Status' => 500,
             'Message' => "Ocurrió un error al consultar el estado del método de Scraping.",
@@ -2850,7 +2855,8 @@ class CitasController extends Controller
         return response()->json($response);
     }
 
-    public function metodo_scraping(Request $request) {
+    public function metodo_scraping(Request $request)
+    {
         $response = [
             'Status' => 500,
             'Message' => "Ocurrió un error al cambiar el método de Scraping.",
