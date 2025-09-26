@@ -97,6 +97,8 @@ class LoadController extends Controller
                 $sede = DB::table('tb_sede')->where('id_sede', $id_sede)->first();
                 $nombre_sede = $sede ? $sede->nombre_sede : 'Sede no encontrada';
                 $direccion_sede = $sede ? $sede->direccion_sede : 'Dirección no encontrada';
+                $latitud = $sede ? $sede->latitud : '';
+                $longitud = $sede ? $sede->longitud : '';
 
                 // Asignar valores adicionales
                 $creado_por = 'Cliente'; // Identifica que la cita fue creada por el cliente
@@ -283,7 +285,9 @@ class LoadController extends Controller
                             'reserva_cita'     => $reserva_cita,
                             'rango_horario'    => $rango_horario,
                             'origen'           => $origen,
-                            'tipo_dispositivo' => $tipo_dispositivo
+                            'tipo_dispositivo' => $tipo_dispositivo,
+                            'latitud'          => $latitud,
+                            'longitud'         => $longitud,
                         ];
                         // Enviar el correo al cliente
                         $enviadoCliente = $this->sendPulse->sendEmailConfirmacion(
@@ -314,7 +318,7 @@ class LoadController extends Controller
                     $metodo_actual = DB::table('tb_config')
                         ->where('config_key', 'method_scraping')
                         ->value('config_value');
-                    
+
                     // SE un switch case para validar que método debe de usar
                     switch ($metodo_actual) {
                         case 1:
