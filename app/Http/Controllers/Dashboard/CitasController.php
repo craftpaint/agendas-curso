@@ -436,8 +436,8 @@ class CitasController extends Controller
                 $nombre_sede = $sede ? $sede->nombre_sede : 'Sede no encontrada';
                 $direccion_sede = $sede ? $sede->direccion_sede : 'Dirección no encontrada';
                 $id_servicio = $sede ? $sede->id_servicio : 'Servicio no encontrado';
-                $latitud = $sede ? $sede->latitud : '';
-                $longitud = $sede ? $sede->longitud : '';
+                $latitud = $sede ? str_replace(',', '.', $sede->latitud) : '';
+                $longitud = $sede ? str_replace(',', '.', $sede->longitud) : '';
 
                 $servicio = DB::table('tb_servicio')->where('id_servicio', $id_servicio)->first();
                 $nombre_servicio = $servicio ? $servicio->tipo_servicio : 'Servicio no encontrado';

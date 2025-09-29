@@ -97,8 +97,8 @@ class LoadController extends Controller
                 $sede = DB::table('tb_sede')->where('id_sede', $id_sede)->first();
                 $nombre_sede = $sede ? $sede->nombre_sede : 'Sede no encontrada';
                 $direccion_sede = $sede ? $sede->direccion_sede : 'Dirección no encontrada';
-                $latitud = $sede ? $sede->latitud : '';
-                $longitud = $sede ? $sede->longitud : '';
+                $latitud = $sede ? str_replace(',', '.', $sede->latitud) : '';
+                $longitud = $sede ? str_replace(',', '.', $sede->longitud) : '';
 
                 // Asignar valores adicionales
                 $creado_por = 'Cliente'; // Identifica que la cita fue creada por el cliente

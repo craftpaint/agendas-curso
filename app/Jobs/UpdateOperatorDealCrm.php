@@ -41,16 +41,16 @@ class UpdateOperatorDealCrm implements ShouldQueue {
             $datosUsuario = $whatsappService->searchContactByPhone($phoneClient, $agentInfo->id_chatbot_sendpulse);
             if (!$datosUsuario) {
                 Log::error("No se encontró el usuario en WhatsApp.");
-            }
+            } else {
+                $whatsappActualizado = $whatsappService->assignOperatorToContact($datosUsuario['data']['id'], $agentInfo->id_user_sendpulse);
+                if (!$whatsappActualizado) {
+                    Log::error("No se pudo actualizar el operador del contacto en WhatsApp.");
+                }
 
-            $whatsappActualizado = $whatsappService->assignOperatorToContact($datosUsuario['data']['id'], $agentInfo->id_user_sendpulse);
-            if (!$whatsappActualizado) {
-                Log::error("No se pudo actualizar el operador del contacto en WhatsApp.");
-            }
-
-            $dealActualizado = $crmService->updateResponsibleDealCrm($idDealCrm, $agentInfo->id_user_sendpulse);
-            if (!$dealActualizado) {
-                Log::error("No se pudo actualizar el responsable del trato en CRM.");
+                $dealActualizado = $crmService->updateResponsibleDealCrm($idDealCrm, $agentInfo->id_user_sendpulse);
+                if (!$dealActualizado) {
+                    Log::error("No se pudo actualizar el responsable del trato en CRM.");
+                }
             }
         }
     }
