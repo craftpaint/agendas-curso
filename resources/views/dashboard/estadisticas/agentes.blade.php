@@ -46,7 +46,7 @@
                 <!-- Card para gráfico de citas agendadas vs atendidas global -->
                 <div class="col-12">
                     <div class="card my-2">
-                        <div class="card-header">Citas agendadas vs atendidas (Global)</div>
+                        <div class="card-header">Rendimiento Citas: agendadas vs atendidas vs llamadas (Global)</div>
                         <div class="card-body">
                             <div id="ChartCitasAtendidasGlobal" style="height:350px;"></div>
                         </div>
@@ -107,7 +107,7 @@
                 <!-- Card para gráfico de citas agendadas vs atendidas por agente -->
                 <div class="col-12">
                     <div class="card my-2">
-                        <div class="card-header">Citas agendadas vs atendidas (Agente)</div>
+                        <div class="card-header">Rendimiento Citas: agendadas vs atendidas vs llamadas (Agente)</div>
                         <div class="card-body">
                             <div id="ChartCitasAtendidasAgente-{{ $ag['id'] }}" style="height:350px;"></div>
                         </div>
