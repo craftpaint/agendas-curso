@@ -553,13 +553,18 @@ class EstadisticasController extends Controller
             "Actualización de cita",
             "El estado de la cita ha cambiado",
             "El estado verificado de la cita ha cambiado",
-            "El agente de la cita ha cambiado"
+            "El agente de la cita ha cambiado",
+            "Mensaje de WhatsApp enviado por CRM"
         ];
 
-        // Obtener todas las citas en el rango
+        // Obtener todas las citas en el rango, excluyendo las duplicadas
         $citasQuery = DB::table('tb_cita')
             ->select('id_cita', DB::raw('DATE(reserva_cita) as fecha'))
+            ->whereNotIn('id_estado', function ($query) {
+                $query->select('id_estado')->from('tb_estado')->whereRaw('LOWER(nombre_estado) = ?', ['duplicado']);
+            })
             ->whereBetween('reserva_cita', [$start, $end]);
+
         if ($agentId) {
             $citasQuery->where('id_agente_callcenter', $agentId);
         }
@@ -571,8 +576,10 @@ class EstadisticasController extends Controller
             $citasPorFecha[$cita->fecha][] = $cita->id_cita;
         }
 
-        // Obtener anotaciones válidas para las citas en el rango
+        // Obtener ids de todas las citas en el rango
         $idsCitas = collect($citas)->pluck('id_cita')->all();
+
+        // Obtener anotaciones válidas para las citas atendidas
         $anotaciones = DB::table('tb_seguimiento')
             ->select('id_cita')
             ->whereIn('id_cita', $idsCitas)
@@ -582,19 +589,40 @@ class EstadisticasController extends Controller
             ->pluck('id_cita')
             ->all();
 
-        // Para cada fecha, contar citas y atendidas
+        // Obtener citas que han sido llamadas
+        $citasLlamadasIds = DB::table('tb_seguimiento')
+            ->whereIn('id_cita', $idsCitas)
+            ->whereRaw('LOWER(titulo_seguimiento) LIKE ?', ['%llamada%'])
+            ->distinct()
+            ->pluck('id_cita');
+
+        $citasLlamadas = collect($citas)->whereIn('id_cita', $citasLlamadasIds);
+
+        $citasLlamadasPorFecha = [];
+        foreach ($citasLlamadas as $cita) {
+            $citasLlamadasPorFecha[$cita->fecha][] = $cita->id_cita;
+        }
+
+        // Para cada fecha, contar citas, atendidas y llamadas
         $fechas = [];
         $totalCitas = [];
         $totalAtendidas = [];
+        $totalLlamadas = [];
         for ($i = 0; $i <= $range; $i++) {
             $fecha = $start->copy()->addDays($i)->toDateString();
             $fechas[] = $fecha;
             $ids = $citasPorFecha[$fecha] ?? [];
             $totalCitas[] = count($ids);
+
             // Citas atendidas: intersección con anotaciones válidas
             $atendidas = array_intersect($ids, $anotaciones);
             $totalAtendidas[] = count($atendidas);
+
+            // Citas llamadas
+            $llamadas = $citasLlamadasPorFecha[$fecha] ?? [];
+            $totalLlamadas[] = count($llamadas);
         }
+
         return response()->json([
             'categories' => $fechas,
             'series' => [
@@ -607,6 +635,11 @@ class EstadisticasController extends Controller
                     'name' => 'Citas atendidas',
                     'data' => $totalAtendidas,
                     'color' => '#00bbe3'
+                ],
+                [
+                    'name' => 'Citas llamadas',
+                    'data' => $totalLlamadas,
+                    'color' => '#28a745'
                 ]
             ]
         ]);
