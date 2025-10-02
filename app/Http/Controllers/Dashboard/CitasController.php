@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Services\SendPulseService;
 use App\Services\CrmService;
 use App\Services\ScrapingService;
+use App\Helpers\UtilsHelper;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -30,12 +31,14 @@ class CitasController extends Controller
     protected $sendPulse;
     protected $crmService;
     protected $scrapingService;
+    protected $utilsHelper;
 
-    public function __construct(SendPulseService $sendPulse, CrmService $crmService, ScrapingService $scrapingService)
+    public function __construct(SendPulseService $sendPulse, CrmService $crmService, ScrapingService $scrapingService, UtilsHelper $utilsHelper)
     {
         $this->sendPulse = $sendPulse;
         $this->crmService = $crmService;
         $this->scrapingService = $scrapingService;
+        $this->utilsHelper = $utilsHelper;
     }
     public function index()
     {
@@ -2252,16 +2255,15 @@ class CitasController extends Controller
             }
 
             $verificacionSimit = $this->scrapingService->VerificarInformacion($id_cita, $metadata);
+            $contenidoHtml = $this->utilsHelper->limpiezaHtmlSimit($metadata['contenidoHtml']);
 
-            if (!$verificacionSimit) {
-                return response()->json($response);
-            }
 
-            $html = '<div class="row m-auto">';
-            $html .= '<div class="col-md-6">';
+            $contenidoLimpio = stripslashes($metadata['contenidoHtml']);
+            $html = '<div class="m-auto">';
+            $html .= '<div class="col-md-12">';
             $html .= '<div class="alert alert-warning" role="alert"><i class="ti ti-info-circle"></i>
             ¡Atención! Tenga en cuenta que estos datos son solo una aproximación de resultados hechos por el sistema.
-            Deberá de verificar que la información sea correcta en la imagen que se encuentra en el lado derecho <i class="ti ti-arrow-big-right"></i>
+            Deberá de verificar que la información sea correcta en la imagen que se encuentra en la sección inferior. <i class="ti ti-arrow-big-down"></i>
             </div>';
             $html .= '<h5 class="text-center">Fecha de Consulta: ' . $metadata['fechaCaptura'] . '</h5>';
             foreach ($verificacionSimit as $registro) {
@@ -2275,7 +2277,9 @@ class CitasController extends Controller
                 $secretaria = $registro[3] ?? 'No se encontró la secretaría';
                 $infraccion = $columna_infraccion[0] ?? 'No se encontró la infracción';
 
-                $html .= '<div class="card bg-info mt-3 mb-3">';
+                $html .= '<div class="col-12">';
+                $html .= '<div class="row">';
+                $html .= '<div class="card bg-info mt-3 mb-3 col-12 col-md-4">';
                 $html .= '<div class="row">';
                 $html .= '<div class="col-md-5">';
                 $html .= '<i class="card-img-top ti ti-checkup-list display-1" style="color:white;"></i>';
@@ -2293,10 +2297,13 @@ class CitasController extends Controller
                 $html .= '</div>';
                 $html .= '</div>';
                 $html .= '</div>';
+                $html .= '</div>';
+                $html .= '</div>';
             }
             $html .= '</div>';
-            $html .= '<div class="col-md-5">';
-            $html .= '<img class="img-fluid" src="' . env('SCRAPING_RUTA_BASE') . $cita->url_simit_imagen . '">';
+            $html .= '<div class="col-md-12 ">';
+            $html .= '<h3 class="text-center">Datos del SIMIT:</h3>';
+            $html .= $contenidoHtml;
             $html .= '</div>';
             $html .= '</div>';
             $response = [

@@ -12,7 +12,9 @@ class ScrapingService {
         try {
             $response = Http::withHeaders([
                 'Content-Type'  => 'application/json'
-            ])->get(env('SCRAPING_RUTA_BASE') . 'scrape/' . $recipientDocument . '/' . $recipientIdCita);
+            ])->timeout(180)
+              ->connectTimeout(180)
+              ->get(env('SCRAPING_RUTA_BASE') . 'scrape/' . $recipientDocument . '/' . $recipientIdCita);
 
             if ($response->successful()) {
                 return $response->json();
@@ -41,7 +43,7 @@ class ScrapingService {
 
             if (!$datosFiltradosInfraccion) {
                 Log::info("Ocurrió un error al intentar filtrar por el tipo de infracción.");
-                return false;
+                return [];
             }
 
             Log::info("Registros encontrados con el mismo código de comparendo", ['Data' => $datosFiltradosInfraccion]);
@@ -53,7 +55,7 @@ class ScrapingService {
 
                     if (!$datosFiltradosNotificacion) {
                         Log::info("Ocurrió un error al intentar filtrar por fecha de notificación más reciente.");
-                        return false;
+                        return [];
                     }
                     return $datosFiltradosNotificacion;
                     break;
@@ -66,7 +68,7 @@ class ScrapingService {
             }
         } catch (\Throwable $e) {
             Log::error("Excepción al realizar el Scraping: " . $e->getMessage());
-            return false;
+            return [];
         }
     }
 
