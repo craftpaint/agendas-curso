@@ -199,7 +199,7 @@ class UtilsHelper {
             libxml_use_internal_errors(true);
             $dom->loadHTML('<?xml encoding="UTF-8">' . $html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
             $xpath = new \DOMXPath($dom);
-
+                 
             // Eliminar el elemento con aria-labelledby="descripcionEstadoDeCuenta"
             foreach ($xpath->query('//*[@aria-labelledby="descripcionEstadoDeCuenta"]') as $element) {
                 $element->parentNode->removeChild($element);
@@ -211,7 +211,7 @@ class UtilsHelper {
             }
 
             // Eliminar los divs con id="enviarCorreo" e id="historialCursos"
-            foreach ($xpath->query('//div[@id="enviarCorreo" or @id="historialCursos"]') as $div) {
+            foreach ($xpath->query('//div[@id="enviarCorreo" or @id="historialCursos" or @id="generaPazSalvo"]') as $div) {
                 $div->parentNode->removeChild($div);
             }
 
@@ -224,12 +224,8 @@ class UtilsHelper {
             foreach ($xpath->query('//th[@id="chkMulta"]') as $th) {
                 $th->parentNode->removeChild($th);
             }
-
+            
             foreach ($xpath->query('//table[@id="multaTable"]//td[.//input[contains(@id, "chkMulta")]]') as $td) {
-                $td->parentNode->removeChild($td);
-            }
-
-            foreach ($xpath->query('//td[@data-label="Selecciona para pagar"]') as $td) {
                 $td->parentNode->removeChild($td);
             }
 
@@ -257,14 +253,14 @@ class UtilsHelper {
                 $div->setAttribute('style', 'overflow-x: visible; width: 100%');
             }
 
-            // Simplificar las celdas y eliminar contenido innecesario
+            /*// Simplificar las celdas y eliminar contenido innecesario
             foreach ($xpath->query('//table[@id="multaTable"]//td//p[@data-step="10"]') as $p) {
                 $p->parentNode->removeChild($p);
             }
 
             foreach ($xpath->query('//table[@id="multaTable"]//td//div[@data-step="11"]') as $div) {
                 $div->parentNode->removeChild($div);
-            }
+            }*/
 
             // Ajustar el ancho de las columnas restantes
             $headers = $xpath->query('//table[@id="multaTable"]//th');
@@ -279,10 +275,10 @@ class UtilsHelper {
                 $cell->setAttribute('style', 'min-width: auto; max-width: none; white-space: normal;');
             }
 
-            // Eliminar listas de progreso y filas vacías
+            /*// Eliminar listas de progreso y filas vacías
             foreach ($xpath->query('//ul[contains(@class,"resprogressbar") and contains(@class,"list-unstyled")]') as $ul) {
                 $ul->parentNode->removeChild($ul);
-            }
+            }*/
 
             $trs = $xpath->query('//tr');
             for ($i = 0; $i < $trs->length; $i++) {
@@ -314,7 +310,6 @@ class UtilsHelper {
                     }
                 }
             }
-            
             return $dom->saveHTML();
         } catch (\Throwable $e) {
             Log::error("Error en limpiezaHtmlSimit: " . $e->getMessage());

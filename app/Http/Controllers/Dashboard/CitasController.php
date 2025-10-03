@@ -2257,8 +2257,6 @@ class CitasController extends Controller
             $verificacionSimit = $this->scrapingService->VerificarInformacion($id_cita, $metadata);
             $contenidoHtml = $this->utilsHelper->limpiezaHtmlSimit($metadata['contenidoHtml']);
 
-
-            $contenidoLimpio = stripslashes($metadata['contenidoHtml']);
             $html = '<div class="m-auto">';
             $html .= '<div class="col-md-12">';
             $html .= '<div class="alert alert-warning" role="alert"><i class="ti ti-info-circle"></i>
@@ -2306,6 +2304,7 @@ class CitasController extends Controller
             $html .= $contenidoHtml;
             $html .= '</div>';
             $html .= '</div>';
+            
             $response = [
                 'Status' => 200,
                 'Message' => "Se obtuvo la información del SIMIT correctamente.",
