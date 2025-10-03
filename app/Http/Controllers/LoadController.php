@@ -311,8 +311,8 @@ class LoadController extends Controller
                     $ultimaCita = DB::table('tb_cita')->orderBy('id_cita', 'desc')->first();
                     $id_cita = $ultimaCita->id_cita;
 
-                    // Envía el mensaje de WhatsApp al cliente
-                    WhatsappJob::dispatch($id_cita, $citas_agendadas)->onQueue('Whatsapp');
+                    //Limitar agente si es el caso
+                    $this->limitar_agente($agenteValue, $id_cita, $citas_agendadas);
 
                     // Se envía la cita para validar en el SIMIT
                     $metodo_actual = DB::table('tb_config')
@@ -590,5 +590,35 @@ class LoadController extends Controller
         }
 
         return $horarios_disponibles;
+    }
+
+    public function limitar_agente($idAgente, $id_cita, $citas_agendadas) {
+        $agente_limitado = DB::table('tb_config')
+            ->where('config_key', 'limited_agent')
+            ->value('config_value');
+
+        $porcentaje_envio_sendpulse = DB::table('tb_config')
+            ->where('config_key', 'sendpulse_delivery_rate')
+            ->value('config_value');
+
+        
+        if($agente_limitado == $idAgente) {
+            $enviar = $this->probabilidad_envio_sendpulse($porcentaje_envio_sendpulse);
+
+            if($enviar) {
+                // Envía el mensaje de WhatsApp al cliente
+                WhatsappJob::dispatch($id_cita, $citas_agendadas)->onQueue('Whatsapp');
+            }
+        } else {
+            // Envía el mensaje de WhatsApp al cliente
+            WhatsappJob::dispatch($id_cita, $citas_agendadas)->onQueue('Whatsapp');
+        }
+    }
+
+    function probabilidad_envio_sendpulse(int $probabilidad_true): bool {
+        $probabilidad = max(0, min(100, $probabilidad_true));
+        $aleatorio = mt_rand(1, 100);
+        Log::info("RESULTADO: " . $aleatorio);
+        return $aleatorio <= $probabilidad;
     }
 }
