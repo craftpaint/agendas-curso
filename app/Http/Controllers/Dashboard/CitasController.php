@@ -2223,9 +2223,7 @@ class CitasController extends Controller
         }
     }
 
-    public function get_informacion_simit(Request $request)
-    {
-
+    public function get_informacion_simit(Request $request) {
         $response = [
             'Status' => 500,
             'Message' => "Ocurrió un error al obtener la información del Simit.",
@@ -2255,7 +2253,6 @@ class CitasController extends Controller
             }
 
             $verificacionSimit = $this->scrapingService->VerificarInformacion($id_cita, $metadata);
-            $contenidoHtml = $this->utilsHelper->limpiezaHtmlSimit($metadata['contenidoHtml']);
 
             $html = '<div class="m-auto">';
             $html .= '<div class="col-md-12">';
@@ -2301,7 +2298,7 @@ class CitasController extends Controller
             $html .= '</div>';
             $html .= '<div class="col-md-12 ">';
             $html .= '<h3 class="text-center">Datos del SIMIT:</h3>';
-            $html .= $contenidoHtml;
+            $html .= '<iframe  style="width: 100%; height: 50vh; border: none;" src="' . env('SCRAPING_RUTA_BASE') . $metadata['urlHtml'] . '"></iframe>';
             $html .= '</div>';
             $html .= '</div>';
             
