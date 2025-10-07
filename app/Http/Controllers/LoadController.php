@@ -319,15 +319,11 @@ class LoadController extends Controller
                         ->where('config_key', 'method_scraping')
                         ->value('config_value');
 
-                    // SE un switch case para validar que método debe de usar
-                    switch ($metodo_actual) {
-                        case 1:
-                            ScrapingSimitJob::dispatch($id_cita, $doc_cliente)->onQueue('Scraping');
-                            break;
-                        case 2:
-                            Log::info("Se enviaría al Agente ChatGPT para realizar el Scraping.");
-                            break;
+                    // Se valida si debe realizar el scraping o no
+                    if ($metodo_actual > 0) {
+                        ScrapingSimitJob::dispatch($id_cita, $doc_cliente, $metodo_actual)->onQueue('Scraping');
                     }
+                    
 
                     try {
                         $saveliquidador = DB::table('tb_liquidador')->insert([
