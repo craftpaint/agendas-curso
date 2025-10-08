@@ -15,6 +15,8 @@ use App\Services\ScrapingService;
 class ScrapingSimitJob implements ShouldQueue {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public $tries = 5;
+
     protected $id_cita;
     protected $doc_cliente;
     protected $metodo_actual;
@@ -44,8 +46,21 @@ class ScrapingSimitJob implements ShouldQueue {
                     'metadata_simit' => $scraping['Data']
                 ]);
         } else {
-            Log::error("El scraping para la cita " . $this->id_cita . " falló, por lo tanto se vuelve a agregar a la cola.");
-            ScrapingSimitJob::dispatch($this->id_cita, $this->doc_cliente, $this->metodo_actual)->onQueue('Scraping');
+            $attempt = $this->attempts();
+            $delays = [
+                1 => 7200,    // 2 horas
+                2 => 21600,   // 6 horas
+                3 => 43200,   // 12 horas
+            ];
+
+            $delay = $delays[$attempt] ?? 0;
+
+            if ($delay > 0) {
+                Log::warning("Scraping falló para cita {$this->id_cita}, intento #{$attempt}. Reintentando en {$delay} segundos.");
+                $this->release($delay);
+            } else {
+                Log::error("Scraping falló definitivamente para cita {$this->id_cita} después de {$attempt} intentos. Error: " . $e->getMessage());
+            }
         }
     }
 }
