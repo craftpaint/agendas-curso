@@ -15,7 +15,7 @@ use App\Services\ScrapingService;
 class ScrapingSimitJob implements ShouldQueue {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 5;
+    public $tries = 4;
 
     protected $id_cita;
     protected $doc_cliente;
