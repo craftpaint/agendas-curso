@@ -320,7 +320,7 @@ class LoadController extends Controller
                         ->value('config_value');
 
                     // Se valida si debe realizar el scraping o no
-                    if ($metodo_actual > 0) {
+                    if ($metodo_actual > 0 && !$citas_agendadas) {
                         ScrapingSimitJob::dispatch($id_cita, $doc_cliente, $metodo_actual)->onQueue('Scraping');
                     }
                     
