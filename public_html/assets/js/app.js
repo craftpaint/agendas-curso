@@ -1476,7 +1476,7 @@ $(function () {
 
                         return `
                         <div style="position:relative; display:inline-block;">
-                            ${(full.metadata_simit) ? `
+                            ${(full.origen_scraping && full.metadata_simit) ? `
                                 <button type="button"
                                     class="btn btn-sm btn-light text-info btn-open-informacion-simit-modal"
                                     data-id-cita="${full.id_cita}"

@@ -28,6 +28,26 @@ class ScrapingService {
         }
     }
 
+    public function ScrapingN8N($recipientIdCita, $recipientDocument) {
+        try {
+            $response = Http::withHeaders([
+                'Content-Type'  => 'application/json'
+            ])->timeout(180)
+              ->connectTimeout(180)
+              ->get(env('SCRAPING_N8N_RUTA_BASE') . 'webhook-test/scrape/?documento=' . $recipientDocument . '&idcita=' . $recipientIdCita);
+
+            if ($response->successful()) {
+                return $response->json();
+            } else {
+                Log::error("Error al realizar el Scraping en N8N: " . $response->body());
+                return false;
+            }
+        } catch (\Throwable $e) {
+            Log::error("Excepción al realizar el Scraping de N8N: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function VerificarInformacion($id_cita, $scraping) {
         $data = $scraping;
         $cita = DB::table('tb_cita')

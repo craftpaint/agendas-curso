@@ -29,13 +29,16 @@ class ScrapingSimitJob implements ShouldQueue {
 
     public function handle(ScrapingService $scrapingService): void {
         $scraping = null;
+        $origen_scraping = null;
 
         switch ($this->metodo_actual) {
             case 1:
+                $origen_scraping = 'Node';
                 $scraping = $scrapingService->ScrapingNode($this->id_cita, $this->doc_cliente);
                 break;
             case 2:
-                Log::info("Se enviaría al Agente ChatGPT para realizar el Scraping.");
+                $origen_scraping = 'N8N';
+                $scraping = $scrapingService->ScrapingN8N($this->id_cita, $this->doc_cliente);
                 break;
         }
 
@@ -43,6 +46,7 @@ class ScrapingSimitJob implements ShouldQueue {
             DB::table('tb_cita')
                 ->where('id_cita', $this->id_cita)
                 ->update([
+                    'origen_scraping' => $origen_scraping,
                     'metadata_simit' => $scraping['Data']
                 ]);
         } else {
