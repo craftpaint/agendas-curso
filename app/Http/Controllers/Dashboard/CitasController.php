@@ -2298,7 +2298,13 @@ class CitasController extends Controller
             $html .= '</div>';
             $html .= '<div class="col-md-12 ">';
             $html .= '<h3 class="text-center">Datos del SIMIT:</h3>';
-            $html .= '<iframe  style="width: 100%; height: 50vh; border: none;" src="' . env('SCRAPING_RUTA_BASE') . $metadata['urlHtml'] . '"></iframe>';
+
+            if ($cita->origen_scraping == 'Node') {
+                $html .= '<iframe  style="width: 100%; height: 50vh; border: none;" src="' . env('SCRAPING_RUTA_BASE') . $metadata['urlHtml'] . '"></iframe>';
+            } else if ($cita->origen_scraping == 'N8N') {
+                $html .= '<iframe  style="width: 100%; height: 50vh; border: none;" src="' . env('SCRAPING_N8N_RUTA_BASE') . $metadata['urlHtml'] . '"></iframe>';
+            }
+            
             $html .= '</div>';
             $html .= '</div>';
             
