@@ -26,8 +26,9 @@ Route::controller(LoadController::class)->group(function () {
     Route::get('detalles-cita/{id}', 'getDetallesCita');
 });
 
-Route::controller(sedesController::class)->group(function () {
+Route::controller(SedesController::class)->group(function () {
     Route::get('obtener-ubicaciones', 'obtenerUbicaciones');
+    Route::get('validar-sede-participante/{contact_id}', 'validarSedeParticipante');
 });
 
 Route::controller(EmpresasController::class)->group(function () {
