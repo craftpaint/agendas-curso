@@ -937,7 +937,7 @@ class SedesController extends Controller
                     ->select('tb_ciudad.*')
                     ->first();
 
-                if ($ciudad && !empty($ciudad->nombre)) {
+                if ($ciudad && $ciudad->id_ciudad > 0 && !empty($ciudad->nombre)) {
                     if (mb_stripos($ciudad->nombre, 'Bogotá') !== false) {
                         $respuesta['Status'] = 200;
                         $respuesta['Message'] = 'La sede es participante del concurso.';
