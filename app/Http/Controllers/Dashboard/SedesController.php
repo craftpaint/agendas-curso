@@ -12,8 +12,7 @@ use App\Helpers\AdminHelper;
 
 class SedesController extends Controller
 {
-    public function index()
-    {
+    public function index() {
         $user = Auth::user();
         $data = [
             'page' => 'Sedes',
@@ -33,9 +32,9 @@ class SedesController extends Controller
         echo view('dashboard.sedes.index', $data);
         echo view('layouts.footer', $data);
     }
+
     //Obtener las actividades de la base de datos
-    public function get_sedes(Request $request)
-    {
+    public function get_sedes(Request $request) {
         if ($request->ajax()) {
             $objLoad = ['validate' => false];
             //Ejecución de la funcion
@@ -102,9 +101,9 @@ class SedesController extends Controller
             return response()->json($objLoad);
         }
     }
+
     //Ver sede
-    public function add()
-    {
+    public function add() {
         $user = Auth::user();
         $data = [
             'page' => 'Sedes',
@@ -127,9 +126,9 @@ class SedesController extends Controller
         echo view('dashboard.sedes.add', $data);
         echo view('layouts.footer', $data);
     }
+
     //Obtener las actividades de la base de datos
-    public function save(Request $request)
-    {
+    public function save(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -206,8 +205,7 @@ class SedesController extends Controller
         }
     }
     //Ver sede
-    public function edit($id)
-    {
+    public function edit($id) {
         $user = Auth::user();
         $data = [
             'page' => 'Sedes',
@@ -232,9 +230,9 @@ class SedesController extends Controller
         echo view('dashboard.sedes.edit', $data);
         echo view('layouts.footer', $data);
     }
+
     //Obtener las actividades de la base de datos
-    public function update(Request $request)
-    {
+    public function update(Request $request) {
         if ($request->ajax()) {
 
             // 1. Validación de campos
@@ -346,9 +344,9 @@ class SedesController extends Controller
             return response()->json($objLoad);
         }
     }
+
     //Vamos a borrar la sede
-    public function delete_sede(Request $request)
-    {
+    public function delete_sede(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -373,8 +371,7 @@ class SedesController extends Controller
         }
     }
     //Horarios
-    public function configuracion()
-    {
+    public function configuracion() {
         $user = Auth::user();
         $data = [
             'page' => 'Sedes',
@@ -390,9 +387,9 @@ class SedesController extends Controller
         echo view('dashboard.sedes.configuracion', $data);
         echo view('layouts.footer', $data);
     }
+
     //Obtener las actividades de la base de datos
-    public function get_horarios(Request $request)
-    {
+    public function get_horarios(Request $request) {
         if ($request->ajax()) {
             $objLoad = ['validate' => false];
             //Ejecución de la funcion
@@ -419,9 +416,9 @@ class SedesController extends Controller
             return response()->json($objLoad);
         }
     }
+
     //Obtener las actividades de la base de datos
-    public function add_horarios(Request $request)
-    {
+    public function add_horarios(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -446,9 +443,9 @@ class SedesController extends Controller
             return response()->json($objLoad);
         }
     }
+
     //Vamos a borrar la sede
-    public function delete_horario(Request $request)
-    {
+    public function delete_horario(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -476,9 +473,9 @@ class SedesController extends Controller
             return response()->json($objLoad);
         }
     }
+
     //Obtener las actividades de la base de datos
-    public function get_festivos(Request $request)
-    {
+    public function get_festivos(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -508,8 +505,7 @@ class SedesController extends Controller
         }
     }
     //Obtener las actividades de la base de datos
-    public function add_festivos(Request $request)
-    {
+    public function add_festivos(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -534,8 +530,7 @@ class SedesController extends Controller
         }
     }
     //Vamos a borrar la sede
-    public function delete_festivos(Request $request)
-    {
+    public function delete_festivos(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -565,8 +560,7 @@ class SedesController extends Controller
         }
     }
     //Obtener las servicios de la base de datos
-    public function get_servicio(Request $request)
-    {
+    public function get_servicio(Request $request) {
         if ($request->ajax()) {
             $objLoad = ['validate' => false];
             //Ejecución de la funcion
@@ -594,8 +588,7 @@ class SedesController extends Controller
         }
     }
 
-    public static function get_ciudades(Request $request)
-    {
+    public static function get_ciudades(Request $request) {
         if ($request->ajax()) {
             $objLoad = ['validate' => false];
             //Ejecución de la funcion
@@ -659,8 +652,7 @@ class SedesController extends Controller
         }
     }
 
-    public function get_ciudad(Request $request)
-    {
+    public function get_ciudad(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -686,8 +678,7 @@ class SedesController extends Controller
     }
 
     //CREAR CIUDAD
-    public function add_ciudad(Request $request)
-    {
+    public function add_ciudad(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'status' => 500,
@@ -722,9 +713,9 @@ class SedesController extends Controller
             return response()->json($objLoad);
         }
     }
+
     //ACTUALIZAR CIUDAD
-    public function save_ciudad(Request $request)
-    {
+    public function save_ciudad(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'status' => 500,
@@ -763,9 +754,9 @@ class SedesController extends Controller
             return response()->json($objLoad);
         }
     }
+
     //CAMBIAR ESTADO CIUDAD
-    public function change_estado_ciudad(Request $request)
-    {
+    public function change_estado_ciudad(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'status' => 500,
@@ -804,10 +795,8 @@ class SedesController extends Controller
         }
     }
 
-
     //Obtener las servicios de la base de datos
-    public function get_servicio_by_id_sede(Request $request)
-    {
+    public function get_servicio_by_id_sede(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -833,9 +822,9 @@ class SedesController extends Controller
             return response()->json($objLoad);
         }
     }
+
     //agregar servicio de la base de datos
-    public function add_servicio(Request $request)
-    {
+    public function add_servicio(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -858,9 +847,9 @@ class SedesController extends Controller
             return response()->json($objLoad);
         }
     }
+
     //Vamos a borrar la sede
-    public function delete_servicio(Request $request)
-    {
+    public function delete_servicio(Request $request) {
         if ($request->ajax()) {
             $objLoad = [
                 'validate' => false,
@@ -889,8 +878,7 @@ class SedesController extends Controller
         }
     }
 
-    public function obtenerUbicaciones()
-    {
+    public function obtenerUbicaciones() {
         // Obtener todas las ciudades con sus sedes relacionadas
         $ciudades = DB::table('tb_ciudad')
             ->select('id_ciudad', 'nombre', 'latitud', 'longitud', 'nivel_zoom')
@@ -929,5 +917,48 @@ class SedesController extends Controller
         }
 
         return response()->json($resultado);
+    }
+
+    public function validarSedeParticipante($contact_id) {
+        $respuesta = [
+            'Status' => 500,
+            'Message' => 'Error al validar si la sede es participante',
+            'Success' => false,
+            'Data' => null
+        ];
+
+        try {
+            if($contact_id) {
+                $ciudad = DB::table('tb_cita')
+                    ->join('tb_sede', 'tb_cita.id_sede', '=', 'tb_sede.id_sede')
+                    ->join('tb_ciudad', 'tb_sede.id_ciudad', '=', 'tb_ciudad.id_ciudad')
+                    ->where('tb_cita.id_whatsapp_sendpulse', $contact_id)
+                    ->orderBy('tb_cita.id_cita', 'desc')
+                    ->select('tb_ciudad.*')
+                    ->first();
+
+                if ($ciudad && !empty($ciudad)) {
+                    if (mb_stripos($ciudad->nombre, 'Bogotá') !== false) {
+                        $respuesta['Status'] = 200;
+                        $respuesta['Message'] = 'La sede es participante del concurso.';
+                        $respuesta['Success'] = true;
+                        $respuesta['Data'] = true;
+                    } else {
+                        $respuesta['Status'] = 200;
+                        $respuesta['Message'] = 'La sede no es participante del concurso.';
+                        $respuesta['Success'] = true;
+                        $respuesta['Data'] = false;
+                    }
+                } else {
+                    $respuesta['Message'] = 'No se encontró una sede participante para el contact_id proporcionado';
+                }
+            } else {
+                $respuesta['Message'] = 'No se proporcionó el contact_id';
+            }
+        } catch (\Throwable $e) {
+            Log::error('Error al validar si la sede es participante: ' . $e->getMessage());
+            $respuesta['Message'] = 'Error al validar si la sede es participante';
+        }
+        return response()->json($respuesta);
     }
 }
