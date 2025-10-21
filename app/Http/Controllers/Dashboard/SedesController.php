@@ -928,6 +928,8 @@ class SedesController extends Controller
         ];
 
         try {
+            Log::info("Validando sede participante para contact_id: " . $contact_id);
+            
             if($contact_id) {
                 $ciudad = DB::table('tb_cita')
                     ->join('tb_sede', 'tb_cita.id_sede', '=', 'tb_sede.id_sede')
