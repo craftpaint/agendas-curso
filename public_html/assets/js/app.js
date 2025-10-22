@@ -807,6 +807,144 @@ $(function () {
             $('.content_ciudad_add').fadeIn(200);
         });
     }
+
+    // Tabla de LOCALIDADES
+    if ($('.datatables-localidades').length) {
+        table_localidades = $('.datatables-localidades').DataTable({
+            lengthChange: true,
+            searching: true,
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            info: true,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
+                info: "Mostrando _START_ a _END_ de _MAX_ registros",
+                infoEmpty: "No hay datos disponibles",
+                infoFiltered: "(filtrados de un total de _MAX_ registros)"
+            },
+            ajax: {
+                url: url + '/dashboard/sedes/get_localidades',
+                type: "POST",
+                dataSrc: function (json) {
+                    // Se extraen los datos para la información de la tabla
+                    json.draw = json.Data.draw;
+                    json.recordsTotal = json.Data.recordsTotal;
+                    json.recordsFiltered = json.Data.recordsFiltered;
+
+                    // Se retornan los datos de las localidades
+                    return json.Data.localidades;
+                }
+            },
+            column: [{ data: '' }],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        return full.nombre_localidad;
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return full.latitud + ', ' + full.longitud;
+                    }
+                },
+                {
+                    targets: 2,
+                    render: function (data, type, full, meta) {
+                        return '<i class="tf-icons ti ti-zoom-scan ti-md"></i>' + full.nivel_zoom;
+                    }
+                },
+                {
+                    targets: 3,
+                    render: function (data, type, full, meta) {
+                        if (full.deleted_at == null) {
+                            return '<span class="badge bg-label-success">ACTIVO</span>';
+                        }
+                        return '<span class="badge bg-label-danger">INACTIVO</span>';
+                    }
+                },
+                {
+                    targets: 4,
+                    render: function (data, type, full, meta) {
+                        return `
+                        <div class="d-flex justify-content-end">
+                            ${(canEditLocalidades) ? `
+                                <a href="#" data-id_localidad="${full.id_localidad}" class="btn_edit_localidad btn btn-icon btn-label-primary waves-effect me-2">
+                                    <i class="tf-icons ti ti-edit ti-md"></i>
+                                </a>` : ``}
+                            ${(canDeleteLocalidades) ? `
+                                <a href="#" data-id_localidad="${full.id_localidad}" class="btn_desactivar_localidad btn btn-icon btn-label-danger waves-effect">
+                                    <i class="tf-icons ti ti-map-pin-x ti-md"></i>
+                                </a>` : ``}
+                        </div>`;
+                    }
+                },
+
+            ],
+            pagingType: "simple"
+        });
+
+        // Editar localidad
+        $('.datatables-localidades').on('click', '.btn_edit_localidad', function () {
+            let id_localidad = $(this).data('id_localidad');
+            $.ajax({
+                url: url + '/dashboard/sedes/get_localidad',
+                type: 'POST',
+                data: { id_localidad: id_localidad },
+                success: function (response) {
+                    $('.content_localidad_edit input[name="id_localidad"]').val(id_localidad);
+                    $('.content_localidad_edit input[name="nombre_localidad"]').val(response.data.nombre_localidad);
+                    $('.content_localidad_edit input[name="longitud_localidad"]').val(response.data.longitud);
+                    $('.content_localidad_edit input[name="latitud_localidad"]').val(response.data.latitud);
+                    $('.content_localidad_edit input[name="nivel_zoom_localidad"]').val(response.data.nivel_zoom);
+                    $('.content_localidad_add').hide();
+                    $('.content_localidad_edit').fadeIn(200);
+                }
+            });
+        });
+
+        // Desactivar localidad
+        $('.datatables-localidades').on('click', '.btn_desactivar_localidad', function () {
+            let id_localidad = $(this).data('id_localidad');
+
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: '¡Todas las sedes asociadas a esta localidad serán desactivadas!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '¡Sí, desactivar!',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-outline-danger ml-1'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url + '/dashboard/sedes/change_estado_localidad',
+                        type: 'POST',
+                        data: { id_localidad: id_localidad },
+                        success: function (data) {
+                            if (data.validate) {
+                                table_localidades.ajax.reload();
+                            } else {
+                                alertNotify('¡Error!', data.text, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        $('.add_localidad').click(function () {
+            $('.content_localidad_edit').hide();
+            $('.content_localidad_add').fadeIn(200);
+        });
+    }
+    
     //FIN: HORARIOS------------------------------------------------------------------------
     if ($('.form-repeater').length) {
         a_dias.forEach(function (item, index) {

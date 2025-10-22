@@ -161,6 +161,18 @@ Route::controller(SedesController::class)->group(function () {
     Route::post('dashboard/sedes/save_ciudad', 'save_ciudad')
         ->middleware(['auth', 'prevent.cache', 'verified', 'permission:sede.Ciudades.e']);
 
+    // Rutas para localidades
+    Route::post('dashboard/sedes/get_localidades', 'get_localidades')
+        ->middleware(['auth', 'prevent.cache', 'verified', 'permission:sede.Localidades.v']);
+    Route::post('dashboard/sedes/add_localidad', 'add_localidad')
+        ->middleware(['auth', 'prevent.cache', 'verified', 'permission:sede.Localidades.a']);
+    Route::post('dashboard/sedes/get_localidad', 'get_localidad')
+        ->middleware(['auth', 'prevent.cache', 'verified', 'permission:sede.Localidades.e']);
+    Route::post('dashboard/sedes/edit_localidad', 'edit_localidad')
+        ->middleware(['auth', 'prevent.cache', 'verified', 'permission:sede.Localidades.e']);
+    Route::post('dashboard/sedes/change_estado_localidad', 'change_estado_localidad')
+        ->middleware(['auth', 'prevent.cache', 'verified', 'permission:sede.Localidades.d']);
+
     Route::get('no-api/obtener-ubicaciones', 'obtenerUbicaciones');
 })->name('sedes');
 
