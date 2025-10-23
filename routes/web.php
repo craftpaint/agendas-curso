@@ -14,6 +14,7 @@ use App\Http\Controllers\Dashboard\RolesController;
 use App\Http\Controllers\Dashboard\PermissionsController;
 use App\Http\Controllers\Dashboard\EmpresasController;
 use App\Http\Controllers\Dashboard\PaquetesController;
+use App\Http\Controllers\Dashboard\ConfiguracionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -493,5 +494,18 @@ Route::controller(PaquetesController::class)->group(function () {
     Route::post('dashboard/paquetes/actualizar/{id}', 'actualizarPaquete')
         ->middleware(['auth', 'prevent.cache', 'verified', 'permission:paquete.listado.e']);
 })->name('paquetes');
+
+Route::controller(ConfiguracionController::class)->group(function () {
+    Route::get('dashboard/configuracion/general', 'index')
+        ->middleware(['auth', 'prevent.cache', 'verified', 'permission:configuracion.General.v']);
+    Route::post('dashboard/configuracion/obtener_configuracion_general', 'obtenerConfiguracionGeneral')
+        ->middleware(['auth', 'prevent.cache', 'verified', 'permission:configuracion.General.v']);
+    Route::post('dashboard/configuracion/guardar_configuracion_general', 'guardarConfiguracionGeneral')
+        ->middleware(['auth', 'prevent.cache', 'verified', 'permission:configuracion.General.a']);
+    Route::post('dashboard/configuracion/actualizar_configuracion_general/{clave_original}', 'actualizarConfiguracionGeneral')
+        ->middleware(['auth', 'prevent.cache', 'verified', 'permission:configuracion.General.e']);
+    Route::delete('dashboard/configuracion/eliminar_configuracion_general', 'eliminarConfiguracionGeneral')
+        ->middleware(['auth', 'prevent.cache', 'verified', 'permission:configuracion.General.d']);
+})->name('configuracion');
 
 require __DIR__ . '/auth.php';

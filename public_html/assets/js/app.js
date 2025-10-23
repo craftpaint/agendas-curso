@@ -5791,5 +5791,162 @@ $(function () {
             }
         });
     }
+
+    // TABLAS DE CONFIGURACIÓN
+    var table_configuracion_general;
+
+    if ($('.datatables-configuracion-general').length) {
+        table_configuracion_general = $('.datatables-configuracion-general').DataTable({
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            searching: false,
+            info: true,
+            pageLength: 10,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
+                info: "Mostrando _START_ a _END_ de _MAX_ registros",
+                infoEmpty: "No hay datos disponibles",
+                infoFiltered: "(filtrados de un total de _MAX_ registros)"
+            },
+            dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+            ajax: {
+                url: url + '/dashboard/configuracion/obtener_configuracion_general',
+                type: 'POST',
+                dataSrc: function (json) {
+                    // Se extraen los datos para la información de la tabla
+                    json.draw = json.Data.draw;
+                    json.recordsTotal = json.Data.recordsTotal;
+                    json.recordsFiltered = json.Data.recordsFiltered;
+
+                    // Se retorna los datos de las configuraciones generales
+                    return json.Data.configuraciones_generales;
+                }
+            },
+            columns: [
+                { data: 'config_key' },
+                { data: 'config_value' },
+                { data: null, visible: (canEditConfiguracionGeneral || canDeleteConfiguracionGeneral) ? true : false }
+            ],
+            columnDefs: [
+                {
+                    targets: '_all',
+                    className: 'dt-center'
+                },
+                {
+                    targets: 2,
+                    orderable: false,
+                    render: function (data) {
+                        return `
+                            ${(canEditConfiguracionGeneral) ? `
+                                <button class="btn btn-icon btn-label-info waves-effect btn-editar-configuracion-general" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-info" title="Editar"
+                                    data-clave-configuracion-general="${data.config_key}" data-valor-configuracion-general="${data.config_value}">
+                                    <i class="ti ti-settings-code"></i>
+                                </button>` : ''}
+                            ${(canDeleteConfiguracionGeneral) ? `
+                                <button class="btn btn-icon btn-label-danger waves-effect btn-eliminar-configuracion-general" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-danger" title="Eliminar"
+                                    data-clave-configuracion-general="${data.config_key}">
+                                    <i class="ti ti-settings-cancel"></i>
+                                </button>` : ''}
+                        `;
+                    }
+                }
+            ],
+            drawCallback: function (settings) {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            },
+            pagingType: "simple"
+        });
+
+        $('#crear-configuracion-general').on('click', function () {
+            $('#modalNuevaConfiguracionGeneralLabel').text('Crear Configuración General');
+            $('#form-nueva-configuracion-general').attr('action', url + '/dashboard/configuracion/guardar_configuracion_general');
+            $('#form-nueva-configuracion-general')[0].reset();
+            $('#modalNuevaConfiguracionGeneral').modal('show');
+        });
+
+        //Formulario para crear una nueva configuración general
+        $('#form-nueva-configuracion-general').on('submit', function (event) {
+            event.preventDefault();
+            let action = $(this).attr('action');
+            let formData = $(this).serialize();
+
+            $.ajax({
+                url: action,
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    if (response.Success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Exito!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        }).then(() => {
+                            table_configuracion_general.ajax.reload();
+                            $('#modalNuevaConfiguracionGeneral').modal('hide');
+                            $('#form-nueva-configuracion-general')[0].reset();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: response.Message
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al enviar los datos.'
+                    });
+                }
+            });
+        });
+
+        $('.datatables-configuracion-general').on('click', '.btn-editar-configuracion-general', function () {
+            const clave = $(this).data('clave-configuracion-general');
+            const valor = $(this).data('valor-configuracion-general');
+
+            $('#modalNuevaConfiguracionGeneralLabel').text('Editar Configuración General');
+            $('#form-nueva-configuracion-general').attr('action', url + '/dashboard/configuracion/actualizar_configuracion_general/' + clave);
+            $('#clave-configuracion-general').val(clave);
+            $('#valor-configuracion-general').val(valor);
+
+            $('#modalNuevaConfiguracionGeneral').modal('show');
+        });
+
+        // Eliminar configuración general
+        $('.datatables-configuracion-general').on('click', '.btn-eliminar-configuracion-general', function () {
+            const clave_configuracion_general = $(this).data('clave-configuracion-general');
+
+            $.ajax({
+            url: url + '/dashboard/configuracion/eliminar_configuracion_general',
+            type: 'DELETE',
+            data: {
+                clave: clave_configuracion_general
+            },
+            success: function () {
+                // Destruir todos los tooltips activos antes de recargar la tabla
+                var tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                tooltips.forEach(function (el) {
+                    var instance = bootstrap.Tooltip.getInstance(el);
+                    if (instance) {
+                        instance.dispose();
+                    }
+                });
+
+                table_configuracion_general.ajax.reload();
+            }
+        });
+        });
+    }
 });
 

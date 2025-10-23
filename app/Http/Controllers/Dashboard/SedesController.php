@@ -228,6 +228,8 @@ class SedesController extends Controller
         $data['empresas'] = $empresas;
         $ciudades = AdminHelper::get_ciudades_activas();
         $data['ciudades'] = $ciudades;
+        $localidades = DB::table('tb_localidad')->orderBy('nombre_localidad', 'asc')->get();
+        $data['localidades'] = $localidades;
         $alert = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
         $data['alert'] = $alert;
         $data['sede'] = AdminHelper::get_sede_by_id($id);
@@ -263,6 +265,10 @@ class SedesController extends Controller
                 'latitud_sede'    => 'required|string|max:50',
                 'longitud_sede'   => 'required|string|max:50',
                 'id_ciudad'       => 'required|integer|exists:tb_ciudad,id_ciudad',
+                'barrio'          => 'nullable|string|max:100',
+                'url_video'       => 'nullable|string|max:150',
+                'url_imagen'      => 'nullable|string|max:150',
+                'id_localidad'    => 'nullable|integer|exists:tb_localidad,id_localidad'
             ]);
 
             $id_sede = $data['id_sede'];
@@ -289,6 +295,10 @@ class SedesController extends Controller
                             'horario'           => $data['horario_sede'],
                             'id_ciudad'         => $data['id_ciudad'],
                             'festivos_sede'     => serialize($data['festivos_sede'] ?? []),
+                            'barrio'            => $data['barrio'] ?? null,
+                            'url_video'         => $data['url_video'] ?? null,
+                            'url_imagen'        => $data['url_imagen'] ?? null,
+                            'id_localidad'      => $data['id_localidad'] ?? null
                         ]);
                 } catch (\Throwable $e) {
                     Log::error('Error al actualizar la sede: ' . $e->getMessage());

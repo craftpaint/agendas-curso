@@ -153,6 +153,11 @@
         var canEditPaquetes = <?= json_encode($user->can('paquete.listado.e')); ?>;
         var canDeletePaquetes = <?= json_encode($user->can('paquete.listado.d')); ?>;
         
+        // Permisos para el módulo de configuración general
+        var canViewConfiguracionGeneral = <?= json_encode($user->can('configuracion.General.v')); ?>;
+        var canEditConfiguracionGeneral = <?= json_encode($user->can('configuracion.General.e')); ?>;
+        var canAddConfiguracionGeneral = <?= json_encode($user->can('configuracion.General.a')); ?>;
+        var canDeleteConfiguracionGeneral = <?= json_encode($user->can('configuracion.General.d')); ?>;
     </script>
 
 </head>
