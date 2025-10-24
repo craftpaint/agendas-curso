@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -187,5 +189,140 @@ class UtilsHelper {
             }
         }
         return true;
+    }
+
+    public static function enviarNotificacionSedes() {
+        $secretKey = DB::table('tb_config')
+            ->where('config_key', 'encryption_key')
+            ->first();
+        $rutasEnvio = DB::table('tb_config')
+            ->where('config_key', 'url_send_sedes_json')
+            ->first();
+
+        if (($rutasEnvio && !empty($rutasEnvio->config_value)) && ($secretKey && !empty($secretKey->config_value))) {
+            $sedes = DB::table('tb_sede')
+                ->leftJoin('tb_localidad', 'tb_sede.id_localidad', '=', 'tb_localidad.id_localidad')
+                ->leftJoin('tb_ciudad', 'tb_sede.id_ciudad', '=', 'tb_ciudad.id_ciudad')
+                ->select(
+                    'tb_sede.id_sede as id_sede',
+                    'tb_sede.nombre_sede as nombre_sede',
+                    'tb_sede.direccion_sede as direccion_sede',
+                    'tb_sede.tel_sede as telefono_sede',
+                    'tb_sede.estado_sede as estado_sede',
+                    'tb_sede.festivos_sede as festivos_sede',
+                    'tb_sede.latitud as latitud_sede',
+                    'tb_sede.longitud as longitud_sede',
+                    'tb_sede.horario as horario_sede',
+                    'tb_sede.barrio as barrio_sede',
+                    'tb_sede.url_video as url_video_sede',
+                    'tb_sede.url_imagen as url_imagen_sede',
+                    'tb_sede.created_at as created_at_sede',
+                    'tb_sede.updated_at as updated_at_sede',
+                    'tb_sede.id_localidad as id_localidad',
+                    'tb_localidad.nombre_localidad as nombre_localidad',
+                    'tb_localidad.latitud as latitud_localidad',
+                    'tb_localidad.longitud as longitud_localidad',
+                    'tb_localidad.nivel_zoom as nivel_zoom_localidad',
+                    'tb_localidad.created_at as created_at_localidad',
+                    'tb_localidad.updated_at as updated_at_localidad',
+                    'tb_localidad.deleted_at as deleted_at_localidad',
+                    'tb_sede.id_ciudad as id_ciudad',
+                    'tb_ciudad.nombre as nombre_ciudad',
+                    'tb_ciudad.latitud as latitud_ciudad',
+                    'tb_ciudad.longitud as longitud_ciudad',
+                    'tb_ciudad.nivel_zoom as nivel_zoom_ciudad',
+                    'tb_ciudad.estado as estado_ciudad',
+                    'tb_ciudad.created_at as created_at_ciudad',
+                    'tb_ciudad.updated_at as updated_at_ciudad',
+                    'tb_ciudad.deleted_at as deleted_at_ciudad'
+                )
+                ->get()
+                ->map(function ($item) {
+                    $data = [
+                        'sede' => [
+                            'id' => $item->id_sede,
+                            'nombre' => $item->nombre_sede,
+                            'direccion' => $item->direccion_sede,
+                            'telefono' => $item->telefono_sede,
+                            'estado' => $item->estado_sede,
+                            'festivos' => json_decode($item->festivos_sede),
+                            'latitud' => $item->latitud_sede,
+                            'longitud' => $item->longitud_sede,
+                            'horario' => $item->horario_sede,
+                            'barrio' => $item->barrio_sede,
+                            'url_video' => $item->url_video_sede,
+                            'url_imagen' => $item->url_imagen_sede,
+                            'fecha_creacion' => $item->created_at_sede,
+                            'fecha_actualizacion' => $item->updated_at_sede
+                        ]
+                    ];
+
+                    if ($item->id_localidad != null && $item->id_localidad != 0) {
+                        $data['localidad']  = [
+                            'nombre' => $item->nombre_localidad,
+                            'latitud' => $item->latitud_localidad,
+                            'longitud' => $item->longitud_localidad,
+                            'nivel_zoom' => $item->nivel_zoom_localidad,
+                            'fecha_creacion' => $item->created_at_localidad,
+                            'fecha_actualizacion' => $item->updated_at_localidad,
+                            'fecha_eliminacion' => $item->deleted_at_localidad
+                        ];
+                    }
+
+                    if ($item->id_ciudad != null && $item->id_ciudad != 0) {
+                        $data['ciudad']  = [
+                            'nombre' => $item->nombre_ciudad,
+                            'latitud' => $item->latitud_ciudad,
+                            'longitud' => $item->longitud_ciudad,
+                            'nivel_zoom' => $item->nivel_zoom_ciudad,
+                            'estado' => $item->estado_ciudad,
+                            'fecha_creacion' => $item->created_at_ciudad,
+                            'fecha_actualizacion' => $item->updated_at_ciudad,
+                            'fecha_eliminacion' => $item->deleted_at_ciudad
+                        ];
+                    }
+                    return $data;
+                });
+            
+            // Enviar datos por POST a la URL configurada
+            $rutas = json_decode($rutasEnvio->config_value);
+
+            foreach ($rutas as $ruta) {
+                try {
+                    $body = [
+                        'fecha_envio' => Carbon::now(),
+                        'sedes' => $sedes
+                    ];
+                    $textoPlano = json_encode($body, JSON_UNESCAPED_UNICODE);
+                    $key = hash('sha256', $secretKey->config_value, true);
+                    $iv = random_bytes(16);
+                    $textoCifrado = openssl_encrypt($textoPlano, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
+
+                    if ($textoCifrado === false) {
+                        Log::error("Error al cifrar los datos de las sedes para enviar a: " . $ruta->nombre_sitio);
+                    } else {
+                        $hmac = hash_hmac('sha256', $iv . $textoCifrado, $secretKey->config_value, true);
+
+                        $toSend = [
+                            'iv' => base64_encode($iv),
+                            'data' => base64_encode($textoCifrado),
+                            'hmac' => base64_encode($hmac),
+                        ];
+
+                        $response = Http::withHeaders([
+                            'Content-Type'  => 'application/json'
+                        ])->post($ruta->url, $toSend);
+                        
+                        if ($response->successful()) {
+                            Log::info("Información de sedes enviada correctamente a: " . $ruta->nombre_sitio);
+                        } else {
+                            Log::error("Error al enviar información de sedes a: " . $ruta->nombre_sitio . " - ". $ruta->url . " ERROR: " . $response->body());
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::error("Excepción al enviar la información actualizada de las sedes a todos los sitios: " . $e->getMessage());
+                }
+            }
+        }
     }
 }

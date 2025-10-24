@@ -5834,6 +5834,17 @@ $(function () {
                     className: 'dt-center'
                 },
                 {
+                    targets: 1,
+                    createdCell: function (td) {
+                        $(td).css({
+                            'max-width': '200px',
+                            'white-space': 'nowrap',
+                            'overflow': 'hidden',
+                            'text-overflow': 'ellipsis'
+                        });
+                    }
+                },
+                {
                     targets: 2,
                     orderable: false,
                     render: function (data) {

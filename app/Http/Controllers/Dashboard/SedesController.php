@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use App\Helpers\AdminHelper;
+use App\Helpers\UtilsHelper;
 
 class SedesController extends Controller
 {
@@ -97,6 +98,7 @@ class SedesController extends Controller
                 Log::error($e->getMessage());
                 $objLoad['text'] = 'Error al obtener los datos';
             }
+
             //retornar respuesta
             return response()->json($objLoad);
         }
@@ -208,6 +210,8 @@ class SedesController extends Controller
                         "id" => $id_sede
                     );
                 }
+
+                UtilsHelper::enviarNotificacionSedes();
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
@@ -359,6 +363,8 @@ class SedesController extends Controller
                     "text" => 'Sede actualizada correctamente',
                     "id" => $id_sede
                 );
+
+                UtilsHelper::enviarNotificacionSedes();
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
@@ -384,6 +390,8 @@ class SedesController extends Controller
                     "validate" => true,
                     "text" => 'Sede borrada correctamente'
                 );
+
+                UtilsHelper::enviarNotificacionSedes();
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
@@ -457,6 +465,7 @@ class SedesController extends Controller
                         "validate" => true,
                         "text" => 'Horario guardado correctamente'
                     );
+                    UtilsHelper::enviarNotificacionSedes();
                 }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
@@ -487,6 +496,8 @@ class SedesController extends Controller
                     "validate" => true,
                     "text" => 'Horario borrado correctamente'
                 );
+
+                UtilsHelper::enviarNotificacionSedes();
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
@@ -543,6 +554,7 @@ class SedesController extends Controller
                         "validate" => true,
                         "text" => 'Festivo guardado correctamente'
                     );
+                    UtilsHelper::enviarNotificacionSedes();
                 }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
@@ -573,6 +585,7 @@ class SedesController extends Controller
                     "validate" => true,
                     "text" => 'Festivo borrado correctamente'
                 );
+                UtilsHelper::enviarNotificacionSedes();
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
@@ -727,6 +740,7 @@ class SedesController extends Controller
                         "validate" => true,
                         "message" => 'La ciudad ha sido guardada correctamente'
                     );
+                    UtilsHelper::enviarNotificacionSedes();
                 }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
@@ -767,6 +781,7 @@ class SedesController extends Controller
                         "validate" => true,
                         "message" => 'La ciudad ha sido guardada correctamente'
                     );
+                    UtilsHelper::enviarNotificacionSedes();
                 }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
@@ -808,6 +823,7 @@ class SedesController extends Controller
                         "validate" => true,
                         "message" => 'La ciudad ha sido guardada correctamente'
                     );
+                    UtilsHelper::enviarNotificacionSedes();
                 }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
@@ -925,6 +941,7 @@ class SedesController extends Controller
                         "validate" => true,
                         "message" => 'La localidad ha sido guardada correctamente'
                     );
+                    UtilsHelper::enviarNotificacionSedes();
                 }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
@@ -965,6 +982,7 @@ class SedesController extends Controller
                         "validate" => true,
                         "message" => 'La localidad ha sido guardada correctamente'
                     );
+                    UtilsHelper::enviarNotificacionSedes();
                 }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
@@ -1005,6 +1023,7 @@ class SedesController extends Controller
                         "validate" => true,
                         "message" => 'La localidad ha sido guardada correctamente'
                     );
+                    UtilsHelper::enviarNotificacionSedes();
                 }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
