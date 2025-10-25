@@ -199,6 +199,10 @@ class UtilsHelper {
             ->where('config_key', 'url_send_sedes_json')
             ->first();
 
+        $numeroPrincipal = DB::table('tb_config')
+            ->where('config_key', 'primary_contact_number')
+            ->first();
+
         if (($rutasEnvio && !empty($rutasEnvio->config_value)) && ($secretKey && !empty($secretKey->config_value))) {
             $sedes = DB::table('tb_sede')
                 ->leftJoin('tb_localidad', 'tb_sede.id_localidad', '=', 'tb_localidad.id_localidad')
@@ -291,8 +295,10 @@ class UtilsHelper {
                 try {
                     $body = [
                         'fecha_envio' => Carbon::now(),
-                        'sedes' => $sedes
+                        'sedes' => $sedes,
+                        'numero_principal' => $numeroPrincipal->config_value
                     ];
+                    
                     $textoPlano = json_encode($body, JSON_UNESCAPED_UNICODE);
                     $key = hash('sha256', $secretKey->config_value, true);
                     $iv = random_bytes(16);
