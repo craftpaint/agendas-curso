@@ -807,6 +807,144 @@ $(function () {
             $('.content_ciudad_add').fadeIn(200);
         });
     }
+
+    // Tabla de LOCALIDADES
+    if ($('.datatables-localidades').length) {
+        table_localidades = $('.datatables-localidades').DataTable({
+            lengthChange: true,
+            searching: true,
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            info: true,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
+                info: "Mostrando _START_ a _END_ de _MAX_ registros",
+                infoEmpty: "No hay datos disponibles",
+                infoFiltered: "(filtrados de un total de _MAX_ registros)"
+            },
+            ajax: {
+                url: url + '/dashboard/sedes/get_localidades',
+                type: "POST",
+                dataSrc: function (json) {
+                    // Se extraen los datos para la información de la tabla
+                    json.draw = json.Data.draw;
+                    json.recordsTotal = json.Data.recordsTotal;
+                    json.recordsFiltered = json.Data.recordsFiltered;
+
+                    // Se retornan los datos de las localidades
+                    return json.Data.localidades;
+                }
+            },
+            column: [{ data: '' }],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, full, meta) {
+                        return full.nombre_localidad;
+                    }
+                },
+                {
+                    targets: 1,
+                    render: function (data, type, full, meta) {
+                        return full.latitud + ', ' + full.longitud;
+                    }
+                },
+                {
+                    targets: 2,
+                    render: function (data, type, full, meta) {
+                        return '<i class="tf-icons ti ti-zoom-scan ti-md"></i>' + full.nivel_zoom;
+                    }
+                },
+                {
+                    targets: 3,
+                    render: function (data, type, full, meta) {
+                        if (full.deleted_at == null) {
+                            return '<span class="badge bg-label-success">ACTIVO</span>';
+                        }
+                        return '<span class="badge bg-label-danger">INACTIVO</span>';
+                    }
+                },
+                {
+                    targets: 4,
+                    render: function (data, type, full, meta) {
+                        return `
+                        <div class="d-flex justify-content-end">
+                            ${(canEditLocalidades) ? `
+                                <a href="#" data-id_localidad="${full.id_localidad}" class="btn_edit_localidad btn btn-icon btn-label-primary waves-effect me-2">
+                                    <i class="tf-icons ti ti-edit ti-md"></i>
+                                </a>` : ``}
+                            ${(canDeleteLocalidades) ? `
+                                <a href="#" data-id_localidad="${full.id_localidad}" class="btn_desactivar_localidad btn btn-icon btn-label-danger waves-effect">
+                                    <i class="tf-icons ti ti-map-pin-x ti-md"></i>
+                                </a>` : ``}
+                        </div>`;
+                    }
+                },
+
+            ],
+            pagingType: "simple"
+        });
+
+        // Editar localidad
+        $('.datatables-localidades').on('click', '.btn_edit_localidad', function () {
+            let id_localidad = $(this).data('id_localidad');
+            $.ajax({
+                url: url + '/dashboard/sedes/get_localidad',
+                type: 'POST',
+                data: { id_localidad: id_localidad },
+                success: function (response) {
+                    $('.content_localidad_edit input[name="id_localidad"]').val(id_localidad);
+                    $('.content_localidad_edit input[name="nombre_localidad"]').val(response.data.nombre_localidad);
+                    $('.content_localidad_edit input[name="longitud_localidad"]').val(response.data.longitud);
+                    $('.content_localidad_edit input[name="latitud_localidad"]').val(response.data.latitud);
+                    $('.content_localidad_edit input[name="nivel_zoom_localidad"]').val(response.data.nivel_zoom);
+                    $('.content_localidad_add').hide();
+                    $('.content_localidad_edit').fadeIn(200);
+                }
+            });
+        });
+
+        // Desactivar localidad
+        $('.datatables-localidades').on('click', '.btn_desactivar_localidad', function () {
+            let id_localidad = $(this).data('id_localidad');
+
+            Swal.fire({
+                title: '¿Estas seguro?',
+                text: '¡Todas las sedes asociadas a esta localidad serán desactivadas!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '¡Sí, desactivar!',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-outline-danger ml-1'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url + '/dashboard/sedes/change_estado_localidad',
+                        type: 'POST',
+                        data: { id_localidad: id_localidad },
+                        success: function (data) {
+                            if (data.validate) {
+                                table_localidades.ajax.reload();
+                            } else {
+                                alertNotify('¡Error!', data.text, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        $('.add_localidad').click(function () {
+            $('.content_localidad_edit').hide();
+            $('.content_localidad_add').fadeIn(200);
+        });
+    }
+    
     //FIN: HORARIOS------------------------------------------------------------------------
     if ($('.form-repeater').length) {
         a_dias.forEach(function (item, index) {
@@ -5651,6 +5789,174 @@ $(function () {
                     }
                 });
             }
+        });
+    }
+
+    // TABLAS DE CONFIGURACIÓN
+    var table_configuracion_general;
+
+    if ($('.datatables-configuracion-general').length) {
+        table_configuracion_general = $('.datatables-configuracion-general').DataTable({
+            ordering: true,
+            processing: true,
+            serverSide: true,
+            searching: false,
+            info: true,
+            pageLength: 10,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json', // Configuración de idioma español
+                info: "Mostrando _START_ a _END_ de _MAX_ registros",
+                infoEmpty: "No hay datos disponibles",
+                infoFiltered: "(filtrados de un total de _MAX_ registros)"
+            },
+            dom: '<"top px-4"fli>rt<"bottom"p><"clear">',
+            ajax: {
+                url: url + '/dashboard/configuracion/obtener_configuracion_general',
+                type: 'POST',
+                dataSrc: function (json) {
+                    // Se extraen los datos para la información de la tabla
+                    json.draw = json.Data.draw;
+                    json.recordsTotal = json.Data.recordsTotal;
+                    json.recordsFiltered = json.Data.recordsFiltered;
+
+                    // Se retorna los datos de las configuraciones generales
+                    return json.Data.configuraciones_generales;
+                }
+            },
+            columns: [
+                { data: 'config_key' },
+                { data: 'config_value' },
+                { data: null, visible: (canEditConfiguracionGeneral || canDeleteConfiguracionGeneral) ? true : false }
+            ],
+            columnDefs: [
+                {
+                    targets: '_all',
+                    className: 'dt-center'
+                },
+                {
+                    targets: 1,
+                    createdCell: function (td) {
+                        $(td).css({
+                            'max-width': '200px',
+                            'white-space': 'nowrap',
+                            'overflow': 'hidden',
+                            'text-overflow': 'ellipsis'
+                        });
+                    }
+                },
+                {
+                    targets: 2,
+                    orderable: false,
+                    render: function (data) {
+                        return `
+                            ${(canEditConfiguracionGeneral) ? `
+                                <button class="btn btn-icon btn-label-info waves-effect btn-editar-configuracion-general" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-info" title="Editar"
+                                    data-clave-configuracion-general="${data.config_key}" data-valor-configuracion-general="${data.config_value}">
+                                    <i class="ti ti-settings-code"></i>
+                                </button>` : ''}
+                            ${(canDeleteConfiguracionGeneral) ? `
+                                <button class="btn btn-icon btn-label-danger waves-effect btn-eliminar-configuracion-general" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-danger" title="Eliminar"
+                                    data-clave-configuracion-general="${data.config_key}">
+                                    <i class="ti ti-settings-cancel"></i>
+                                </button>` : ''}
+                        `;
+                    }
+                }
+            ],
+            drawCallback: function (settings) {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            },
+            pagingType: "simple"
+        });
+
+        $('#crear-configuracion-general').on('click', function () {
+            $('#modalNuevaConfiguracionGeneralLabel').text('Crear Configuración General');
+            $('#form-nueva-configuracion-general').attr('action', url + '/dashboard/configuracion/guardar_configuracion_general');
+            $('#form-nueva-configuracion-general')[0].reset();
+            $('#modalNuevaConfiguracionGeneral').modal('show');
+        });
+
+        //Formulario para crear una nueva configuración general
+        $('#form-nueva-configuracion-general').on('submit', function (event) {
+            event.preventDefault();
+            let action = $(this).attr('action');
+            let formData = $(this).serialize();
+
+            $.ajax({
+                url: action,
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    if (response.Success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Exito!',
+                            text: response.Message,
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            }
+                        }).then(() => {
+                            table_configuracion_general.ajax.reload();
+                            $('#modalNuevaConfiguracionGeneral').modal('hide');
+                            $('#form-nueva-configuracion-general')[0].reset();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: response.Message
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al enviar los datos.'
+                    });
+                }
+            });
+        });
+
+        $('.datatables-configuracion-general').on('click', '.btn-editar-configuracion-general', function () {
+            const clave = $(this).data('clave-configuracion-general');
+            const valor = $(this).data('valor-configuracion-general');
+
+            $('#modalNuevaConfiguracionGeneralLabel').text('Editar Configuración General');
+            $('#form-nueva-configuracion-general').attr('action', url + '/dashboard/configuracion/actualizar_configuracion_general/' + clave);
+            $('#clave-configuracion-general').val(clave);
+            $('#valor-configuracion-general').val(valor);
+
+            $('#modalNuevaConfiguracionGeneral').modal('show');
+        });
+
+        // Eliminar configuración general
+        $('.datatables-configuracion-general').on('click', '.btn-eliminar-configuracion-general', function () {
+            const clave_configuracion_general = $(this).data('clave-configuracion-general');
+
+            $.ajax({
+            url: url + '/dashboard/configuracion/eliminar_configuracion_general',
+            type: 'DELETE',
+            data: {
+                clave: clave_configuracion_general
+            },
+            success: function () {
+                // Destruir todos los tooltips activos antes de recargar la tabla
+                var tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                tooltips.forEach(function (el) {
+                    var instance = bootstrap.Tooltip.getInstance(el);
+                    if (instance) {
+                        instance.dispose();
+                    }
+                });
+
+                table_configuracion_general.ajax.reload();
+            }
+        });
         });
     }
 });
