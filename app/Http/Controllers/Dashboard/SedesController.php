@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use App\Helpers\AdminHelper;
+use App\Helpers\UtilsHelper;
 
 class SedesController extends Controller
 {
@@ -97,6 +98,7 @@ class SedesController extends Controller
                 Log::error($e->getMessage());
                 $objLoad['text'] = 'Error al obtener los datos';
             }
+
             //retornar respuesta
             return response()->json($objLoad);
         }
@@ -115,6 +117,8 @@ class SedesController extends Controller
         $data['empresas'] = $empresas;
         $ciudades = AdminHelper::get_ciudades_activas();
         $data['ciudades'] = $ciudades;
+        $localidades = DB::table('tb_localidad')->orderBy('nombre_localidad', 'asc')->get();
+        $data['localidades'] = $localidades;
         $alert = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
         $data['alert'] = $alert;
         $data['servicios'] = AdminHelper::get_servicios();
@@ -148,6 +152,11 @@ class SedesController extends Controller
                 $latitud_sede = $request->request->get('latitud_sede');
                 $longitud_sede = $request->request->get('longitud_sede');
                 $horario_sede = $request->request->get('horario_sede');
+                $barrio = $request->request->get('barrio');
+                $url_video = $request->request->get('url_video');
+                $url_imagen = $request->request->get('url_imagen');
+                $id_localidad = $request->request->get('id_localidad');
+
                 //Guardamo la sede
                 $save = DB::table('tb_sede')
                     ->insert([
@@ -162,7 +171,11 @@ class SedesController extends Controller
                         'id_ciudad' => $id_ciudad,
                         'latitud' => $latitud_sede,
                         'longitud' => $longitud_sede,
-                        'horario' => $horario_sede
+                        'horario' => $horario_sede,
+                        'barrio' => $barrio,
+                        'url_video' => $url_video,
+                        'url_imagen' => $url_imagen,
+                        'id_localidad' => $id_localidad
                     ]);
                 if ($save) {
                     $id_sede = DB::getPdo()->lastInsertId();
@@ -197,6 +210,8 @@ class SedesController extends Controller
                         "id" => $id_sede
                     );
                 }
+
+                UtilsHelper::enviarNotificacionSedes();
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
@@ -217,6 +232,8 @@ class SedesController extends Controller
         $data['empresas'] = $empresas;
         $ciudades = AdminHelper::get_ciudades_activas();
         $data['ciudades'] = $ciudades;
+        $localidades = DB::table('tb_localidad')->orderBy('nombre_localidad', 'asc')->get();
+        $data['localidades'] = $localidades;
         $alert = AdminHelper::get_count_alert($data['rol'], $user->id_sede); //gestorsede
         $data['alert'] = $alert;
         $data['sede'] = AdminHelper::get_sede_by_id($id);
@@ -252,6 +269,10 @@ class SedesController extends Controller
                 'latitud_sede'    => 'required|string|max:50',
                 'longitud_sede'   => 'required|string|max:50',
                 'id_ciudad'       => 'required|integer|exists:tb_ciudad,id_ciudad',
+                'barrio'          => 'nullable|string|max:100',
+                'url_video'       => 'nullable|string|max:150',
+                'url_imagen'      => 'nullable|string|max:150',
+                'id_localidad'    => 'nullable|integer|exists:tb_localidad,id_localidad'
             ]);
 
             $id_sede = $data['id_sede'];
@@ -278,6 +299,10 @@ class SedesController extends Controller
                             'horario'           => $data['horario_sede'],
                             'id_ciudad'         => $data['id_ciudad'],
                             'festivos_sede'     => serialize($data['festivos_sede'] ?? []),
+                            'barrio'            => $data['barrio'] ?? null,
+                            'url_video'         => $data['url_video'] ?? null,
+                            'url_imagen'        => $data['url_imagen'] ?? null,
+                            'id_localidad'      => $data['id_localidad'] ?? null
                         ]);
                 } catch (\Throwable $e) {
                     Log::error('Error al actualizar la sede: ' . $e->getMessage());
@@ -338,6 +363,8 @@ class SedesController extends Controller
                     "text" => 'Sede actualizada correctamente',
                     "id" => $id_sede
                 );
+
+                UtilsHelper::enviarNotificacionSedes();
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
@@ -363,6 +390,8 @@ class SedesController extends Controller
                     "validate" => true,
                     "text" => 'Sede borrada correctamente'
                 );
+
+                UtilsHelper::enviarNotificacionSedes();
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
@@ -436,6 +465,7 @@ class SedesController extends Controller
                         "validate" => true,
                         "text" => 'Horario guardado correctamente'
                     );
+                    UtilsHelper::enviarNotificacionSedes();
                 }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
@@ -466,6 +496,8 @@ class SedesController extends Controller
                     "validate" => true,
                     "text" => 'Horario borrado correctamente'
                 );
+
+                UtilsHelper::enviarNotificacionSedes();
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
@@ -522,6 +554,7 @@ class SedesController extends Controller
                         "validate" => true,
                         "text" => 'Festivo guardado correctamente'
                     );
+                    UtilsHelper::enviarNotificacionSedes();
                 }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
@@ -552,6 +585,7 @@ class SedesController extends Controller
                     "validate" => true,
                     "text" => 'Festivo borrado correctamente'
                 );
+                UtilsHelper::enviarNotificacionSedes();
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
             }
@@ -706,6 +740,7 @@ class SedesController extends Controller
                         "validate" => true,
                         "message" => 'La ciudad ha sido guardada correctamente'
                     );
+                    UtilsHelper::enviarNotificacionSedes();
                 }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
@@ -746,6 +781,7 @@ class SedesController extends Controller
                         "validate" => true,
                         "message" => 'La ciudad ha sido guardada correctamente'
                     );
+                    UtilsHelper::enviarNotificacionSedes();
                 }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());
@@ -787,6 +823,207 @@ class SedesController extends Controller
                         "validate" => true,
                         "message" => 'La ciudad ha sido guardada correctamente'
                     );
+                    UtilsHelper::enviarNotificacionSedes();
+                }
+            } catch (\Throwable $e) {
+                Log::error($e->getMessage());
+            }
+            return response()->json($objLoad);
+        }
+    }
+
+    // Obtener las localidades de la base de datos
+    public static function get_localidades(Request $request) {
+        if ($request->ajax()) {
+            $response = [
+                "Status" => 500,
+                "Message" => "Error al obtener las localidades",
+                "Success" => false,
+                "Data" => []
+            ];
+
+            try {
+                $user = Auth::user();
+                $length = $request->request->get('length');
+                $start = $request->request->get('start');
+                $draw = $request->request->get('draw');
+                $search = $request->input('search.value', '');
+                $query = DB::table('tb_localidad')->select('tb_localidad.*');
+
+                if (!empty($search)) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('tb_localidad.nombre_localidad', 'like', '%' . $search . '%');
+                    });
+                }
+
+                // Obtener el total filtrado antes del paginado
+                $totalFiltered = $query->count();
+
+                // Aplicar paginación
+                $localidades = $query
+                    ->offset($start)
+                    ->limit($length)
+                    ->get();
+                
+                $response = [
+                    "Status" => 200,
+                    "Message" => "Localidades obtenidas correctamente",
+                    "Success" => true,
+                    "Data" => [
+                            'draw' => $draw,
+                            'data' => $localidades,
+                            'recordsTotal' => $totalFiltered,
+                            'recordsFiltered' => $totalFiltered,
+                            'localidades' => $localidades
+                        ]
+                    ];
+            } catch (\Throwable $e) {
+                Log::error($e->getMessage());
+            }
+            return response()->json($response);
+        }
+    }
+
+    public function get_localidad(Request $request) {
+        if ($request->ajax()) {
+            $objLoad = [
+                'validate' => false,
+                'status' => 500,
+                'message' => 'Error al obtener la localidad',
+            ];
+
+            //Ejecución de la funcion
+            try {
+                $id_localidad = $request->request->get('id_localidad');
+                $data = DB::table('tb_localidad')->where('id_localidad', $id_localidad)->first();
+                $objLoad = array(
+                    'status' => 200,
+                    'validate' => true,
+                    'data' => $data,
+                    'message' => 'Localidad obtenida correctamente'
+                );
+            } catch (\Throwable $e) {
+                Log::error($e->getMessage());
+            }
+            //retornar respuesta
+            return response()->json($objLoad);
+        }
+    }
+
+    // Crear localidad
+    public function add_localidad(Request $request) {
+        if ($request->ajax()) {
+            $objLoad = [
+                'status' => 500,
+                'validate' => false,
+                'message' => 'Error al guardar la localidad'
+            ];
+
+            try {
+                $nombre_localidad = $request->request->get('nombre_localidad');
+                $longitud_localidad = $request->request->get('longitud_localidad');
+                $latitud_localidad = $request->request->get('latitud_localidad');
+                $nivel_zoom = $request->request->get('nivel_zoom_localidad');
+                $ahora = Carbon::now();
+
+                $save = DB::table('tb_localidad')->insert([
+                    'nombre_localidad' => $nombre_localidad,
+                    'longitud' => $longitud_localidad,
+                    'latitud' => $latitud_localidad,
+                    'nivel_zoom' => $nivel_zoom,
+                    'created_at' => $ahora,
+                    'updated_at' => $ahora
+                ]);
+
+                if ($save) {
+                    $objLoad = array(
+                        "status" => 200,
+                        "validate" => true,
+                        "message" => 'La localidad ha sido guardada correctamente'
+                    );
+                    UtilsHelper::enviarNotificacionSedes();
+                }
+            } catch (\Throwable $e) {
+                Log::error($e->getMessage());
+            }
+            return response()->json($objLoad);
+        }
+    }
+
+    public function edit_localidad(Request $request) {
+        if ($request->ajax()) {
+            $objLoad = [
+                'status' => 500,
+                'validate' => false,
+                'message' => 'Error al guardar la localidad'
+            ];
+
+            //Ejecución de la funcion
+            try {
+                $id_localidad = $request->request->get('id_localidad');
+                $nombre_localidad = $request->request->get('nombre_localidad');
+                $longitud_localidad = $request->request->get('longitud_localidad');
+                $latitud_localidad = $request->request->get('latitud_localidad');
+                $nivel_zoom = $request->request->get('nivel_zoom_localidad');
+                $update_at = carbon::now();
+
+                $save = DB::table('tb_localidad')
+                    ->where('id_localidad', $id_localidad)
+                    ->update([
+                        'nombre_localidad' => $nombre_localidad,
+                        'longitud' => $longitud_localidad,
+                        'latitud' => $latitud_localidad,
+                        'nivel_zoom' => $nivel_zoom,
+                        'updated_at' => $update_at
+                    ]);
+                if ($save) {
+                    $objLoad = array(
+                        "status" => 200,
+                        "validate" => true,
+                        "message" => 'La localidad ha sido guardada correctamente'
+                    );
+                    UtilsHelper::enviarNotificacionSedes();
+                }
+            } catch (\Throwable $e) {
+                Log::error($e->getMessage());
+            }
+            return response()->json($objLoad);
+        }
+    }
+
+    // Cambiar estado localidad
+    public function change_estado_localidad(Request $request) {
+        if ($request->ajax()) {
+            $objLoad = [
+                'status' => 500,
+                'validate' => false,
+                'message' => 'Error al cambiar el estado de la localidad'
+            ];
+            try {
+                $id_localidad = $request->request->get('id_localidad');
+                $localidad = DB::table('tb_localidad')->where('id_localidad', $id_localidad)->first();
+                $ahora = Carbon::now();
+
+                if ($localidad->deleted_at === null) {
+                    $delete_at = $ahora;
+                } else {
+                    $delete_at = null;
+                }
+
+                $save = DB::table('tb_localidad')
+                    ->where('id_localidad', $id_localidad)
+                    ->update([
+                        'updated_at' => $ahora,
+                        'deleted_at' => $delete_at
+                    ]);
+                    
+                if ($save) {
+                    $objLoad = array(
+                        "status" => 200,
+                        "validate" => true,
+                        "message" => 'La localidad ha sido guardada correctamente'
+                    );
+                    UtilsHelper::enviarNotificacionSedes();
                 }
             } catch (\Throwable $e) {
                 Log::error($e->getMessage());

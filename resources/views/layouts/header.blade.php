@@ -142,11 +142,22 @@
         var canEditCiudades = <?= json_encode($user->can('sede.Ciudades.e')); ?>;
         var canDeleteCiudades = <?= json_encode($user->can('sede.Ciudades.d')); ?>;
         
+        // Permiso para la gestión de localidades
+        var canViewLocalidades = <?= json_encode($user->can('sede.Localidades.v')); ?>;
+        var canAddLocalidades = <?= json_encode($user->can('sede.Localidades.a')); ?>;
+        var canEditLocalidades = <?= json_encode($user->can('sede.Localidades.e')); ?>;
+        var canDeleteLocalidades = <?= json_encode($user->can('sede.Localidades.d')); ?>;
+
         // Permisos para el módulo de paquetes
         var canAddPaquetes = <?= json_encode($user->can('paquete.listado.a')); ?>;
         var canEditPaquetes = <?= json_encode($user->can('paquete.listado.e')); ?>;
         var canDeletePaquetes = <?= json_encode($user->can('paquete.listado.d')); ?>;
         
+        // Permisos para el módulo de configuración general
+        var canViewConfiguracionGeneral = <?= json_encode($user->can('configuracion.General.v')); ?>;
+        var canEditConfiguracionGeneral = <?= json_encode($user->can('configuracion.General.e')); ?>;
+        var canAddConfiguracionGeneral = <?= json_encode($user->can('configuracion.General.a')); ?>;
+        var canDeleteConfiguracionGeneral = <?= json_encode($user->can('configuracion.General.d')); ?>;
     </script>
 
 </head>
