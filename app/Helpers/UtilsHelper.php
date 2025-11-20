@@ -26,8 +26,10 @@ class UtilsHelper {
         $cliente = DB::table('tb_cliente')->where('id_cliente', $cita->id_cliente)->first();
         $agente = DB::table('users')->where('id', $cita->id_agente_callcenter)->first();
         $sede = DB::table('tb_sede')->where('id_sede', $cita->id_sede)->first();
+        $metodo = 'Ninguno';
 
         if ($agente->id_chatbot_sendpulse && $agente->id_user_sendpulse && $agente->id_plantilla_sendpulse) {
+            $metodo = 'SendPulse WhatsApp';
             $datosUsuario = $this->sendPulseWhatsapp->searchContactByPhone($cliente->telefono_cliente, $agente->id_chatbot_sendpulse);
             //Corrección de estructura de datos
             $fechaFormateada = date('Y/m/d', strtotime($cita->reserva_cita));
@@ -86,7 +88,7 @@ class UtilsHelper {
                 $TemplateEnviado = $this->sendPulseWhatsapp->sendWhatsappTemplateByPhone($data);
                 if (!$TemplateEnviado) {
                     Log::error("No se pudo enviar la plantilla de confirmación de Whatsapp al cliente");
-                    return false;
+                    return ['exito' => false, 'metodo' => $metodo];
                 }
 
                 //Se asigna el id de whatsapp a la cita
@@ -100,20 +102,20 @@ class UtilsHelper {
                 $operadorAsignado = $this->sendPulseWhatsapp->assignOperatorToContact($datosUsuario['data']['id'], $agente->id_user_sendpulse);
                 if (!$operadorAsignado) {
                     Log::error("No se pudo asignar el operador al contacto de Whatsapp.");
-                    return false;
+                    return ['exito' => false, 'metodo' => $metodo];
                 }
             } else {
                 $contactoCreado = $this->sendPulseWhatsapp->createContactWhatsapp($cliente->telefono_cliente, $cliente->nombre_cliente, [], [], $agente->id_chatbot_sendpulse);
                 $TemplateEnviado = $this->sendPulseWhatsapp->sendWhatsappTemplateByPhone($data);
                 if (!$contactoCreado || !$TemplateEnviado) {
                     Log::error("No se pudo crear el contacto de Whatsapp y tampoco enviar la plantilla de confirmación de cita al cliente");
-                    return false;
+                    return ['exito' => false, 'metodo' => $metodo];
                 }
                 
                 $datosUsuario = $this->sendPulseWhatsapp->searchContactByPhone($cliente->telefono_cliente, $agente->id_chatbot_sendpulse);
                 if (!$datosUsuario) {
                     Log::error("No se encontró el contacto de Whatsapp creado.");
-                    return false;
+                    return ['exito' => false, 'metodo' => $metodo];
                 }
 
                 //Se asigna el id de whatsapp a la cita
@@ -127,7 +129,7 @@ class UtilsHelper {
                 $operadorAsignado = $this->sendPulseWhatsapp->assignOperatorToContact($datosUsuario['data']['id'], $agente->id_user_sendpulse);
                 if (!$operadorAsignado) {
                     Log::error("No se pudo asignar el operador al contacto de Whatsapp.");
-                    return false;
+                    return ['exito' => false, 'metodo' => $metodo];
                 }
             }
 
@@ -137,7 +139,7 @@ class UtilsHelper {
                 $tratoCreado = $this->sendPulseCrm->createDealCrm($agente->id_user_sendpulse, $cliente->nombre_cliente, $cliente->apellido_cliente, $sede->nombre_sede, $datosUsuarioCRM['data']['id']);
                 if (!$tratoCreado) {
                     Log::error("No se pudo crear el trato en el CRM.");
-                    return false;
+                    return ['exito' => false, 'metodo' => $metodo];
                 }
 
                 // Se asigna el ID del trato en la cita
@@ -151,26 +153,26 @@ class UtilsHelper {
                 $tratoAsignado = $this->sendPulseCrm->assignDealToContact($tratoCreado['data']['id'], $datosUsuarioCRM['data']['id']);
                 if (!$tratoAsignado) {
                     Log::error("No se pudo asignar el trato al contacto en el CRM.");
-                    return false;
+                    return ['exito' => false, 'metodo' => $metodo];
                 }
             } else {
                 $contactoCrmCreado = $this->sendPulseCrm->createContactCrm($cliente->nombre_cliente, $cliente->apellido_cliente, $agente->id_user_sendpulse, $datosUsuario['data']['id']);
                 $contactoCrmEncontrado = $this->sendPulseCrm->searchContactByExternalContactId($datosUsuario['data']['id']);
                 if (!$contactoCrmCreado || !$contactoCrmEncontrado) {
                     Log::error("No se pudo crear el contacto en el CRM o no se encontró después de crearlo.");
-                    return false;
+                    return ['exito' => false, 'metodo' => $metodo];
                 }
 
                 $messengerAsignado = $this->sendPulseCrm->assignMessengerContactCrm($cliente->telefono_cliente, $agente->id_chatbot_sendpulse, $datosUsuario['data']['id'], $contactoCrmEncontrado['data']['id']);
                 if (!$messengerAsignado) {
                     Log::error("No se pudo asignar el chat del bot al contacto de CRM.");
-                    return false;
+                    return ['exito' => false, 'metodo' => $metodo];
                 }
 
                 $tratoCreado = $this->sendPulseCrm->createDealCrm($agente->id_user_sendpulse, $cliente->nombre_cliente, $cliente->apellido_cliente, $sede->nombre_sede, $contactoCrmEncontrado['data']['id']);
                 if (!$tratoCreado) {
                     Log::error("No se pudo crear el trato en el CRM.");
-                    return false;
+                    return ['exito' => false, 'metodo' => $metodo];
                 }
 
                 // Se asigna el ID del trato en la cita
@@ -184,11 +186,43 @@ class UtilsHelper {
                 $tratoAsignado = $this->sendPulseCrm->assignDealToContact($tratoCreado['data']['id'], $contactoCrmEncontrado['data']['id']);
                 if (!$tratoAsignado) {
                     Log::error("No se pudo asignar el trato al contacto en el CRM.");
-                    return false;
+                    return ['exito' => false, 'metodo' => $metodo];
                 }
             }
         }
-        return true;
+
+        if ($agente->id_agente_chatwoot && $agente->id_equipo_agentes_chatwoot && $agente->id_inbox_chatwoot && $agente->nombre_plantilla_chatwoot && $agente->idioma_plantilla_chatwoot) {
+            $metodo = 'ChatWoot WhatsApp';
+            $body = [
+                "numero_cliente" => $cliente->telefono_cliente,
+                "correo_cliente" => $cliente->email_cliente,
+                "plantilla" => [
+                    "nombre" => $agente->nombre_plantilla_chatwoot,
+                    "parametros" => [
+                        "1" => $cliente->nombre_cliente . ' ' . $cliente->apellido_cliente,
+                        "2" => $agente->name,
+                        "3" => date('Y/m/d', strtotime($cita->reserva_cita)),
+                        "4" => trim(explode('-', $cita->rango_horario)[0] ?? ''),
+                        "5" => $sede->nombre_sede,
+                        "6" => $sede->direccion_sede
+                    ],
+                    "idioma" => $agente->idioma_plantilla_chatwoot
+                ],
+                "id_agente_chatwoot" => $agente->id_agente_chatwoot,
+                "id_equipo_agentes_chatwoot" => $agente->id_equipo_agentes_chatwoot,
+                "id_inbox_chatwoot" => $agente->id_inbox_chatwoot
+            ];
+
+            $response = Http::withHeaders([
+                'Content-Type'  => 'application/json'
+            ])->post(env('N8N_RUTA_BASE') . 'webhook-test/send_utilidad_confirmacion_cita', $body);
+
+            if (!$response->successful()) {
+                Log::error("No se pudo enviar la plantilla de confirmación de Whatsapp al cliente vía ChatWoot. ERROR: " . $response->body());
+                return ['exito' => false, 'metodo' => $metodo];
+            }
+        }
+        return ['exito' => true, 'metodo' => $metodo];
     }
 
     public static function enviarNotificacionSedes() {

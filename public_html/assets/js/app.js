@@ -2332,6 +2332,11 @@ $(function () {
                         $('#contenedor-id-usuario-sendpulse-edit').show();
                         $('#contenedor-id-chatbot-sendpulse-edit').show();
                         $('#contenedor-id-plantilla-sendpulse-edit').show();
+                        $('#contenedor-id-agente-chatwoot-edit').show();
+                        $('#contenedor-id-equipo-agentes-chatwoot-edit').show();
+                        $('#contenedor-id-inbox-chatwoot-edit').show();
+                        $('#contenedor-nombre-plantilla-chatwoot-edit').show();
+                        $('#contenedor-idioma-plantilla-chatwoot-edit').show();
                     } else {
                         $('#contenedor-rol-user-edit').addClass('col-6');
                         $('#contenedor-rol-user-edit').removeClass('col-3');
@@ -2339,6 +2344,11 @@ $(function () {
                         $('#contenedor-id-usuario-sendpulse-edit').hide();
                         $('#contenedor-id-chatbot-sendpulse-edit').hide();
                         $('#contenedor-id-plantilla-sendpulse-edit').hide();
+                        $('#contenedor-id-agente-chatwoot-edit').show();
+                        $('#contenedor-id-equipo-agentes-chatwoot-edit').show();
+                        $('#contenedor-id-inbox-chatwoot-edit').show();
+                        $('#contenedor-nombre-plantilla-chatwoot-edit').show();
+                        $('#contenedor-idioma-plantilla-chatwoot-edit').show();
                     }
                     if (response.usuario.callcenter_habilitado == 1) {
                         $('.content_users_edit input[name="callcenter_habilitado"]').prop('checked', true);
@@ -2350,6 +2360,11 @@ $(function () {
                     $('.content_users_edit input[name="id_user_sendpulse"]').val(response.usuario.id_user_sendpulse);
                     $('.content_users_edit input[name="id_chatbot_sendpulse"]').val(response.usuario.id_chatbot_sendpulse);
                     $('.content_users_edit input[name="id_plantilla_sendpulse"]').val(response.usuario.id_plantilla_sendpulse);
+                    $('.content_users_edit input[name="id_agente_chatwoot"]').val(response.usuario.id_agente_chatwoot);
+                    $('.content_users_edit input[name="id_equipo_agentes_chatwoot"]').val(response.usuario.id_equipo_agentes_chatwoot);
+                    $('.content_users_edit input[name="id_inbox_chatwoot"]').val(response.usuario.id_inbox_chatwoot);
+                    $('.content_users_edit input[name="nombre_plantilla_chatwoot"]').val(response.usuario.nombre_plantilla_chatwoot);
+                    $('.content_users_edit input[name="idioma_plantilla_chatwoot"]').val(response.usuario.idioma_plantilla_chatwoot);
                 }
             });
         });
@@ -2365,6 +2380,11 @@ $(function () {
                 $('#contenedor-id-usuario-sendpulse').show();
                 $('#contenedor-id-chatbot-sendpulse').show();
                 $('#contenedor-id-plantilla-sendpulse').show();
+                $('#contenedor-id-agente-chatwoot').show();
+                $('#contenedor-id-equipo-agentes-chatwoot').show();
+                $('#contenedor-id-inbox-chatwoot').show();
+                $('#contenedor-nombre-plantilla-chatwoot').show();
+                $('#contenedor-idioma-plantilla-chatwoot').show();
             } else {
                 $('#contenedor-rol-user').addClass('col-6');
                 $('#contenedor-rol-user').removeClass('col-3');
@@ -2372,6 +2392,11 @@ $(function () {
                 $('#contenedor-id-usuario-sendpulse').hide();
                 $('#contenedor-id-chatbot-sendpulse').hide();
                 $('#contenedor-id-plantilla-sendpulse').hide();
+                $('#contenedor-id-agente-chatwoot').hide();
+                $('#contenedor-id-equipo-agentes-chatwoot').hide();
+                $('#contenedor-id-inbox-chatwoot').hide();
+                $('#contenedor-nombre-plantilla-chatwoot').hide();
+                $('#contenedor-idioma-plantilla-chatwoot').hide();
             }
         }); $('#rol-user-edit').change(function () {
             if ($(this).val() == 'callcenter' || $(this).val() == 'lidercallcenter') {
@@ -2381,6 +2406,11 @@ $(function () {
                 $('#contenedor-id-usuario-sendpulse-edit').show();
                 $('#contenedor-id-chatbot-sendpulse-edit').show();
                 $('#contenedor-id-plantilla-sendpulse-edit').show();
+                $('#contenedor-id-agente-chatwoot-edit').show();
+                $('#contenedor-id-equipo-agentes-chatwoot-edit').show();
+                $('#contenedor-id-inbox-chatwoot-edit').show();
+                $('#contenedor-nombre-plantilla-chatwoot-edit').show();
+                $('#contenedor-idioma-plantilla-chatwoot-edit').show();
             } else {
                 $('#contenedor-rol-user-edit').addClass('col-6');
                 $('#contenedor-rol-user-edit').removeClass('col-3');
@@ -2388,6 +2418,11 @@ $(function () {
                 $('#contenedor-id-usuario-sendpulse-edit').hide();
                 $('#contenedor-id-chatbot-sendpulse-edit').hide();
                 $('#contenedor-id-plantilla-sendpulse-edit').hide();
+                $('#contenedor-id-agente-chatwoot-edit').show();
+                $('#contenedor-id-equipo-agentes-chatwoot-edit').show();
+                $('#contenedor-id-inbox-chatwoot-edit').show();
+                $('#contenedor-nombre-plantilla-chatwoot-edit').show();
+                $('#contenedor-idioma-plantilla-chatwoot-edit').show();
             }
         });
     }
