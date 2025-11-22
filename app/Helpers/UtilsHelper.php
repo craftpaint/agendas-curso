@@ -191,7 +191,7 @@ class UtilsHelper {
             }
         }
 
-        if ($agente->id_agente_chatwoot && $agente->id_equipo_agentes_chatwoot && $agente->id_inbox_chatwoot && $agente->nombre_plantilla_chatwoot && $agente->idioma_plantilla_chatwoot) {
+        if ($agente->id_agente_chatwoot && $agente->id_equipo_agentes_chatwoot && $agente->id_inbox_chatwoot && $agente->nombre_plantilla_chatwoot && $agente->idioma_plantilla_chatwoot && $agente->id_whatsapp_business_phone_number) {
             $metodo = 'ChatWoot WhatsApp';
             $body = [
                 "numero_cliente" => $cliente->telefono_cliente,
@@ -210,7 +210,9 @@ class UtilsHelper {
                 ],
                 "id_agente_chatwoot" => $agente->id_agente_chatwoot,
                 "id_equipo_agentes_chatwoot" => $agente->id_equipo_agentes_chatwoot,
-                "id_inbox_chatwoot" => $agente->id_inbox_chatwoot
+                "id_inbox_chatwoot" => $agente->id_inbox_chatwoot,
+                "whatsapp_business_phone_number_id" => $agente->id_whatsapp_business_phone_number,
+                "url_cita" => env('APP_URL') . '/dashboard/citas/edit/' . $cita->id_cita
             ];
 
             $response = Http::withHeaders([

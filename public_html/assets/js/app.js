@@ -2337,6 +2337,7 @@ $(function () {
                         $('#contenedor-id-inbox-chatwoot-edit').show();
                         $('#contenedor-nombre-plantilla-chatwoot-edit').show();
                         $('#contenedor-idioma-plantilla-chatwoot-edit').show();
+                        $('#contenedor-id-whatsapp-business-phone-number-edit').show();
                     } else {
                         $('#contenedor-rol-user-edit').addClass('col-6');
                         $('#contenedor-rol-user-edit').removeClass('col-3');
@@ -2349,6 +2350,7 @@ $(function () {
                         $('#contenedor-id-inbox-chatwoot-edit').show();
                         $('#contenedor-nombre-plantilla-chatwoot-edit').show();
                         $('#contenedor-idioma-plantilla-chatwoot-edit').show();
+                        $('#contenedor-id-whatsapp-business-phone-number-edit').show();
                     }
                     if (response.usuario.callcenter_habilitado == 1) {
                         $('.content_users_edit input[name="callcenter_habilitado"]').prop('checked', true);
@@ -2365,6 +2367,7 @@ $(function () {
                     $('.content_users_edit input[name="id_inbox_chatwoot"]').val(response.usuario.id_inbox_chatwoot);
                     $('.content_users_edit input[name="nombre_plantilla_chatwoot"]').val(response.usuario.nombre_plantilla_chatwoot);
                     $('.content_users_edit input[name="idioma_plantilla_chatwoot"]').val(response.usuario.idioma_plantilla_chatwoot);
+                    $('.content_users_edit input[name="id_whatsapp_business_phone_number"]').val(response.usuario.id_whatsapp_business_phone_number);
                 }
             });
         });
@@ -2385,6 +2388,7 @@ $(function () {
                 $('#contenedor-id-inbox-chatwoot').show();
                 $('#contenedor-nombre-plantilla-chatwoot').show();
                 $('#contenedor-idioma-plantilla-chatwoot').show();
+                $('#contenedor-id-whatsapp-business-phone-number').show();
             } else {
                 $('#contenedor-rol-user').addClass('col-6');
                 $('#contenedor-rol-user').removeClass('col-3');
@@ -2397,6 +2401,7 @@ $(function () {
                 $('#contenedor-id-inbox-chatwoot').hide();
                 $('#contenedor-nombre-plantilla-chatwoot').hide();
                 $('#contenedor-idioma-plantilla-chatwoot').hide();
+                $('#contenedor-id-whatsapp-business-phone-number').hide();
             }
         }); $('#rol-user-edit').change(function () {
             if ($(this).val() == 'callcenter' || $(this).val() == 'lidercallcenter') {
@@ -2411,6 +2416,7 @@ $(function () {
                 $('#contenedor-id-inbox-chatwoot-edit').show();
                 $('#contenedor-nombre-plantilla-chatwoot-edit').show();
                 $('#contenedor-idioma-plantilla-chatwoot-edit').show();
+                $('#contenedor-id-whatsapp-business-phone-number-edit').show();
             } else {
                 $('#contenedor-rol-user-edit').addClass('col-6');
                 $('#contenedor-rol-user-edit').removeClass('col-3');
@@ -2423,6 +2429,7 @@ $(function () {
                 $('#contenedor-id-inbox-chatwoot-edit').show();
                 $('#contenedor-nombre-plantilla-chatwoot-edit').show();
                 $('#contenedor-idioma-plantilla-chatwoot-edit').show();
+                $('#contenedor-id-whatsapp-business-phone-number-edit').show();
             }
         });
     }

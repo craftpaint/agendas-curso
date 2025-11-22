@@ -97,6 +97,10 @@
                                 <label class="form-label">Idioma Plantilla Chatwoot </label>
                                 <input class="form-control" type="text" name="idioma_plantilla_chatwoot">
                             </div>
+                            <div class="col-6 mb-4" id="contenedor-id-whatsapp-business-phone-number" style="display:none">
+                                <label class="form-label">Whatsapp Business Phone Number ID</label>
+                                <input class="form-control" type="text" name="id_whatsapp_business_phone_number">
+                            </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Guardar usuario</button>
                             </div>
@@ -190,6 +194,10 @@
                             <div class="col-6 mb-4" id="contenedor-idioma-plantilla-chatwoot-edit" style="display:none">
                                 <label class="form-label">Idioma Plantilla Chatwoot </label>
                                 <input class="form-control" type="text" name="idioma_plantilla_chatwoot">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-id-whatsapp-business-phone-number-edit" style="display:none">
+                                <label class="form-label">Whatsapp Business Phone Number ID</label>
+                                <input class="form-control" type="text" name="id_whatsapp_business_phone_number">
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Actualizar usuario</button>

@@ -169,6 +169,7 @@ class UsersController extends Controller
                 $id_inbox_chatwoot = $request->request->get('id_inbox_chatwoot');
                 $nombre_plantilla_chatwoot = $request->request->get('nombre_plantilla_chatwoot');
                 $idioma_plantilla_chatwoot = $request->request->get('idioma_plantilla_chatwoot');
+                $id_whatsapp_business_phone_number = $request->request->get('id_whatsapp_business_phone_number');
 
                 //Guardamos al usuario
                 $user = new User();
@@ -185,6 +186,7 @@ class UsersController extends Controller
                 $user->id_inbox_chatwoot = $id_inbox_chatwoot;
                 $user->nombre_plantilla_chatwoot = $nombre_plantilla_chatwoot;
                 $user->idioma_plantilla_chatwoot = $idioma_plantilla_chatwoot;
+                $user->id_whatsapp_business_phone_number = $id_whatsapp_business_phone_number;
                 $user->save();
                 $user->assignRole($role);
                 $objLoad = array(
@@ -227,6 +229,7 @@ class UsersController extends Controller
                 $id_inbox_chatwoot = $request->request->get('id_inbox_chatwoot');
                 $nombre_plantilla_chatwoot = $request->request->get('nombre_plantilla_chatwoot');
                 $idioma_plantilla_chatwoot = $request->request->get('idioma_plantilla_chatwoot');
+                $id_whatsapp_business_phone_number = $request->get('id_whatsapp_business_phone_number');
                 $user = User::find($id_user);
                 $user->id_sede = $id_sede;
                 $user->name = $name;
@@ -242,6 +245,7 @@ class UsersController extends Controller
                 $user->id_inbox_chatwoot = $id_inbox_chatwoot;
                 $user->nombre_plantilla_chatwoot = $nombre_plantilla_chatwoot;
                 $user->idioma_plantilla_chatwoot = $idioma_plantilla_chatwoot;
+                $user->id_whatsapp_business_phone_number = $id_whatsapp_business_phone_number;
                 $user->callcenter_habilitado = $callcenter_habilitado;
                 $user->save();
                 $user->syncRoles([$role]);
