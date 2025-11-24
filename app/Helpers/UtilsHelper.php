@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Services\WhatsappService;
 use App\Services\CrmService;
+use Illuminate\Support\Str;
 
 class UtilsHelper {
 
@@ -193,6 +194,7 @@ class UtilsHelper {
 
         if ($agente->id_agente_chatwoot && $agente->id_equipo_agentes_chatwoot && $agente->id_inbox_chatwoot && $agente->nombre_plantilla_chatwoot && $agente->idioma_plantilla_chatwoot && $agente->id_whatsapp_business_phone_number) {
             $metodo = 'ChatWoot WhatsApp';
+
             $body = [
                 "numero_cliente" => $cliente->telefono_cliente,
                 "correo_cliente" => $cliente->email_cliente,
@@ -215,13 +217,28 @@ class UtilsHelper {
                 "url_cita" => env('APP_URL') . '/dashboard/citas/edit/' . $cita->id_cita
             ];
 
+            if ($sede->id_ciudad) {
+                $body['ciudad_sede'] = DB::table('tb_ciudad')->where('id_ciudad', $sede->id_ciudad)->value('nombre');
+                $body['enviar_imagen_sorteo'] = Str::contains($body['ciudad_sede'], 'Bogotá') ? true : false;
+            }
+
+            $codigos = json_decode($cita->codigos_comparendo, true);
+
+            $body['codigos_comparendo'] = (empty($codigos) || !is_array($codigos)) ? '': implode(' - ', array_column($codigos, 'value'));
+
             $response = Http::withHeaders([
                 'Content-Type'  => 'application/json'
             ])->post(env('N8N_RUTA_BASE') . 'webhook-test/send_utilidad_confirmacion_cita', $body);
-
-            if (!$response->successful()) {
+            
+            Log::info("Response ChatWoot: " . $response);
+            if (!$response['Success']) {
                 Log::error("No se pudo enviar la plantilla de confirmación de Whatsapp al cliente vía ChatWoot. ERROR: " . $response->body());
                 return ['exito' => false, 'metodo' => $metodo];
+            } else {
+                DB::table('tb_cita')->where('tb_cita.id_cita', $id_cita)->update([
+                    'tb_cita.id_conversacion_chatwoot' => $response['Data'],
+                    'tb_cita.updated_at' => Carbon::now()
+                ]);
             }
         }
         return ['exito' => true, 'metodo' => $metodo];
