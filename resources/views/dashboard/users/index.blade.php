@@ -77,6 +77,30 @@
                                 <label class="form-label">ID Plantilla SendPulse </label>
                                 <input class="form-control" type="text" name="id_plantilla_sendpulse">
                             </div>
+                            <div class="col-6 mb-4" id="contenedor-id-agente-chatwoot" style="display:none">
+                                <label class="form-label">ID Agente Chatwoot </label>
+                                <input class="form-control" type="number" name="id_agente_chatwoot">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-id-equipo-agentes-chatwoot" style="display:none">
+                                <label class="form-label">ID Equipo Agentes Chatwoot </label>
+                                <input class="form-control" type="number" name="id_equipo_agentes_chatwoot">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-id-inbox-chatwoot" style="display:none">
+                                <label class="form-label">ID Inbox Chatwoot </label>
+                                <input class="form-control" type="number" name="id_inbox_chatwoot">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-nombre-plantilla-chatwoot" style="display:none">
+                                <label class="form-label">Nombre Plantilla Chatwoot </label>
+                                <input class="form-control" type="text" name="nombre_plantilla_chatwoot">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-idioma-plantilla-chatwoot" style="display:none">
+                                <label class="form-label">Idioma Plantilla Chatwoot </label>
+                                <input class="form-control" type="text" name="idioma_plantilla_chatwoot">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-id-whatsapp-business-phone-number" style="display:none">
+                                <label class="form-label">Whatsapp Business Phone Number ID</label>
+                                <input class="form-control" type="text" name="id_whatsapp_business_phone_number">
+                            </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Guardar usuario</button>
                             </div>
@@ -150,6 +174,30 @@
                             <div class="col-6 mb-4" id="contenedor-id-plantilla-sendpulse-edit" style="display:none">
                                 <label class="form-label">ID Plantilla SendPulse </label>
                                 <input class="form-control" type="text" name="id_plantilla_sendpulse">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-id-agente-chatwoot-edit" style="display:none">
+                                <label class="form-label">ID Agente Chatwoot </label>
+                                <input class="form-control" type="number" name="id_agente_chatwoot">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-id-equipo-agentes-chatwoot-edit" style="display:none">
+                                <label class="form-label">ID Equipo Agentes Chatwoot </label>
+                                <input class="form-control" type="number" name="id_equipo_agentes_chatwoot">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-id-inbox-chatwoot-edit" style="display:none">
+                                <label class="form-label">ID Inbox Chatwoot </label>
+                                <input class="form-control" type="number" name="id_inbox_chatwoot">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-nombre-plantilla-chatwoot-edit" style="display:none">
+                                <label class="form-label">Nombre Plantilla Chatwoot </label>
+                                <input class="form-control" type="text" name="nombre_plantilla_chatwoot">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-idioma-plantilla-chatwoot-edit" style="display:none">
+                                <label class="form-label">Idioma Plantilla Chatwoot </label>
+                                <input class="form-control" type="text" name="idioma_plantilla_chatwoot">
+                            </div>
+                            <div class="col-6 mb-4" id="contenedor-id-whatsapp-business-phone-number-edit" style="display:none">
+                                <label class="form-label">Whatsapp Business Phone Number ID</label>
+                                <input class="form-control" type="text" name="id_whatsapp_business_phone_number">
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Actualizar usuario</button>
