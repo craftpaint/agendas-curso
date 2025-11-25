@@ -228,7 +228,7 @@ class UtilsHelper {
 
             $response = Http::withHeaders([
                 'Content-Type'  => 'application/json'
-            ])->post(env('N8N_RUTA_BASE') . 'webhook-test/send_utilidad_confirmacion_cita', $body);
+            ])->post(env('N8N_RUTA_BASE') . 'webhook/send_utilidad_confirmacion_cita', $body);
             
             Log::info("Response ChatWoot: " . $response);
             if (!$response['Success']) {
