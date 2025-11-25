@@ -230,7 +230,6 @@ class UtilsHelper {
                 'Content-Type'  => 'application/json'
             ])->post(env('N8N_RUTA_BASE') . 'webhook/send_utilidad_confirmacion_cita', $body);
             
-            Log::info("Response ChatWoot: " . $response);
             if (!$response['Success']) {
                 Log::error("No se pudo enviar la plantilla de confirmación de Whatsapp al cliente vía ChatWoot. ERROR: " . $response->body());
                 return ['exito' => false, 'metodo' => $metodo];
