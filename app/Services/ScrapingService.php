@@ -34,7 +34,7 @@ class ScrapingService {
                 'Content-Type'  => 'application/json'
             ])->timeout(180)
               ->connectTimeout(180)
-              ->get(env('SCRAPING_N8N_RUTA_BASE') . 'webhook/scrape/?documento=' . $recipientDocument . '&idcita=' . $recipientIdCita);
+              ->get(env('N8N_RUTA_BASE') . 'webhook/scrape/?documento=' . $recipientDocument . '&idcita=' . $recipientIdCita);
 
             if ($response->successful()) {
                 return $response->json();
