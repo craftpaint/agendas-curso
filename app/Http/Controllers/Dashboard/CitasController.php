@@ -18,6 +18,8 @@ use App\Models\User;
 use Carbon\Carbon;
 use App\Jobs\UpdateStepDealCrm;
 use App\Jobs\UpdateOperatorDealCrm;
+use App\Jobs\UpdateAgentConversationChatwoot;
+use App\Jobs\UpdateLabelConversationChatwoot;
 
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -743,6 +745,7 @@ class CitasController extends Controller
                 $codigo_comparendo      = $request->input('codigo_comparendo');
                 $id_whatsapp_sendpulse  = $request->input('id_whatsapp_sendpulse');
                 $id_trato_sendpulse     = $request->input('id_trato_sendpulse');
+                $id_conversacion_chatwoot = $request->input('id_conversacion_chatwoot');
 
                 // Convertir la fecha de formato d/m/Y a Y-m-d
                 $date = \DateTime::createFromFormat('d/m/Y', $reserva_cita);
@@ -790,6 +793,7 @@ class CitasController extends Controller
                     'desc_cita'              => $desc_cita,
                     'id_whatsapp_sendpulse'  => $id_whatsapp_sendpulse,
                     'id_trato_sendpulse'     => $id_trato_sendpulse,
+                    'id_conversacion_chatwoot'=> $id_conversacion_chatwoot,
                     'updated_at'             => Carbon::now()
                 ];
 
@@ -844,6 +848,13 @@ class CitasController extends Controller
                 }
 
                 UpdateOperatorDealCrm::dispatch($id_cita, $id_agente_callcenter)->onQueue('crm');
+
+                // Se ejecuta el cambio en chatwoot
+                if ($id_conversacion_chatwoot) {
+                    UpdateAgentConversationChatwoot::dispatch($id_cita, $id_agente_callcenter)->onQueue('Chatwoot');
+                    UpdateLabelConversationChatwoot::dispatch($id_cita, $id_estado_verificado)->onQueue('Chatwoot');
+                }
+
                 $objLoad = [
                     'validate' => true,
                     'text'     => 'Cita actualizada correctamente',
