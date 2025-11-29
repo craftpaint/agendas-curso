@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Helpers\UtilsHelper;
 use App\Services\CrmService;
+use App\Services\ChatwootService;
 
 class WhatsappJob implements ShouldQueue {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -24,7 +25,7 @@ class WhatsappJob implements ShouldQueue {
         $this->citas_agendadas = $citas_agendadas;
     }
 
-    public function handle(UtilsHelper $utilsHelper, CrmService $crmService): void {
+    public function handle(UtilsHelper $utilsHelper, CrmService $crmService, ChatwootService $chatwootService): void {
         $whatsappEnviado = $utilsHelper->enviarConfirmacionWhatsappCliente($this->id_cita);
 
         if ($whatsappEnviado['exito'] == true) {
@@ -44,6 +45,20 @@ class WhatsappJob implements ShouldQueue {
 
                     if (!$dealActualizado) {
                         Log::error("No se pudo actualizar el paso del trato en CRM para el estado Duplicado.");
+                    }
+                }
+            }
+
+            if ($whatsappEnviado['metodo'] == 'Chatwoot WhatsApp' && $this->citas_agendadas) {
+                $id_conversacion_chatwoot = DB::table('tb_cita')
+                    ->where('id_cita', $this->id_cita)
+                    ->value('id_conversacion_chatwoot');
+
+                if ($id_conversacion_chatwoot) {
+                    $chatwootLabelActualizado = $chatwootService->updateLabelConversation($id_conversacion_chatwoot, "Duplicado");
+
+                    if (!$chatwootLabelActualizado) {
+                        Log::error("No se pudo actualizar la etiqueta de la conversación en Chatwoot con ID " . $id_conversacion_chatwoot);
                     }
                 }
             }

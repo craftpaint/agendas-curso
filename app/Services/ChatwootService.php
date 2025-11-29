@@ -62,4 +62,25 @@ class ChatwootService {
             return false;
         }
     }
+
+    public function updateCustomAtributesConversation($recipientIdConversation, $recipientAttributes) {
+        try {
+            $body = $recipientAttributes;
+
+            $response = Http::withHeaders([
+                'api_access_token' => $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->post($this->baseUrl . "api/v1/accounts/" . $this->accountId . "/conversations/" . $recipientIdConversation . "/custom_attributes", $body);
+
+            if ($response->successful()) {
+                return true;
+            } else {
+                Log::error("Error al actualizar los atributos personalizados de la conversación en Chatwoot con ID " . $recipientIdConversation . ". Respuesta: " . $response->body());
+                return false;
+            }
+        } catch (\Throwable $e) {
+            Log::error("Error al actualizar los atributos personalizados de la conversación en Chatwoot con ID " . $recipientIdConversation . " y error: " . $e->getMessage());
+            return false;
+        }
+    }
 }
