@@ -18,6 +18,10 @@ use App\Models\User;
 use Carbon\Carbon;
 use App\Jobs\UpdateStepDealCrm;
 use App\Jobs\UpdateOperatorDealCrm;
+use App\Jobs\UpdateAgentConversationChatwoot;
+use App\Jobs\UpdateLabelConversationChatwoot;
+use App\Jobs\UpdateCustomAttributesConversationChatwoot;
+use App\Jobs\WhatsappJob;
 
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -590,6 +594,14 @@ class CitasController extends Controller
                     } catch (\Exception $e) {
                         Log::error($e->getMessage());
                     }
+
+                    // Obtener el ID de la cita recién creada
+                    $ultimaCita = DB::table('tb_cita')->orderBy('id_cita', 'desc')->first();
+                    $id_cita = $ultimaCita->id_cita;
+
+                    // Limitar agente si es el caso
+                    $this->limitar_agente($idAgenteCallcenter, $id_cita, false);
+
                     try {
                         // Crear liquidador
                         DB::table('tb_liquidador')->insert([
@@ -743,6 +755,7 @@ class CitasController extends Controller
                 $codigo_comparendo      = $request->input('codigo_comparendo');
                 $id_whatsapp_sendpulse  = $request->input('id_whatsapp_sendpulse');
                 $id_trato_sendpulse     = $request->input('id_trato_sendpulse');
+                $id_conversacion_chatwoot = $request->input('id_conversacion_chatwoot');
 
                 // Convertir la fecha de formato d/m/Y a Y-m-d
                 $date = \DateTime::createFromFormat('d/m/Y', $reserva_cita);
@@ -790,6 +803,7 @@ class CitasController extends Controller
                     'desc_cita'              => $desc_cita,
                     'id_whatsapp_sendpulse'  => $id_whatsapp_sendpulse,
                     'id_trato_sendpulse'     => $id_trato_sendpulse,
+                    'id_conversacion_chatwoot'=> $id_conversacion_chatwoot,
                     'updated_at'             => Carbon::now()
                 ];
 
@@ -844,6 +858,14 @@ class CitasController extends Controller
                 }
 
                 UpdateOperatorDealCrm::dispatch($id_cita, $id_agente_callcenter)->onQueue('crm');
+
+                // Se ejecuta el cambio en chatwoot
+                if ($id_conversacion_chatwoot) {
+                    UpdateAgentConversationChatwoot::dispatch($id_cita, $id_agente_callcenter)->onQueue('Chatwoot');
+                    UpdateLabelConversationChatwoot::dispatch($id_cita, $id_estado_verificado)->onQueue('Chatwoot');
+                    UpdateCustomAttributesConversationChatwoot::dispatch($id_cita, $id_agente_callcenter)->onQueue('Chatwoot');
+                }
+
                 $objLoad = [
                     'validate' => true,
                     'text'     => 'Cita actualizada correctamente',
@@ -969,6 +991,16 @@ class CitasController extends Controller
                     updateStepDealCrm::dispatch($idDealCrm, $step_sendpulse)->onQueue('crm');
                 }
 
+                // Se realiza el cambio para el caso de chatwoot
+                $id_conversacion_chatwoot = DB::table('tb_cita')
+                    ->where('id_cita', $id_cita)
+                    ->value('id_conversacion_chatwoot');
+                
+                if ($id_conversacion_chatwoot) {
+                    UpdateLabelConversationChatwoot::dispatch($id_cita, $id_estado_verificado)->onQueue('Chatwoot');
+                }
+                
+
                 $objLoad = [
                     'validate' => true,
                     'text' => 'Estado verificado actualizado correctamente'
@@ -1015,6 +1047,14 @@ class CitasController extends Controller
                         'created_at'         => Carbon::now(),
                         'updated_at'         => Carbon::now()
                     ]);
+
+                    $id_conversacion_chatwoot = DB::table('tb_cita')
+                        ->where('id_cita', $id_cita)
+                        ->value('id_conversacion_chatwoot');
+
+                    if ($id_conversacion_chatwoot) {
+                        UpdateAgentConversationChatwoot::dispatch($id_cita, $id_agente)->onQueue('Chatwoot');
+                    }
 
                     $objLoad = [
                         'validate' => true,
@@ -2893,5 +2933,34 @@ class CitasController extends Controller
             Log::error("Ocurrió un error al intentar cambiar el método de Scraping.");
         }
         return response()->json($response);
+    }
+
+    public function limitar_agente($idAgente, $id_cita, $citas_agendadas) {
+        $agente_limitado = DB::table('tb_config')
+            ->where('config_key', 'limited_agent')
+            ->value('config_value');
+
+        $porcentaje_envio_sendpulse = DB::table('tb_config')
+            ->where('config_key', 'sendpulse_delivery_rate')
+            ->value('config_value');
+
+        
+        if($agente_limitado == $idAgente) {
+            $enviar = $this->probabilidad_envio_sendpulse($porcentaje_envio_sendpulse);
+
+            if($enviar) {
+                // Envía el mensaje de WhatsApp al cliente
+                WhatsappJob::dispatch($id_cita, $citas_agendadas)->onQueue('Whatsapp');
+            }
+        } else {
+            // Envía el mensaje de WhatsApp al cliente
+            WhatsappJob::dispatch($id_cita, $citas_agendadas)->onQueue('Whatsapp');
+        }
+    }
+
+    function probabilidad_envio_sendpulse(int $probabilidad_true): bool {
+        $probabilidad = max(0, min(100, $probabilidad_true));
+        $aleatorio = mt_rand(1, 100);
+        return $aleatorio <= $probabilidad;
     }
 }
