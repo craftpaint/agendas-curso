@@ -192,52 +192,59 @@ class UtilsHelper {
             }
         }
 
-        if ($agente->id_agente_chatwoot && $agente->id_equipo_agentes_chatwoot && $agente->id_inbox_chatwoot && $agente->nombre_plantilla_chatwoot && $agente->idioma_plantilla_chatwoot && $agente->id_whatsapp_business_phone_number) {
-            $metodo = 'ChatWoot WhatsApp';
+        $agentsExcludedChatwootSendTemplate = DB::table('tb_config')
+            ->where('config_key', 'agents_excluded_chatwoot_send_template')
+            ->value('config_value');
+        $arrayAgentsExcludedChatwootSendTemplate = json_decode($agentsExcludedChatwootSendTemplate, true) ?? [];
 
-            $body = [
-                "numero_cliente" => $cliente->telefono_cliente,
-                "correo_cliente" => $cliente->email_cliente,
-                "plantilla" => [
-                    "nombre" => $agente->nombre_plantilla_chatwoot,
-                    "parametros" => [
-                        "1" => $cliente->nombre_cliente . ' ' . $cliente->apellido_cliente,
-                        "2" => $agente->name,
-                        "3" => date('Y/m/d', strtotime($cita->reserva_cita)),
-                        "4" => trim(explode('-', $cita->rango_horario)[0] ?? ''),
-                        "5" => $sede->nombre_sede,
-                        "6" => $sede->direccion_sede
+        if (!in_array($agente->id, $arrayAgentsExcludedChatwootSendTemplate)) {
+            if ($agente->id_agente_chatwoot && $agente->id_equipo_agentes_chatwoot && $agente->id_inbox_chatwoot && $agente->nombre_plantilla_chatwoot && $agente->idioma_plantilla_chatwoot && $agente->id_whatsapp_business_phone_number) {
+                $metodo = 'Chatwoot WhatsApp';
+
+                $body = [
+                    "numero_cliente" => $cliente->telefono_cliente,
+                    "correo_cliente" => $cliente->email_cliente,
+                    "plantilla" => [
+                        "nombre" => $agente->nombre_plantilla_chatwoot,
+                        "parametros" => [
+                            "1" => $cliente->nombre_cliente . ' ' . $cliente->apellido_cliente,
+                            "2" => $agente->name,
+                            "3" => date('Y/m/d', strtotime($cita->reserva_cita)),
+                            "4" => trim(explode('-', $cita->rango_horario)[0] ?? ''),
+                            "5" => $sede->nombre_sede,
+                            "6" => $sede->direccion_sede
+                        ],
+                        "idioma" => $agente->idioma_plantilla_chatwoot
                     ],
-                    "idioma" => $agente->idioma_plantilla_chatwoot
-                ],
-                "id_agente_chatwoot" => $agente->id_agente_chatwoot,
-                "id_equipo_agentes_chatwoot" => $agente->id_equipo_agentes_chatwoot,
-                "id_inbox_chatwoot" => $agente->id_inbox_chatwoot,
-                "whatsapp_business_phone_number_id" => $agente->id_whatsapp_business_phone_number,
-                "url_cita" => env('APP_URL') . '/dashboard/citas/edit/' . $cita->id_cita
-            ];
+                    "id_agente_chatwoot" => $agente->id_agente_chatwoot,
+                    "id_equipo_agentes_chatwoot" => $agente->id_equipo_agentes_chatwoot,
+                    "id_inbox_chatwoot" => $agente->id_inbox_chatwoot,
+                    "whatsapp_business_phone_number_id" => $agente->id_whatsapp_business_phone_number,
+                    "url_cita" => env('APP_URL') . '/dashboard/citas/edit/' . $cita->id_cita
+                ];
 
-            if ($sede->id_ciudad) {
-                $body['ciudad_sede'] = DB::table('tb_ciudad')->where('id_ciudad', $sede->id_ciudad)->value('nombre');
-                $body['enviar_imagen_sorteo'] = Str::contains($body['ciudad_sede'], 'Bogotá') ? true : false;
-            }
+                if ($sede->id_ciudad) {
+                    $body['ciudad_sede'] = DB::table('tb_ciudad')->where('id_ciudad', $sede->id_ciudad)->value('nombre');
+                    $body['enviar_imagen_sorteo'] = Str::contains($body['ciudad_sede'], 'Bogotá') ? true : false;
+                }
 
-            $codigos = json_decode($cita->codigos_comparendo, true);
+                $codigos = json_decode($cita->codigos_comparendo, true);
 
-            $body['codigos_comparendo'] = (empty($codigos) || !is_array($codigos)) ? '': implode(' - ', array_column($codigos, 'value'));
+                $body['codigos_comparendo'] = (empty($codigos) || !is_array($codigos)) ? '': implode(' - ', array_column($codigos, 'value'));
 
-            $response = Http::withHeaders([
-                'Content-Type'  => 'application/json'
-            ])->post(env('N8N_RUTA_BASE') . 'webhook/send_utilidad_confirmacion_cita', $body);
-            
-            if (!$response['Success']) {
-                Log::error("No se pudo enviar la plantilla de confirmación de Whatsapp al cliente vía ChatWoot. ERROR: " . $response->body());
-                return ['exito' => false, 'metodo' => $metodo];
-            } else {
-                DB::table('tb_cita')->where('tb_cita.id_cita', $id_cita)->update([
-                    'tb_cita.id_conversacion_chatwoot' => $response['Data'],
-                    'tb_cita.updated_at' => Carbon::now()
-                ]);
+                $response = Http::withHeaders([
+                    'Content-Type'  => 'application/json'
+                ])->post(env('N8N_RUTA_BASE') . 'webhook/send_utilidad_confirmacion_cita', $body);
+                
+                if (!$response['Success']) {
+                    Log::error("No se pudo enviar la plantilla de confirmación de Whatsapp al cliente vía ChatWoot. ERROR: " . $response->body());
+                    return ['exito' => false, 'metodo' => $metodo];
+                } else {
+                    DB::table('tb_cita')->where('tb_cita.id_cita', $id_cita)->update([
+                        'tb_cita.id_conversacion_chatwoot' => $response['Data'],
+                        'tb_cita.updated_at' => Carbon::now()
+                    ]);
+                }
             }
         }
         return ['exito' => true, 'metodo' => $metodo];

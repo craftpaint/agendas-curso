@@ -614,7 +614,6 @@ class LoadController extends Controller
     function probabilidad_envio_sendpulse(int $probabilidad_true): bool {
         $probabilidad = max(0, min(100, $probabilidad_true));
         $aleatorio = mt_rand(1, 100);
-        Log::info("RESULTADO: " . $aleatorio);
         return $aleatorio <= $probabilidad;
     }
 }
