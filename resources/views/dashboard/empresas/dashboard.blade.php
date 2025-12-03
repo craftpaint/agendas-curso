@@ -2,7 +2,7 @@
     <!-- Content wrapper -->
     <div class="content-wrapper">
         <!-- Content -->
-        @if ($rol == 'superadmin' || $rol == 'admin')
+        @if ($rol == 'superadmin' || $rol == 'admin' || $rol == 'lidercallcenter')
             <div class="container-xxl flex-grow-1 container-p-y">
                 <div class="row">
                     <div class="col-md-12">
@@ -19,10 +19,14 @@
                 <div class="mb-3 col-md-3 d-flex">
                     <div class="card w-100">
                         <div class="card-body">
-                            <h3 class="card-title mb-4 " style="font-size:22px;"><i class="ti ti-box fs-1 me-2"></i> Paquete Activo</h3>
-                            <h4 class="card-text mb-1" style="font-size:15px;" id="nombre-paquete-activo-dashboard-empresa"></h4>
-                            <h4 class="card-text mb-1" style="font-size:15px;" id="numero-citas-paquete-activo-dashboard-empresa"></h4>
-                            <h4 class="card-text mb-1" style="font-size:15px;" id="estado-paquete-activo-dashboard-empresa"></h4>
+                            <h3 class="card-title mb-4 " style="font-size:22px;"><i class="ti ti-box fs-1 me-2"></i>
+                                Paquete Activo</h3>
+                            <h4 class="card-text mb-1" style="font-size:15px;"
+                                id="nombre-paquete-activo-dashboard-empresa"></h4>
+                            <h4 class="card-text mb-1" style="font-size:15px;"
+                                id="numero-citas-paquete-activo-dashboard-empresa"></h4>
+                            <h4 class="card-text mb-1" style="font-size:15px;"
+                                id="estado-paquete-activo-dashboard-empresa"></h4>
                         </div>
                     </div>
                 </div>
@@ -30,9 +34,9 @@
                 <div class="mb-3 col-md-3 d-flex">
                     <div class="card w-100">
                         <div class="card-body d-flex flex-column">
-                            <h4 class="card-title text-info" style="font-size:22px;"><i class="ti ti-package-export fs-1 me-2"></i> Citas Consumidas</h4>
-                            <h1 class="card-text mb-1 text-center display-1"
-                                style="font-size:60px;"
+                            <h4 class="card-title text-info" style="font-size:22px;"><i
+                                    class="ti ti-package-export fs-1 me-2"></i> Citas Consumidas</h4>
+                            <h1 class="card-text mb-1 text-center display-1" style="font-size:60px;"
                                 id="citas-consumidas-paquete-activo-dashboard-empresa"></h1>
                         </div>
                     </div>
@@ -41,9 +45,9 @@
                 <div class="mb-3 col-md-3 d-flex">
                     <div class="card w-100">
                         <div class="card-body d-flex flex-column">
-                            <h3 class="card-title verde" style="font-size:22px;"><i class="ti ti-packages fs-1 me-2"></i> Citas Faltantes</h3>
-                            <h1 class="card-text mb-1 text-center display-1"
-                                style="font-size:60px;"
+                            <h3 class="card-title verde" style="font-size:22px;"><i
+                                    class="ti ti-packages fs-1 me-2"></i> Citas Faltantes</h3>
+                            <h1 class="card-text mb-1 text-center display-1" style="font-size:60px;"
                                 id="citas-faltantes-paquete-activo-dashboard-empresa"></h1>
                         </div>
                     </div>
@@ -51,9 +55,10 @@
                 <div class="mb-3 col-md-3 d-flex">
                     <div class="card w-100">
                         <div class="card-body">
-                            <h3 class="card-title " style="font-size:22px;"><i class="ti ti-building-skyscraper fs-1 me-2"></i>Información</h3>
-                            <img id="logo-empresa-dashboard" src="" alt="Logo"
-                                class="rounded me-2 mb-2 img-fluid" style="max-height: 70px;">
+                            <h3 class="card-title " style="font-size:22px;"><i
+                                    class="ti ti-building-skyscraper fs-1 me-2"></i>Información</h3>
+                            <img id="logo-empresa-dashboard" src="" alt="Logo" class="rounded me-2 mb-2 img-fluid"
+                                style="max-height: 70px;">
                             <p class="card-text mb-1" style="font-size:15px;" id="nombre-empresa-dashboard"></p>
                             <p class="card-text mb-1" style="font-size:15px;" id="documento-empresa-dashboard"></p>
                             <p class="card-text mb-1" style="font-size:15px;" id="plan-empresa-dashboard"></p>
@@ -66,7 +71,8 @@
                 <div class="col-md-6">
                     <div class="card h-100">
                         <div class="card-body">
-                            <h3 class="mb-4 text-dark" style="font-size:22px;"><i class="ti ti-square-percentage text-info fs-1 me-2"></i> Progreso del paquete</h3>
+                            <h3 class="mb-4 text-dark" style="font-size:22px;"><i
+                                    class="ti ti-square-percentage text-info fs-1 me-2"></i> Progreso del paquete</h3>
                             <div id="ChartDashboardEmpresasProgressBar"></div>
                             <div class="row">
                                 <div class="col-md-6 mt-5">
@@ -90,7 +96,9 @@
                 <div class="col-md-6">
                     <div class="card h-100">
                         <div class="card-body">
-                             <h3 class="mb-4 text-dark" style="font-size:22px;"><i class="ti ti-chart-infographic text-info fs-1 me-2"></i> Citas Agendadas vs Asistidas del mes actual</h3>
+                            <h3 class="mb-4 text-dark" style="font-size:22px;"><i
+                                    class="ti ti-chart-infographic text-info fs-1 me-2"></i> Citas Agendadas vs
+                                Asistidas del mes actual</h3>
                             <div id="ChartDashboardEmpresasLineBarMixed"></div>
                         </div>
                     </div>
@@ -103,10 +111,12 @@
                     <div class="col-md-7">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h3 style="font-size:22px;"><i class="ti ti-progress text-primary fs-1 me-2"></i> Historial de paquetes</h3>
+                                <h3 style="font-size:22px;"><i class="ti ti-progress text-primary fs-1 me-2"></i>
+                                    Historial de paquetes</h3>
                                 <div class="row">
                                     <div class="col-md-12 justify-content-center align-item-center">
-                                        <div id="ChartRadialProgressDashboardEmpresasHistorial" class="col-12 h-100"></div>
+                                        <div id="ChartRadialProgressDashboardEmpresasHistorial" class="col-12 h-100">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -115,7 +125,8 @@
                     <div class="col-md-5">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h4 style="font-size:22px;"><i class="ti ti-history text-warning fs-1 me-2"></i> Paquetes pendientes de activación</h4>
+                                <h4 style="font-size:22px;"><i class="ti ti-history text-warning fs-1 me-2"></i>
+                                    Paquetes pendientes de activación</h4>
                                 <div id="ListadopaquetesPendientes"></div>
                             </div>
                         </div>
