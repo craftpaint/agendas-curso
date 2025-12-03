@@ -944,7 +944,7 @@ $(function () {
             $('.content_localidad_add').fadeIn(200);
         });
     }
-    
+
     //FIN: HORARIOS------------------------------------------------------------------------
     if ($('.form-repeater').length) {
         a_dias.forEach(function (item, index) {
@@ -5383,7 +5383,7 @@ $(function () {
         ChartDashboardEmpresasLineBarMixed.render();
 
         // Datos de las empresas para el select
-        if (rol == 'superadmin' || rol == 'admin') {
+        if (rol == 'superadmin' || rol == 'admin' || rol == 'lidercallcenter') {
             consultarTodasEmpresas();
         }
 
@@ -5800,7 +5800,7 @@ $(function () {
         });
     });
 
-    if($('#select-metodo-scraping').length) {
+    if ($('#select-metodo-scraping').length) {
         $.ajax({
             url: url + '/dashboard/citas/get_estado_metodo_scraping',
             type: 'GET',
@@ -5981,24 +5981,24 @@ $(function () {
             const clave_configuracion_general = $(this).data('clave-configuracion-general');
 
             $.ajax({
-            url: url + '/dashboard/configuracion/eliminar_configuracion_general',
-            type: 'DELETE',
-            data: {
-                clave: clave_configuracion_general
-            },
-            success: function () {
-                // Destruir todos los tooltips activos antes de recargar la tabla
-                var tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-                tooltips.forEach(function (el) {
-                    var instance = bootstrap.Tooltip.getInstance(el);
-                    if (instance) {
-                        instance.dispose();
-                    }
-                });
+                url: url + '/dashboard/configuracion/eliminar_configuracion_general',
+                type: 'DELETE',
+                data: {
+                    clave: clave_configuracion_general
+                },
+                success: function () {
+                    // Destruir todos los tooltips activos antes de recargar la tabla
+                    var tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                    tooltips.forEach(function (el) {
+                        var instance = bootstrap.Tooltip.getInstance(el);
+                        if (instance) {
+                            instance.dispose();
+                        }
+                    });
 
-                table_configuracion_general.ajax.reload();
-            }
-        });
+                    table_configuracion_general.ajax.reload();
+                }
+            });
         });
     }
 });
