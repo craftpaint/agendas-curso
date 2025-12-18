@@ -1,3 +1,4 @@
+<!--?= dd($id_ciudad, $nombre_ciudad) ?>-->
 <!doctype html>
 
 <html
@@ -63,11 +64,38 @@
         <form class="content_form" action="{{url('savecita')}}">
             <input type="hidden" name="id_sede" value="<?= $id_sede ?>">
             <div class="row">
+
                 <div class="col-12">
-                    <h5 class="mb-2">Sede: <?= $sede['nombre_sede'] ?></h5>
-                    <p class="mb-1"><strong>Dirección:</strong> <?= $sede['direccion_sede'] ?></p>
-                    <p><strong>Teléfono:</strong> <span class="badge rounded-pill bg-label-primary"><?= $sede['tel_sede'] ?></span></p>
+
+                    <!-- FILA SUPERIOR: TITULO + CIUDAD -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
+
+                        <h5 class="mb-0">
+                            Sede: <?= $sede['nombre_sede'] ?>
+                        </h5>
+
+                        <!-- PILL CIUDAD -->
+                        <span class="badge rounded-pill bg-label-info city-pill">
+                            <i class="ti ti-map-pin"></i>
+                            <?= $nombre_ciudad ?? 'Ciudad no definida' ?>
+                        </span>
+
+                    </div>
+
+                    <!-- INFORMACIÓN DEBAJO -->
+                    <p class="mb-1">
+                        <strong>Dirección:</strong> <?= $sede['direccion_sede'] ?>
+                    </p>
+
+                    <p>
+                        <strong>Teléfono:</strong>
+                        <span class="badge rounded-pill bg-label-primary">
+                            <?= $sede['tel_sede'] ?>
+                        </span>
+                    </p>
+
                 </div>
+
                 <div class="mb-4 col-12 col-md-6">
                     <label class="form-label">Día de la cita <span class="required_flied">*</span></label>
                     <input name="reserva_cita" type="text" id="citaDia" placeholder="DD/MM/YYYY" class="form-control" readonly required />
@@ -293,6 +321,13 @@
         <div class="spinner-border text-white" style="width: 3rem; height: 3rem;"></div>
         <p class="text-white mt-2">Cargando horarios...</p>
     </div>
+
+    <script>
+    const ID_CIUDAD_GLOBAL = {{ (int) $id_ciudad }};
+</script>
+
+<script src="{{ asset('js/createcita.js') }}"></script>
+
 </body>
 
 </html>

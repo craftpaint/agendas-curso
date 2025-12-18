@@ -143,6 +143,30 @@ $(function () {
     }
     get_hours();
 
+    //obtener ciudad para etiqueta
+
+    $(function () {
+    cargarCiudad(ID_CIUDAD_GLOBAL);
+});
+
+    function cargarCiudad(idCiudad) {
+    $.ajax({
+        url: url + '/ciudad/obtener',
+        type: 'POST',
+        data: { id_ciudad: idCiudad },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success && response.ciudad) {
+                $('#badgeCiudad .nombre-ciudad').text(response.ciudad.nombre_ciudad);
+                $('#badgeCiudad').removeClass('d-none');
+            }
+        },
+        error: function () {
+            console.error('No se pudo cargar la ciudad');
+        }
+    });
+}
+
     function VerificarCupoHorario(response) {
         if (!Array.isArray(response)) {
             console.log("No hay horarios disponibles para la fecha seleccionada.");
