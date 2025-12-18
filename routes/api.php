@@ -17,6 +17,7 @@ use App\Services\WhatsappService;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+Route::post('/ciudad/obtener', [CiudadController::class, 'obtener']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();

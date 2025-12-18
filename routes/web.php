@@ -25,6 +25,7 @@ use App\Http\Controllers\Dashboard\PaquetesController;
 | en la base estén creados dichos permisos.
 |
 */
+Route::post('/ciudad/obtener', [CiudadController::class, 'obtener']);
 
 // Redirecciona la raíz al login
 Route::get('/', function () {

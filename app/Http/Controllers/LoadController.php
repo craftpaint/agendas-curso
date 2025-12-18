@@ -44,6 +44,7 @@ class LoadController extends Controller
             $request->session()->put('utm_source', $urlParams['utm_source']);
         }
 
+        
         $data = [];
         echo view('load/index', $data);
     }
@@ -59,12 +60,36 @@ class LoadController extends Controller
 
         $sql = "SELECT * FROM tb_servicio_liquidador";
         $servicios_liquidador = DB::select($sql);
+
+        // ===== MODULO INDEPENDIENTE CIUDAD =====
+
+            // Obtener sede
+            $sede_db = DB::table('tb_sede')
+                ->where('id_sede', $id_sede)
+                ->first();
+
+            // Obtener id_ciudad
+            $id_ciudad = $sede_db->id_ciudad ?? null;
+
+            // Obtener nombre de la ciudad
+            $nombre_ciudad = null;
+            if ($id_ciudad) {
+                $nombre_ciudad = DB::table('tb_ciudad')
+                    ->where('id_ciudad', $id_ciudad)
+                    ->value('nombre');
+            }
+
         $data = [
             'id_sede' => $id_sede,
             'sede' => AdminHelper::get_sede_by_id($id_sede),
             'urlParams' => $urlParams,
-            'servicios_liquidador' => $servicios_liquidador
+            'servicios_liquidador' => $servicios_liquidador,
+
+            // 👉 NUEVO (ciudad)
+            'id_ciudad' => $id_ciudad,
+            'nombre_ciudad' => $nombre_ciudad
         ];
+
         echo view('load/createcita', $data);
     }
 
@@ -95,6 +120,8 @@ class LoadController extends Controller
 
                 // Obtener nombre de la sede
                 $sede = DB::table('tb_sede')->where('id_sede', $id_sede)->first();
+                $id_ciudad = $sede->id_ciudad ?? null;
+
                 $nombre_sede = $sede ? $sede->nombre_sede : 'Sede no encontrada';
                 $direccion_sede = $sede ? $sede->direccion_sede : 'Dirección no encontrada';
 
@@ -271,6 +298,7 @@ class LoadController extends Controller
                     try {
                         // Consulta la información de la sede
                         $sede = DB::table('tb_sede')->where('id_sede', $id_sede)->first();
+                        $id_ciudad = $sede->id_ciudad ?? null;
 
                         // Preparar los datos para la plantilla de SendPulse
                         $templateVariables = [
