@@ -164,6 +164,13 @@ class UsersController extends Controller
                 $id_user_sendpulse = $request->request->get('id_user_sendpulse');
                 $id_chatbot_sendpulse = $request->request->get('id_chatbot_sendpulse');
                 $id_plantilla_sendpulse = $request->request->get('id_plantilla_sendpulse');
+                $id_agente_chatwoot = $request->request->get('id_agente_chatwoot');
+                $id_equipo_agentes_chatwoot = $request->request->get('id_equipo_agentes_chatwoot');
+                $id_inbox_chatwoot = $request->request->get('id_inbox_chatwoot');
+                $nombre_plantilla_chatwoot = $request->request->get('nombre_plantilla_chatwoot');
+                $idioma_plantilla_chatwoot = $request->request->get('idioma_plantilla_chatwoot');
+                $id_whatsapp_business_phone_number = $request->request->get('id_whatsapp_business_phone_number');
+
                 //Guardamos al usuario
                 $user = new User();
                 $user->id_sede = $id_sede;
@@ -174,6 +181,12 @@ class UsersController extends Controller
                 $user->id_user_sendpulse = $id_user_sendpulse;
                 $user->id_chatbot_sendpulse = $id_chatbot_sendpulse;
                 $user->id_plantilla_sendpulse = $id_plantilla_sendpulse;
+                $user->id_agente_chatwoot = $id_agente_chatwoot;
+                $user->id_equipo_agentes_chatwoot = $id_equipo_agentes_chatwoot;
+                $user->id_inbox_chatwoot = $id_inbox_chatwoot;
+                $user->nombre_plantilla_chatwoot = $nombre_plantilla_chatwoot;
+                $user->idioma_plantilla_chatwoot = $idioma_plantilla_chatwoot;
+                $user->id_whatsapp_business_phone_number = $id_whatsapp_business_phone_number;
                 $user->save();
                 $user->assignRole($role);
                 $objLoad = array(
@@ -211,6 +224,12 @@ class UsersController extends Controller
                 $id_user_sendpulse = $request->request->get('id_user_sendpulse');
                 $id_chatbot_sendpulse = $request->request->get('id_chatbot_sendpulse');
                 $id_plantilla_sendpulse = $request->request->get('id_plantilla_sendpulse');
+                $id_agente_chatwoot = $request->request->get('id_agente_chatwoot');
+                $id_equipo_agentes_chatwoot = $request->request->get('id_equipo_agentes_chatwoot');
+                $id_inbox_chatwoot = $request->request->get('id_inbox_chatwoot');
+                $nombre_plantilla_chatwoot = $request->request->get('nombre_plantilla_chatwoot');
+                $idioma_plantilla_chatwoot = $request->request->get('idioma_plantilla_chatwoot');
+                $id_whatsapp_business_phone_number = $request->get('id_whatsapp_business_phone_number');
                 $user = User::find($id_user);
                 $user->id_sede = $id_sede;
                 $user->name = $name;
@@ -221,6 +240,12 @@ class UsersController extends Controller
                 $user->id_user_sendpulse = $id_user_sendpulse;
                 $user->id_chatbot_sendpulse = $id_chatbot_sendpulse;
                 $user->id_plantilla_sendpulse = $id_plantilla_sendpulse;
+                $user->id_agente_chatwoot = $id_agente_chatwoot;
+                $user->id_equipo_agentes_chatwoot = $id_equipo_agentes_chatwoot;
+                $user->id_inbox_chatwoot = $id_inbox_chatwoot;
+                $user->nombre_plantilla_chatwoot = $nombre_plantilla_chatwoot;
+                $user->idioma_plantilla_chatwoot = $idioma_plantilla_chatwoot;
+                $user->id_whatsapp_business_phone_number = $id_whatsapp_business_phone_number;
                 $user->callcenter_habilitado = $callcenter_habilitado;
                 $user->save();
                 $user->syncRoles([$role]);

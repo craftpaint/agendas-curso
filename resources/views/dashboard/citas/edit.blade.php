@@ -148,16 +148,18 @@
                                 <label class="form-label">Descripción de la cita <span class="required_flied">*</span></label>
                                 <textarea class="form-control" rows="3" name="desc_cita" required><?= $cita->desc_cita ?></textarea>
                             </div>
-                            <?php if ($user->can('cita.Senpulse.e')) { ?>
                             <div class="mb-4 col-md-6">
                                 <label class="form-label">Id Whatsapp Sendpulse</label>
-                                <input type="text" class="form-control" name="id_whatsapp_sendpulse" placeholder="Id de whatsapp en sendpulse" autocomplete="off" value="<?= $cita->id_whatsapp_sendpulse ?>">
+                                <input type="text" class="form-control" name="id_whatsapp_sendpulse" placeholder="Id de whatsapp en sendpulse" autocomplete="off" value="<?= $cita->id_whatsapp_sendpulse ?>" <?= $user->can('cita.Sendpulse.e') ? '' : 'readonly' ?>>
                             </div>
                             <div class="mb-4 col-md-6">
                                 <label class="form-label">Id Trato Sendpulse</label>
-                                <input type="text" class="form-control" name="id_trato_sendpulse" placeholder="Id del trato en sendpulse" autocomplete="off" value="<?= $cita->id_trato_sendpulse ?>">
+                                <input type="text" class="form-control" name="id_trato_sendpulse" placeholder="Id del trato en sendpulse" autocomplete="off" value="<?= $cita->id_trato_sendpulse ?>" <?= $user->can('cita.Sendpulse.e') ? '' : 'readonly' ?>>
                             </div>
-                            <?php } ?>
+                            <div class="mb-4 col-md-6">
+                                <label class="form-label">Id Conversación Chatwoot</label>
+                                <input type="text" class="form-control" name="id_conversacion_chatwoot" placeholder="Id de la conversación en Chatwoot" autocomplete="off" value="<?= $cita->id_conversacion_chatwoot ?>" <?= $user->can('cita.Chatwoot.e') ? '' : 'readonly' ?>>
+                            </div>
                             <hr>
                             <h5>Anotaciones</h5>
                             <div class="row mb-4">

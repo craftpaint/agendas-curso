@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Services\SendPulseService;
 use App\Services\CrmService;
 use App\Services\ScrapingService;
+use App\Helpers\UtilsHelper;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -17,6 +18,10 @@ use App\Models\User;
 use Carbon\Carbon;
 use App\Jobs\UpdateStepDealCrm;
 use App\Jobs\UpdateOperatorDealCrm;
+use App\Jobs\UpdateAgentConversationChatwoot;
+use App\Jobs\UpdateLabelConversationChatwoot;
+use App\Jobs\UpdateCustomAttributesConversationChatwoot;
+use App\Jobs\WhatsappJob;
 
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -30,12 +35,14 @@ class CitasController extends Controller
     protected $sendPulse;
     protected $crmService;
     protected $scrapingService;
+    protected $utilsHelper;
 
-    public function __construct(SendPulseService $sendPulse, CrmService $crmService, ScrapingService $scrapingService )
+    public function __construct(SendPulseService $sendPulse, CrmService $crmService, ScrapingService $scrapingService, UtilsHelper $utilsHelper)
     {
         $this->sendPulse = $sendPulse;
         $this->crmService = $crmService;
         $this->scrapingService = $scrapingService;
+        $this->utilsHelper = $utilsHelper;
     }
     public function index()
     {
@@ -436,6 +443,8 @@ class CitasController extends Controller
                 $nombre_sede = $sede ? $sede->nombre_sede : 'Sede no encontrada';
                 $direccion_sede = $sede ? $sede->direccion_sede : 'Dirección no encontrada';
                 $id_servicio = $sede ? $sede->id_servicio : 'Servicio no encontrado';
+                $latitud = $sede ? str_replace(',', '.', $sede->latitud) : '';
+                $longitud = $sede ? str_replace(',', '.', $sede->longitud) : '';
 
                 $servicio = DB::table('tb_servicio')->where('id_servicio', $id_servicio)->first();
                 $nombre_servicio = $servicio ? $servicio->tipo_servicio : 'Servicio no encontrado';
@@ -566,6 +575,8 @@ class CitasController extends Controller
                             'origen'           => $origen,
                             'tipo_dispositivo' => $tipo_dispositivo,
                             'nombre_servicio'  => $nombre_servicio,
+                            'latitud'          => $latitud,
+                            'longitud'         => $longitud,
                         ];
                         // Enviar el correo al cliente
                         $enviadoCliente = $this->sendPulse->sendEmailConfirmacion(
@@ -583,6 +594,14 @@ class CitasController extends Controller
                     } catch (\Exception $e) {
                         Log::error($e->getMessage());
                     }
+
+                    // Obtener el ID de la cita recién creada
+                    $ultimaCita = DB::table('tb_cita')->orderBy('id_cita', 'desc')->first();
+                    $id_cita = $ultimaCita->id_cita;
+
+                    // Limitar agente si es el caso
+                    $this->limitar_agente($idAgenteCallcenter, $id_cita, false);
+
                     try {
                         // Crear liquidador
                         DB::table('tb_liquidador')->insert([
@@ -736,6 +755,7 @@ class CitasController extends Controller
                 $codigo_comparendo      = $request->input('codigo_comparendo');
                 $id_whatsapp_sendpulse  = $request->input('id_whatsapp_sendpulse');
                 $id_trato_sendpulse     = $request->input('id_trato_sendpulse');
+                $id_conversacion_chatwoot = $request->input('id_conversacion_chatwoot');
 
                 // Convertir la fecha de formato d/m/Y a Y-m-d
                 $date = \DateTime::createFromFormat('d/m/Y', $reserva_cita);
@@ -783,6 +803,7 @@ class CitasController extends Controller
                     'desc_cita'              => $desc_cita,
                     'id_whatsapp_sendpulse'  => $id_whatsapp_sendpulse,
                     'id_trato_sendpulse'     => $id_trato_sendpulse,
+                    'id_conversacion_chatwoot'=> $id_conversacion_chatwoot,
                     'updated_at'             => Carbon::now()
                 ];
 
@@ -837,6 +858,14 @@ class CitasController extends Controller
                 }
 
                 UpdateOperatorDealCrm::dispatch($id_cita, $id_agente_callcenter)->onQueue('crm');
+
+                // Se ejecuta el cambio en chatwoot
+                if ($id_conversacion_chatwoot) {
+                    UpdateAgentConversationChatwoot::dispatch($id_cita, $id_agente_callcenter)->onQueue('Chatwoot');
+                    UpdateLabelConversationChatwoot::dispatch($id_cita, $id_estado_verificado)->onQueue('Chatwoot');
+                    UpdateCustomAttributesConversationChatwoot::dispatch($id_cita, $id_agente_callcenter)->onQueue('Chatwoot');
+                }
+
                 $objLoad = [
                     'validate' => true,
                     'text'     => 'Cita actualizada correctamente',
@@ -962,6 +991,16 @@ class CitasController extends Controller
                     updateStepDealCrm::dispatch($idDealCrm, $step_sendpulse)->onQueue('crm');
                 }
 
+                // Se realiza el cambio para el caso de chatwoot
+                $id_conversacion_chatwoot = DB::table('tb_cita')
+                    ->where('id_cita', $id_cita)
+                    ->value('id_conversacion_chatwoot');
+                
+                if ($id_conversacion_chatwoot) {
+                    UpdateLabelConversationChatwoot::dispatch($id_cita, $id_estado_verificado)->onQueue('Chatwoot');
+                }
+                
+
                 $objLoad = [
                     'validate' => true,
                     'text' => 'Estado verificado actualizado correctamente'
@@ -1008,6 +1047,14 @@ class CitasController extends Controller
                         'created_at'         => Carbon::now(),
                         'updated_at'         => Carbon::now()
                     ]);
+
+                    $id_conversacion_chatwoot = DB::table('tb_cita')
+                        ->where('id_cita', $id_cita)
+                        ->value('id_conversacion_chatwoot');
+
+                    if ($id_conversacion_chatwoot) {
+                        UpdateAgentConversationChatwoot::dispatch($id_cita, $id_agente)->onQueue('Chatwoot');
+                    }
 
                     $objLoad = [
                         'validate' => true,
@@ -2216,9 +2263,7 @@ class CitasController extends Controller
         }
     }
 
-    public function get_informacion_simit(Request $request)
-    {
-
+    public function get_informacion_simit(Request $request) {
         $response = [
             'Status' => 500,
             'Message' => "Ocurrió un error al obtener la información del Simit.",
@@ -2249,15 +2294,11 @@ class CitasController extends Controller
 
             $verificacionSimit = $this->scrapingService->VerificarInformacion($id_cita, $metadata);
 
-            if (!$verificacionSimit) {
-                return response()->json($response);
-            }
-
-            $html = '<div class="row m-auto">';
-            $html .= '<div class="col-md-6">';
+            $html = '<div class="m-auto">';
+            $html .= '<div class="col-md-12">';
             $html .= '<div class="alert alert-warning" role="alert"><i class="ti ti-info-circle"></i>
             ¡Atención! Tenga en cuenta que estos datos son solo una aproximación de resultados hechos por el sistema.
-            Deberá de verificar que la información sea correcta en la imagen que se encuentra en el lado derecho <i class="ti ti-arrow-big-right"></i>
+            Deberá de verificar que la información sea correcta en la imagen que se encuentra en la sección inferior. <i class="ti ti-arrow-big-down"></i>
             </div>';
             $html .= '<h5 class="text-center">Fecha de Consulta: ' . $metadata['fechaCaptura'] . '</h5>';
             foreach ($verificacionSimit as $registro) {
@@ -2271,7 +2312,9 @@ class CitasController extends Controller
                 $secretaria = $registro[3] ?? 'No se encontró la secretaría';
                 $infraccion = $columna_infraccion[0] ?? 'No se encontró la infracción';
 
-                $html .= '<div class="card bg-info mt-3 mb-3">';
+                $html .= '<div class="col-12">';
+                $html .= '<div class="row">';
+                $html .= '<div class="card bg-info mt-3 mb-3 col-12 col-md-4">';
                 $html .= '<div class="row">';
                 $html .= '<div class="col-md-5">';
                 $html .= '<i class="card-img-top ti ti-checkup-list display-1" style="color:white;"></i>';
@@ -2289,12 +2332,22 @@ class CitasController extends Controller
                 $html .= '</div>';
                 $html .= '</div>';
                 $html .= '</div>';
+                $html .= '</div>';
+                $html .= '</div>';
             }
             $html .= '</div>';
-            $html .= '<div class="col-md-5">';
-            $html .= '<img class="img-fluid" src="' . env('SCRAPING_RUTA_BASE') . $cita->url_simit_imagen . '">';
+            $html .= '<div class="col-md-12 ">';
+            $html .= '<h3 class="text-center">Datos del SIMIT:</h3>';
+
+            if ($cita->origen_scraping == 'Node') {
+                $html .= '<iframe  style="width: 100%; height: 50vh; border: none;" src="' . env('SCRAPING_RUTA_BASE') . $metadata['urlHtml'] . '"></iframe>';
+            } else if ($cita->origen_scraping == 'N8N') {
+                $html .= '<iframe  style="width: 100%; height: 50vh; border: none;" src="' . env('N8N_RUTA_BASE') . $metadata['urlHtml'] . '"></iframe>';
+            }
+            
             $html .= '</div>';
             $html .= '</div>';
+            
             $response = [
                 'Status' => 200,
                 'Message' => "Se obtuvo la información del SIMIT correctamente.",
@@ -2825,7 +2878,8 @@ class CitasController extends Controller
             ->orderBy('t1.id_sede');
     }
 
-    public function get_estado_metodo_scraping() {
+    public function get_estado_metodo_scraping()
+    {
         $response = [
             'Status' => 500,
             'Message' => "Ocurrió un error al consultar el estado del método de Scraping.",
@@ -2850,7 +2904,8 @@ class CitasController extends Controller
         return response()->json($response);
     }
 
-    public function metodo_scraping(Request $request) {
+    public function metodo_scraping(Request $request)
+    {
         $response = [
             'Status' => 500,
             'Message' => "Ocurrió un error al cambiar el método de Scraping.",
@@ -2878,5 +2933,34 @@ class CitasController extends Controller
             Log::error("Ocurrió un error al intentar cambiar el método de Scraping.");
         }
         return response()->json($response);
+    }
+
+    public function limitar_agente($idAgente, $id_cita, $citas_agendadas) {
+        $agente_limitado = DB::table('tb_config')
+            ->where('config_key', 'limited_agent')
+            ->value('config_value');
+
+        $porcentaje_envio_sendpulse = DB::table('tb_config')
+            ->where('config_key', 'sendpulse_delivery_rate')
+            ->value('config_value');
+
+        
+        if($agente_limitado == $idAgente) {
+            $enviar = $this->probabilidad_envio_sendpulse($porcentaje_envio_sendpulse);
+
+            if($enviar) {
+                // Envía el mensaje de WhatsApp al cliente
+                WhatsappJob::dispatch($id_cita, $citas_agendadas)->onQueue('Whatsapp');
+            }
+        } else {
+            // Envía el mensaje de WhatsApp al cliente
+            WhatsappJob::dispatch($id_cita, $citas_agendadas)->onQueue('Whatsapp');
+        }
+    }
+
+    function probabilidad_envio_sendpulse(int $probabilidad_true): bool {
+        $probabilidad = max(0, min(100, $probabilidad_true));
+        $aleatorio = mt_rand(1, 100);
+        return $aleatorio <= $probabilidad;
     }
 }

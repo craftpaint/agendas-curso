@@ -124,6 +124,8 @@ class LoadController extends Controller
 
                 $nombre_sede = $sede ? $sede->nombre_sede : 'Sede no encontrada';
                 $direccion_sede = $sede ? $sede->direccion_sede : 'Dirección no encontrada';
+                $latitud = $sede ? str_replace(',', '.', $sede->latitud) : '';
+                $longitud = $sede ? str_replace(',', '.', $sede->longitud) : '';
 
                 // Asignar valores adicionales
                 $creado_por = 'Cliente'; // Identifica que la cita fue creada por el cliente
@@ -311,7 +313,9 @@ class LoadController extends Controller
                             'reserva_cita'     => $reserva_cita,
                             'rango_horario'    => $rango_horario,
                             'origen'           => $origen,
-                            'tipo_dispositivo' => $tipo_dispositivo
+                            'tipo_dispositivo' => $tipo_dispositivo,
+                            'latitud'          => $latitud,
+                            'longitud'         => $longitud,
                         ];
                         // Enviar el correo al cliente
                         $enviadoCliente = $this->sendPulse->sendEmailConfirmacion(
@@ -335,23 +339,19 @@ class LoadController extends Controller
                     $ultimaCita = DB::table('tb_cita')->orderBy('id_cita', 'desc')->first();
                     $id_cita = $ultimaCita->id_cita;
 
-                    // Envía el mensaje de WhatsApp al cliente
-                    WhatsappJob::dispatch($id_cita, $citas_agendadas)->onQueue('Whatsapp');
+                    //Limitar agente si es el caso
+                    $this->limitar_agente($agenteValue, $id_cita, $citas_agendadas);
 
                     // Se envía la cita para validar en el SIMIT
                     $metodo_actual = DB::table('tb_config')
                         ->where('config_key', 'method_scraping')
                         ->value('config_value');
-                    
-                    // SE un switch case para validar que método debe de usar
-                    switch ($metodo_actual) {
-                        case 1:
-                            ScrapingSimitJob::dispatch($id_cita, $doc_cliente)->onQueue('Scraping');
-                            break;
-                        case 2:
-                            Log::info("Se enviaría al Agente ChatGPT para realizar el Scraping.");
-                            break;
+
+                    // Se valida si debe realizar el scraping o no
+                    if ($metodo_actual > 0 && !$citas_agendadas) {
+                        ScrapingSimitJob::dispatch($id_cita, $doc_cliente, $metodo_actual)->onQueue('Scraping');
                     }
+                    
 
                     try {
                         $saveliquidador = DB::table('tb_liquidador')->insert([
@@ -653,4 +653,32 @@ class LoadController extends Controller
         return $horarios_disponibles;
     }
 
+    public function limitar_agente($idAgente, $id_cita, $citas_agendadas) {
+        $agente_limitado = DB::table('tb_config')
+            ->where('config_key', 'limited_agent')
+            ->value('config_value');
+
+        $porcentaje_envio_sendpulse = DB::table('tb_config')
+            ->where('config_key', 'sendpulse_delivery_rate')
+            ->value('config_value');
+
+        
+        if($agente_limitado == $idAgente) {
+            $enviar = $this->probabilidad_envio_sendpulse($porcentaje_envio_sendpulse);
+
+            if($enviar) {
+                // Envía el mensaje de WhatsApp al cliente
+                WhatsappJob::dispatch($id_cita, $citas_agendadas)->onQueue('Whatsapp');
+            }
+        } else {
+            // Envía el mensaje de WhatsApp al cliente
+            WhatsappJob::dispatch($id_cita, $citas_agendadas)->onQueue('Whatsapp');
+        }
+    }
+
+    function probabilidad_envio_sendpulse(int $probabilidad_true): bool {
+        $probabilidad = max(0, min(100, $probabilidad_true));
+        $aleatorio = mt_rand(1, 100);
+        return $aleatorio <= $probabilidad;
+    }
 }

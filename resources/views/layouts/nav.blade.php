@@ -243,7 +243,7 @@
         <?php
         }
         // Módulo configuración (Roles y Permisos): se muestra solo para usuarios que tengan permisos para gestionar roles y permisos.
-        if ($user->can('roles.Roles.v') || $user->can('permissions.administrar.v')) {
+        if ($user->can('roles.Roles.v') || $user->can('permissions.administrar.v') || $user->can('configuracion.General.v')) {
         ?>
             <li class="menu-item <?= ($page == 'Configuracion') ? 'active open' : '' ?>">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
@@ -262,6 +262,13 @@
                         <li class="menu-item <?= ($page == 'Configuracion' && $subpage == 'Permisos') ? 'active' : '' ?>">
                             <a href="{{ url('dashboard/configuracion/permissions') }}" class="menu-link">
                                 <div>Permisos</div>
+                            </a>
+                        </li>
+                    <?php } ?>
+                    <?php if ($user->can('configuracion.General.v')) { ?>
+                        <li class="menu-item <?= ($page == 'Configuracion' && $subpage == 'General') ? 'active' : '' ?>">
+                            <a href="{{ url('dashboard/configuracion/general') }}" class="menu-link">
+                                <div>General</div>
                             </a>
                         </li>
                     <?php } ?>

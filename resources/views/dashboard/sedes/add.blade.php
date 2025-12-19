@@ -68,6 +68,31 @@
                                     ?>
                                 </select>
                             </div>
+                            <div class="mb-4 col-md-6">
+                                <label class="form-label">Localidad</label>
+                                <select class="select2 form-select" name="id_localidad">
+                                    <option value="">Seleccionar localidad</option>
+                                    <?php
+                                    if ($localidades->isNotEmpty()) {
+                                        foreach ($localidades as $key => $value) {
+                                            echo '<option value="' . $value->id_localidad . '">' . $value->nombre_localidad . '</option>';
+                                        }
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                            <div class="mb-4 col-md-6">
+                                <label class="form-label">Barrio</label>
+                                <input class="form-control" type="text" name="barrio">
+                            </div>
+                            <div class="mb-4 col-md-6">
+                                <label class="form-label">URL del video</label>
+                                <input class="form-control" type="text" name="url_video">
+                            </div>
+                            <div class="mb-4 col-md-6">
+                                <label class="form-label">URL de la imagen</label>
+                                <input class="form-control" type="text" name="url_imagen">
+                            </div>
                             <?php
                             if ($user->can('sede.empresa.v')) {
                             ?>
