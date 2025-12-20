@@ -589,30 +589,67 @@ class LoadController extends Controller
         }
     }
 
-    public function postVerificarCuposHorario(Request $request)
+   public function postVerificarCuposHorario(Request $request)
     {
-
         if (!$request->has('horarios_disponibles')) {
             return true;
         }
 
         $horarios_disponibles = $request->input('horarios_disponibles');
-        $fechaFormateada = \Carbon\Carbon::createFromFormat('d/m/Y', $request->input('fecha_seleccionada'))->format('Y-m-d');
+
+        // Fecha seleccionada
+        $fechaFormateada = Carbon::createFromFormat(
+            'd/m/Y',
+            $request->input('fecha_seleccionada')
+        )->format('Y-m-d');
+
+        $ahora = Carbon::now();
 
         foreach ($horarios_disponibles as $index => &$horario) {
+
+            /*
+            |--------------------------------------------------
+            | Validación margen de 15 minutos (solo HOY)
+            |--------------------------------------------------
+            */
+            if ($fechaFormateada === $ahora->format('Y-m-d')) {
+
+                // Hora inicio del horario
+                $horaInicio = Carbon::createFromFormat(
+                    'Y-m-d H:i:s',
+                    $fechaFormateada . ' ' . $horario['inicio_horario']
+                );
+
+                // Hora mínima permitida
+                $horaMinima = $ahora->copy()->addHour();
+
+                if ($horaInicio->lt($horaMinima)) {
+                    //  No cumple margen → se muestra DESHABILITADO
+                    $horario['disponible'] = false;
+                    continue;
+                }
+            }
+
+            /*
+            |--------------------------------------------------
+            | Validación de cupo
+            |--------------------------------------------------
+            */
             $countCitas = DB::table('tb_cita')
                 ->where('id_sede', $request->input('sede'))
                 ->where('reserva_cita', $fechaFormateada)
                 ->where('rango_horario', $horario['rango_horario'])
                 ->count();
 
-            if ($countCitas < (int) $horario['cupo_sede_horario']) {
+            if ($countCitas < (int)$horario['cupo_sede_horario']) {
                 $horario['disponible'] = true;
             } else {
+                //  Cupo lleno → se muestra DESHABILITADO
                 $horario['disponible'] = false;
             }
         }
 
+        // IMPORTANTE: devolvemos TODOS los horarios
         return $horarios_disponibles;
     }
 
