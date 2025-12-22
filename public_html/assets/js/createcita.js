@@ -80,7 +80,7 @@ $(function () {
                                 let horaInicioDate = new Date();
                                 horaInicioDate.setHours(hh, mm, ss, 0); // Asignar la hora del horario
 
-                                return item.dia_sede_horario == dia_semana && horaInicioDate > horaLimite;
+                                return item.dia_sede_horario == dia_semana;
                             });
                         } else {
                             horarios_disponibles = horarios.filter(function (item) {
