@@ -80,7 +80,7 @@ $(function () {
                                 let horaInicioDate = new Date();
                                 horaInicioDate.setHours(hh, mm, ss, 0); // Asignar la hora del horario
 
-                                return item.dia_sede_horario == dia_semana && horaInicioDate > horaLimite;
+                                return item.dia_sede_horario == dia_semana;
                             });
                         } else {
                             horarios_disponibles = horarios.filter(function (item) {
@@ -142,6 +142,30 @@ $(function () {
         });
     }
     get_hours();
+
+    //obtener ciudad para etiqueta
+
+    $(function () {
+    cargarCiudad(ID_CIUDAD_GLOBAL);
+});
+
+    function cargarCiudad(idCiudad) {
+    $.ajax({
+        url: url + '/ciudad/obtener',
+        type: 'POST',
+        data: { id_ciudad: idCiudad },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success && response.ciudad) {
+                $('#badgeCiudad .nombre-ciudad').text(response.ciudad.nombre_ciudad);
+                $('#badgeCiudad').removeClass('d-none');
+            }
+        },
+        error: function () {
+            console.error('No se pudo cargar la ciudad');
+        }
+    });
+}
 
     function VerificarCupoHorario(response) {
         if (!Array.isArray(response)) {

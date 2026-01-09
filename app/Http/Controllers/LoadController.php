@@ -44,6 +44,7 @@ class LoadController extends Controller
             $request->session()->put('utm_source', $urlParams['utm_source']);
         }
 
+        
         $data = [];
         echo view('load/index', $data);
     }
@@ -59,12 +60,36 @@ class LoadController extends Controller
 
         $sql = "SELECT * FROM tb_servicio_liquidador";
         $servicios_liquidador = DB::select($sql);
+
+        // ===== MODULO INDEPENDIENTE CIUDAD =====
+
+            // Obtener sede
+            $sede_db = DB::table('tb_sede')
+                ->where('id_sede', $id_sede)
+                ->first();
+
+            // Obtener id_ciudad
+            $id_ciudad = $sede_db->id_ciudad ?? null;
+
+            // Obtener nombre de la ciudad
+            $nombre_ciudad = null;
+            if ($id_ciudad) {
+                $nombre_ciudad = DB::table('tb_ciudad')
+                    ->where('id_ciudad', $id_ciudad)
+                    ->value('nombre');
+            }
+
         $data = [
             'id_sede' => $id_sede,
             'sede' => AdminHelper::get_sede_by_id($id_sede),
             'urlParams' => $urlParams,
-            'servicios_liquidador' => $servicios_liquidador
+            'servicios_liquidador' => $servicios_liquidador,
+
+            // 👉 NUEVO (ciudad)
+            'id_ciudad' => $id_ciudad,
+            'nombre_ciudad' => $nombre_ciudad
         ];
+
         echo view('load/createcita', $data);
     }
 
@@ -95,6 +120,8 @@ class LoadController extends Controller
 
                 // Obtener nombre de la sede
                 $sede = DB::table('tb_sede')->where('id_sede', $id_sede)->first();
+                $id_ciudad = $sede->id_ciudad ?? null;
+
                 $nombre_sede = $sede ? $sede->nombre_sede : 'Sede no encontrada';
                 $direccion_sede = $sede ? $sede->direccion_sede : 'Dirección no encontrada';
                 $latitud = $sede ? str_replace(',', '.', $sede->latitud) : '';
@@ -273,6 +300,7 @@ class LoadController extends Controller
                     try {
                         // Consulta la información de la sede
                         $sede = DB::table('tb_sede')->where('id_sede', $id_sede)->first();
+                        $id_ciudad = $sede->id_ciudad ?? null;
 
                         // Preparar los datos para la plantilla de SendPulse
                         $templateVariables = [
@@ -561,30 +589,67 @@ class LoadController extends Controller
         }
     }
 
-    public function postVerificarCuposHorario(Request $request)
+   public function postVerificarCuposHorario(Request $request)
     {
-
         if (!$request->has('horarios_disponibles')) {
             return true;
         }
 
         $horarios_disponibles = $request->input('horarios_disponibles');
-        $fechaFormateada = \Carbon\Carbon::createFromFormat('d/m/Y', $request->input('fecha_seleccionada'))->format('Y-m-d');
+
+        // Fecha seleccionada
+        $fechaFormateada = Carbon::createFromFormat(
+            'd/m/Y',
+            $request->input('fecha_seleccionada')
+        )->format('Y-m-d');
+
+        $ahora = Carbon::now();
 
         foreach ($horarios_disponibles as $index => &$horario) {
+
+            /*
+            |--------------------------------------------------
+            | Validación margen de 15 minutos (solo HOY)
+            |--------------------------------------------------
+            */
+            if ($fechaFormateada === $ahora->format('Y-m-d')) {
+
+                // Hora inicio del horario
+                $horaInicio = Carbon::createFromFormat(
+                    'Y-m-d H:i:s',
+                    $fechaFormateada . ' ' . $horario['inicio_horario']
+                );
+
+                // Hora mínima permitida
+                $horaMinima = $ahora->copy()->addHour();
+
+                if ($horaInicio->lt($horaMinima)) {
+                    //  No cumple margen → se muestra DESHABILITADO
+                    $horario['disponible'] = false;
+                    continue;
+                }
+            }
+
+            /*
+            |--------------------------------------------------
+            | Validación de cupo
+            |--------------------------------------------------
+            */
             $countCitas = DB::table('tb_cita')
                 ->where('id_sede', $request->input('sede'))
                 ->where('reserva_cita', $fechaFormateada)
                 ->where('rango_horario', $horario['rango_horario'])
                 ->count();
 
-            if ($countCitas < (int) $horario['cupo_sede_horario']) {
+            if ($countCitas < (int)$horario['cupo_sede_horario']) {
                 $horario['disponible'] = true;
             } else {
+                //  Cupo lleno → se muestra DESHABILITADO
                 $horario['disponible'] = false;
             }
         }
 
+        // IMPORTANTE: devolvemos TODOS los horarios
         return $horarios_disponibles;
     }
 
