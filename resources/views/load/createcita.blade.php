@@ -95,16 +95,8 @@
                     </p>
 
                 </div>
-
-                <div class="mb-4 col-12 col-md-6">
-                    <label class="form-label">Día de la cita <span class="required_flied">*</span></label>
-                    <input name="reserva_cita" type="text" id="citaDia" placeholder="DD/MM/YYYY" class="form-control" readonly required />
-                </div>
-                <div class="mb-6 col-12 col-md-6">
-                    <label class="form-label">Franja horaria <span class="required_flied">*</span></label>
-                    <select id="citaHora" class="form-select select2" required name="id_sede_horario" disabled>
-                        <option value="">Seleccionar horario</option>
-                    </select>
+                
+                <!--De aqui se movió el día de la cita y la franja horaria a la nueva refactorizacion: para cada comparendo-->
                 </div>
                 <div class="CantCupos">
                 </div>
@@ -142,33 +134,59 @@
                 </div>
                 <div class="resultadoCitas">
                 </div>
-                <div class="mb-4 col-12 col-md-6">
-                    <label class="form-label">Numero de Comparendo <span class="required_flied">*</span></label>
-                    <select class="select2 form-select" id="selectServicioLiquidador" required name="servicio_liquidador">
-                        <option value="" selected disabled>Seleccione una opción</option>
-                        <?php
-                        if (is_array($servicios_liquidador) && !empty($servicios_liquidador)) {
-                            foreach ($servicios_liquidador as $key => $servicio) {
-                                if ($servicio->nombre_servicio_liquidador == "1 comparendo") {
-                                    echo '<option value="' . $servicio->id_servicio_liquidador . '"> 1 comparendo = 1 curso</option>';
-                                } elseif ($servicio->nombre_servicio_liquidador == "2 comparendos") {
-                                    echo '<option value="' . $servicio->id_servicio_liquidador . '"> 2 comparendos = 2 cursos</option>';
-                                } elseif ($servicio->nombre_servicio_liquidador == "3 comparendos") {
-                                    echo '<option value="' . $servicio->id_servicio_liquidador . '"> 3 comparendos = 3 cursos</option>';
-                                } elseif ($servicio->nombre_servicio_liquidador == "+3 comparendos") {
-                                    echo '<option value="' . $servicio->id_servicio_liquidador . '"> Más de 3 comparendos</option>';
-                                }
-                            }
-                        }
-                        ?>
+                
+                <!--reformularización: cantidad de comparendos-->
+                <hr>
+
+                <div class="col-12">
+                    <label class="form-label">Cantidad de comparendos <span class="required_flied">*</span></label>
+                    <select id="cantidad_comparendos" class="form-select" name="cantidad_comparendos" required>
+                        <option value="1">1 comparendo = 1 curso</option>
+                        <option value="2">2 comparendos = 2 cursos</option>
+                        <option value="3">3 comparendos = 3 cursos</option>
+                        <option value="4">Más de 3 comparendos</option>
                     </select>
-                    <p class="text-muted">Recuerde que por cada comparendo se debe realizar un curso.</p>
+
+                    <p class="text-muted mt-1">
+                        <i class="ti ti-alert-circle"></i>
+                        Recuerde que por cada comparendo se debe realizar un curso.
+                    </p>
                 </div>
+
+                <div id="bloqueComparendos" class="row mt-3"></div>
+                <!---->
+                <!--Refactorizacion: Fecha y franja horaria para cada comparendo-->
+                <div class="mb-4 col-12 col-md-6">
+                    <label class="form-label">Día de la cita <span class="required_flied">*</span></label>
+                    <input name="reserva_cita" type="text" id="citaDia" placeholder="DD/MM/YYYY" class="form-control" readonly required />
+                </div>
+
+                <div class="mb-6 col-12 col-md-6">
+                    <label class="form-label">Franja horaria <span class="required_flied">*</span></label>
+                    <select id="citaHora" class="form-select select2" required name="id_sede_horario" disabled>
+                        <option value="">Seleccionar horario</option>
+                    </select>
+                <!---->
+                
                 <div class="mb-4 col-12 col-md-6">
                     <label class="form-label">Codigo de Comparendo</label>
                     <input id="codigo_comparendo_tagify" name="codigo_comparendo" class="form-control" placeholder="Escribe tu codigo de comparendo si lo conoces" autocomplete="off" maxlength="3">
                     <p class="text-muted">Si conoce el codigo del Comparendo, puede ingresarlo aquí. de lo contrario puedes dejarlo vacio.</p>
                 </div>
+                
+                <!--campo para fecha de notificacion de comparendo-->
+                <div class="col-md-3">
+                    <label for="fecha_notificacion_comparendo" class="form-label">
+                        Fecha notificación comparendo
+                    </label>
+                    <input type="date"
+                        class="form-control"
+                        id="fecha_notificacion_comparendo"
+                        name="fecha_notificacion_comparendo"
+                        value="{{ isset($cita) ? $cita->fecha_notificacion_comparendo : old('fecha_notificacion_comparendo') }}">
+                </div>
+                <!-- -->
+
                 <div class="col-12 row mx-auto p-0" id="divContentVehiculo">
                     <hr>
                     <div class="mb-4 col-12 col-md-6">
@@ -327,6 +345,35 @@
 </script>
 
 <script src="{{ asset('js/createcita.js') }}"></script>
+
+//SCRIPT PARA DINAMIZAR LA REFACTORIZACIÓN EN EL SELECTOR DE CANTIDAD DE COMPARENDOS:
+<script>
+document.getElementById('cantidad_comparendos').addEventListener('change', function () {
+
+    const cantidad = parseInt(this.value);
+    const contenedor = document.getElementById('bloqueComparendos');
+    contenedor.innerHTML = '';
+
+    for (let i = 1; i <= cantidad; i++) {
+
+        contenedor.innerHTML += `
+        <div class="col-12">
+            <h6 class="mt-3">Comparendo ${i}</h6>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Fecha notificación comparendo ${i} *</label>
+            <input type="date" class="form-control" name="fechas_comparendo[]" required>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Código de comparendo ${i} (opcional)</label>
+            <input type="text" class="form-control" name="codigos_comparendo[]" placeholder="Ej: C14">
+        </div>
+        `;
+    }
+});
+</script>
 
 </body>
 
