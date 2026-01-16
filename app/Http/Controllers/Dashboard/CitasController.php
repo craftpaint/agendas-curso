@@ -639,7 +639,22 @@ class CitasController extends Controller
             }
             return response()->json($objLoad);
         }
+
+        // Agregar manejo de fecha de notificación
+    $fecha_notificacion_comparendo = $request->request->get('fecha_notificacion_comparendo');
+    if ($fecha_notificacion_comparendo) {
+        $dateNotif = \DateTime::createFromFormat('d/m/Y', $fecha_notificacion_comparendo);
+        if ($dateNotif) {
+            $fecha_notificacion_comparendo = $dateNotif->format('Y-m-d');
+        } else {
+            $fecha_notificacion_comparendo = null;
+        }
     }
+    
+    // Agregar a los datos de la cita
+    $citaData['fecha_notificacion_comparendo'] = $fecha_notificacion_comparendo;
+    }
+    
     //Ver sede
     public function view($id)
     {

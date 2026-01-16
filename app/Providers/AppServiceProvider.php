@@ -6,19 +6,19 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
+    public function register()
     {
-        //
+        // Registrar helper
+        $this->app->bind('multi-comparendo', function() {
+            return new \App\Helpers\MultiComparendoHelper();
+        });
     }
-
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
+    
+    public function boot()
     {
-        //
+        // Compartir variable global con todas las vistas
+        view()->composer('*', function($view) {
+            $view->with('is_multi_comparendo', config('app.multi_comparendo', true));
+        });
     }
 }

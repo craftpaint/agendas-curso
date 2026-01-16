@@ -68,5 +68,7 @@ class Kernel extends HttpKernel
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         'prevent.cache' => \App\Http\Middleware\PreventCache::class,
+        // Agrega el nuevo middleware aquí
+        'multi-comparendo' => \App\Http\Middleware\ValidateMultiComparendo::class,
     ];
 }

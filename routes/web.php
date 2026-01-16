@@ -26,7 +26,6 @@ use App\Http\Controllers\Dashboard\ConfiguracionController;
 | en la base estén creados dichos permisos.
 |
 */
-Route::post('/ciudad/obtener', [CiudadController::class, 'obtener']);
 
 // Redirecciona la raíz al login
 Route::get('/', function () {
@@ -53,16 +52,55 @@ Route::get('/dashboard', function () {
     }
 })->name('dashboard');
 
-// Load
+// ============================================================================
+// RUTAS PÚBLICAS (LOAD) - SIN AUTENTICACIÓN
+// ============================================================================
 Route::controller(LoadController::class)->group(function () {
-    Route::get('load', 'index');
-    Route::get('create-cita/{id}', 'createcita');
-    Route::post('get-horarios', 'gethorarios');
-    Route::post('savecita', 'savecita');
-    Route::post('get-servicio-by-id-sede', 'get_servicio_by_id_sede');
-    Route::post('get-citas-agendadas', 'getCitasAgendadas');
-    Route::post('verificar-cupos-horario', 'postVerificarCuposHorario');
-})->name('load');
+    // Formulario de creación de citas
+    Route::get('cita/{id_sede}', 'createcita')->name('cita.create');
+    Route::get('create-cita/{id_sede}', 'createcita'); // Compatibilidad con rutas antiguas
+    
+    // ========================================================================
+    // MODIFICACIÓN: Agregar middleware 'multi-comparendo' a la ruta savecita
+    // ========================================================================
+    Route::post('savecita', 'savecita')
+        ->middleware(['web', 'multi-comparendo']) // Agregar middleware aquí
+        ->name('cita.save');
+    
+    // Consultas de horarios y disponibilidad
+    Route::post('get-horarios', 'gethorarios')->name('horarios.get');
+    Route::post('verificar-cupos-horario', 'postVerificarCuposHorario')->name('horarios.cupos');
+    
+    // Consultas de servicios
+    Route::post('get-servicio-by-id-sede', 'get_servicio_by_id_sede')->name('servicio.sede');
+    
+    // Validación de citas existentes
+    Route::post('get-citas-agendadas', 'getCitasAgendadas')->name('citas.existentes');
+    
+    // Detalles de cita
+    Route::get('detalles-cita/{id}', 'getDetallesCita')->name('cita.detalles');
+    
+    // ========================================================================
+    // NUEVAS RUTAS PARA SISTEMA DE MÚLTIPLES COMPARENDOS
+    // ========================================================================
+    
+    // 1. Confirmación de múltiples citas agendadas
+    Route::get('citas/confirmacion/{ids}', 'confirmacion')
+        ->where('ids', '[\w\-,=]+')
+        ->name('citas.confirmacion');
+    
+    // 2. Obtener información de ciudad para badge
+    Route::post('ciudad/obtener', 'obtenerCiudad')->name('ciudad.obtener');
+    
+    // ========================================================================
+    // RUTAS EXISTENTES (MANTENER COMPATIBILIDAD)
+    // ========================================================================
+    Route::get('load', 'index')->name('load.index');
+});
+
+// ============================================================================
+// RUTAS DEL DASHBOARD - CON AUTENTICACIÓN
+// ============================================================================
 
 // Estadísticas (se utiliza "estadisticas.panel1.v" como permiso de visualización global)
 Route::controller(EstadisticasController::class)->group(function () {
@@ -77,9 +115,6 @@ Route::controller(EstadisticasController::class)->group(function () {
         ->middleware(['auth', 'prevent.cache', 'verified', 'permission:estadisticas.panel1.v']);
     Route::get('dashboard/estadisticas/estado-verificado/comparativa', 'getComparativaEstadoVerificado')
         ->middleware(['auth', 'prevent.cache', 'verified', 'permission:estadisticas.panel1.v']);
-
-
-
 
     // Listado de estadísticas: por agentes
     Route::get('dashboard/estadisticas/agentes', 'estadisticasAgentes')
@@ -251,6 +286,13 @@ Route::controller(CitasController::class)->group(function () {
         ->name('citas.add');
     Route::post('dashboard/citas/save', 'save')
         ->middleware(['auth', 'prevent.cache', 'verified', 'permission:cita.Cita.a']);
+    // ========================================================================
+    // NUEVA RUTA PARA MÚLTIPLES CITAS (ADMINISTRACIÓN)
+    // ========================================================================
+    Route::post('dashboard/citas/multi-save', 'multiSave')
+        ->middleware(['auth', 'prevent.cache', 'verified', 'permission:cita.Cita.a'])
+        ->name('citas.multi-save');
+    
     // Horarios: se usa "cita.listado.v" para obtenerlos
     Route::post('dashboard/citas/get_horarios', 'get_horarios');
     // Editar cita: "cita.Cita.e"
