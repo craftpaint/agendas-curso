@@ -1,4 +1,4 @@
-<!--?= dd($id_ciudad, $nombre_ciudad) ?>-->
+<!-- createcita.blade.php refactored -->
 <!doctype html>
 
 <html
@@ -63,6 +63,7 @@
     <div class="container-xxl p-0">
         <form class="content_form" action="{{url('savecita')}}">
             <input type="hidden" name="id_sede" value="<?= $id_sede ?>">
+
             <div class="row">
 
                 <div class="col-12">
@@ -95,116 +96,107 @@
                     </p>
 
                 </div>
-                
-                <!--De aqui se movió el día de la cita y la franja horaria a la nueva refactorizacion: para cada comparendo-->
-                </div>
-                <div class="CantCupos">
-                </div>
-                <hr>
-                <div class="mb-4 col-12 col-md-6">
-                    <label class="form-label">Nombre <span class="required_flied">*</span></label>
-                    <input type="text" class="form-control" name="nombre_cliente" required>
-                </div>
-                <div class="mb-4 col-12 col-md-6">
-                    <label class="form-label">Apellido <span class="required_flied">*</span></label>
-                    <input type="text" class="form-control" name="apellido_cliente" required>
-                </div>
-                <div class="mb-4 col-12 col-md-6">
-                    <label class="form-label">Correo <span class="required_flied">*</span></label>
-                    <input type="email" class="form-control" name="email_cliente" required>
-                </div>
-                <div class="mb-4 col-12 col-md-6">
-                    <label class="form-label">Teléfono <span class="required_flied">*</span></label><br>
-                    <input type="tel" class="form-control" id="phoneCliente" name="telefono_cliente" required minlength="10" maxlength="10">
-                </div>
-                <div class="mb-4 col-12 col-md-6">
-                    <label class="form-label">Tipo de documento <span class="required_flied">*</span></label>
-                    <select class="select2 form-select" required name="tipo_doc_cliente">
-                        <option value="CC">Cedula de ciudadania</option>
-                        <option value="TI">Tarjeta de Identidad</option>
-                        <option value="CE">Cédula de Extranjería</option>
-                        <option value="Pasaporte">Pasaporte</option>
-                        <option value="PEP">PEP</option>
-                        <option value="PPT">PPT</option>
-                    </select>
-                </div>
-                <div class="mb-4 col-12 col-md-6">
-                    <label class="form-label">Número de documento <span class="required_flied">*</span></label>
-                    <input type="text" class="form-control" name="doc_cliente" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                </div>
-                <div class="resultadoCitas">
-                </div>
-                
-                <!--reformularización: cantidad de comparendos-->
+
                 <hr>
 
+                <!-- SECCIÓN DE AGENDAMIENTO -->
                 <div class="col-12">
-                    <label class="form-label">Cantidad de comparendos <span class="required_flied">*</span></label>
-                    <select id="cantidad_comparendos" class="form-select" name="cantidad_comparendos" required>
-                        <option value="1">1 comparendo = 1 curso</option>
-                        <option value="2">2 comparendos = 2 cursos</option>
-                        <option value="3">3 comparendos = 3 cursos</option>
-                        <option value="4">Más de 3 comparendos</option>
-                    </select>
-
-                    <p class="text-muted mt-1">
-                        <i class="ti ti-alert-circle"></i>
-                        Recuerde que por cada comparendo se debe realizar un curso.
-                    </p>
-                </div>
-
-                <div id="bloqueComparendos" class="row mt-3"></div>
-                <!---->
-                <!--Refactorizacion: Fecha y franja horaria para cada comparendo-->
-                <div class="mb-4 col-12 col-md-6">
-                    <label class="form-label">Día de la cita <span class="required_flied">*</span></label>
-                    <input name="reserva_cita" type="text" id="citaDia" placeholder="DD/MM/YYYY" class="form-control" readonly required />
-                </div>
-
-                <div class="mb-6 col-12 col-md-6">
-                    <label class="form-label">Franja horaria <span class="required_flied">*</span></label>
-                    <select id="citaHora" class="form-select select2" required name="id_sede_horario" disabled>
-                        <option value="">Seleccionar horario</option>
-                    </select>
-                <!---->
-                
-                <div class="mb-4 col-12 col-md-6">
-                    <label class="form-label">Codigo de Comparendo</label>
-                    <input id="codigo_comparendo_tagify" name="codigo_comparendo" class="form-control" placeholder="Escribe tu codigo de comparendo si lo conoces" autocomplete="off" maxlength="3">
-                    <p class="text-muted">Si conoce el codigo del Comparendo, puede ingresarlo aquí. de lo contrario puedes dejarlo vacio.</p>
-                </div>
-                
-                <!--campo para fecha de notificacion de comparendo-->
-                <div class="col-md-3">
-                    <label for="fecha_notificacion_comparendo" class="form-label">
-                        Fecha notificación comparendo
-                    </label>
-                    <input type="date"
-                        class="form-control"
-                        id="fecha_notificacion_comparendo"
-                        name="fecha_notificacion_comparendo"
-                        value="{{ isset($cita) ? $cita->fecha_notificacion_comparendo : old('fecha_notificacion_comparendo') }}">
-                </div>
-                <!-- -->
-
-                <div class="col-12 row mx-auto p-0" id="divContentVehiculo">
-                    <hr>
-                    <div class="mb-4 col-12 col-md-6">
-                        <label class="form-label">Tipo de vehiculo <span class="required_flied">*</span></label>
-                        <select class="select2 form-select" id="selectTipoVehiculo" name="tipo_vehiculo">
-                            <option value="Motocicleta">Motocicleta</option>
-                            <option value="Automotor">Automotor</option>
-                            <option value="Otro">Otro</option>
-                        </select>
+                    <h5 class="mb-4">SECCIÓN DE AGENDAMIENTO</h5>
+                    <div id="comparendos-container" class="position-relative overflow-hidden" style="height: auto;">
+                        <div id="comparendos-slider" class="d-flex transition" style="transition: transform 0.3s ease;">
+                            <!-- Plantilla inicial para el primer comparendo -->
+                            <div class="comparendo-section col-12 px-3" data-index="1" style="min-width: 100%; box-shadow: 0 0 10px rgba(0,0,0,0.1); border-radius: 10px; padding: 20px; background: #f8f9fa;">
+                                <h6 class="comparendo-title mb-3">Comparendo</h6>
+                                <div class="row">
+                                    <div class="mb-4 col-12 col-md-6">
+                                        <label class="form-label">Día de la cita <span class="required_flied">*</span></label>
+                                        <input name="reserva_cita[]" type="text" class="citaDia form-control" placeholder="DD/MM/YYYY" readonly required />
+                                    </div>
+                                    <div class="mb-4 col-12 col-md-6">
+                                        <label class="form-label">Franja horaria <span class="required_flied">*</span></label>
+                                        <select class="citaHora form-select select2" required name="id_sede_horario[]" disabled>
+                                            <option value="">Seleccionar horario</option>
+                                        </select>
+                                    </div>
+                                    <div class="CantCupos mb-3"></div>
+                                    <div class="mb-4 col-12 col-md-6">
+                                        <label class="form-label">Tipo de vehículo <span class="required_flied">*</span></label>
+                                        <select class="select2 form-select" name="tipo_vehiculo[]" required>
+                                            <option value="Motocicleta">Motocicleta</option>
+                                            <option value="Automotor">Automotor</option>
+                                            <option value="Otro">Otro</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-4 col-12 col-md-6">
+                                        <label class="form-label">Placa de vehículo <span class="required_flied">*</span></label>
+                                        <input type="text" class="form-control" name="placa_vehiculo[]" required>
+                                    </div>
+                                    <input type="hidden" name="modelo_vehiculo[]" value="0000">
+                                    <div class="mb-4 col-12 col-md-6">
+                                        <label class="form-label">Código de comparendo</label>
+                                        <input class="codigo_comparendo_tagify form-control" name="codigo_comparendo[]" placeholder="Escribe tu código de comparendo si lo conoces" autocomplete="off" maxlength="3">
+                                        <p class="text-muted">Si conoce el código del comparendo, puede ingresarlo aquí.</p>
+                                    </div>
+                                    <div class="mb-4 col-12 col-md-6">
+                                        <label class="form-label">Fecha de notificación <span class="required_flied">*</span></label>
+                                        <input name="fecha_notificacion[]" type="text" class="fechaNotificacion form-control" placeholder="DD/MM/YYYY" readonly required />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Flechas de navegación (inicialmente ocultas) -->
+                        <button type="button" id="prev-comparendo" class="btn btn-icon btn-outline-primary position-absolute top-50 start-0 translate-middle-y d-none"><i class="ti ti-chevron-left"></i></button>
+                        <button type="button" id="next-comparendo" class="btn btn-icon btn-outline-primary position-absolute top-50 end-0 translate-middle-y d-none"><i class="ti ti-chevron-right"></i></button>
                     </div>
-                    <div class="mb-4 col-12 col-md-6">
-                        <label class="form-label">Placa de vehiculo <span class="required_flied">*</span></label>
-                        <input type="text" class="form-control" id="placa_vehiculo" name="placa_vehiculo" required>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <p class="text-muted mb-0">Recuerde que por cada comparendo se debe realizar un curso.</p>
+                        <button type="button" id="add-comparendo" class="btn btn-outline-primary rounded-pill">+ Agregar otro curso para comparendo</button>
                     </div>
-                    <input type="hidden" class="form-control" id="modelo_vehiculo" name="modelo_vehiculo" value=0000>
                 </div>
+
+                <hr>
+
+                <!-- DATOS DEL SOLICITANTE -->
+                <div class="col-12">
+                    <h5 class="mb-4">DATOS DEL SOLICITANTE</h5>
+                    <div class="row">
+                        <div class="mb-4 col-12 col-md-6">
+                            <label class="form-label">Nombre <span class="required_flied">*</span></label>
+                            <input type="text" class="form-control" name="nombre_cliente" required>
+                        </div>
+                        <div class="mb-4 col-12 col-md-6">
+                            <label class="form-label">Apellido <span class="required_flied">*</span></label>
+                            <input type="text" class="form-control" name="apellido_cliente" required>
+                        </div>
+                        <div class="mb-4 col-12 col-md-6">
+                            <label class="form-label">Correo <span class="required_flied">*</span></label>
+                            <input type="email" class="form-control" name="email_cliente" required>
+                        </div>
+                        <div class="mb-4 col-12 col-md-6">
+                            <label class="form-label">Teléfono <span class="required_flied">*</span></label>
+                            <input type="tel" class="form-control" id="phoneCliente" name="telefono_cliente" required minlength="10" maxlength="10">
+                        </div>
+                        <div class="mb-4 col-12 col-md-6">
+                            <label class="form-label">Tipo de documento <span class="required_flied">*</span></label>
+                            <select class="select2 form-select" required name="tipo_doc_cliente">
+                                <option value="CC">Cédula de ciudadanía</option>
+                                <option value="TI">Tarjeta de Identidad</option>
+                                <option value="CE">Cédula de Extranjería</option>
+                                <option value="Pasaporte">Pasaporte</option>
+                                <option value="PEP">PEP</option>
+                                <option value="PPT">PPT</option>
+                            </select>
+                        </div>
+                        <div class="mb-4 col-12 col-md-6">
+                            <label class="form-label">Número de documento <span class="required_flied">*</span></label>
+                            <input type="text" class="form-control" name="doc_cliente" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        </div>
+                        <div class="resultadoCitas col-12"></div>
+                    </div>
+                </div>
+
                 <div class="checkbox col-12 mx-auto my-4 px-4">
-                    <input id="form-checkbox-1" name="conscentimiento_subsidio" type="checkbox" required="required">
+                    <input id="form-checkbox-1" name="acepto_politicas" type="checkbox" required>
                     <label for="form-checkbox-1">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200">
                             <mask fill="white" id="checkbox-mask">
@@ -213,11 +205,11 @@
                             <rect mask="url(#checkbox-mask)" stroke-width="40" height="200" width="200"></rect>
                             <path stroke-width="15" d="M52 111.018L76.9867 136L149 64"></path>
                         </svg>
-                        <span class="text-center f18">Acepto las <a href="https://curso-comparendo.com/politica-tratamiento-de-datos/" target="_blank">politicas de tratamiento de datos.</a></span>
+                        <span class="text-center f18">Acepto las <a href="https://curso-comparendo.com/politica-tratamiento-de-datos/" target="_blank">políticas de tratamiento de datos.</a></span>
                     </label>
                 </div>
                 <div class="checkbox col-12 mx-auto my-4 px-4">
-                    <input id="form-checkbox-2" name="conscentimiento_horario" type="checkbox" required="required">
+                    <input id="form-checkbox-2" name="consciente_horario" type="checkbox" required>
                     <label for="form-checkbox-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 200 200">
                             <mask fill="white" id="checkbox-mask">
@@ -226,9 +218,10 @@
                             <rect mask="url(#checkbox-mask)" stroke-width="40" height="200" width="200"></rect>
                             <path stroke-width="15" d="M52 111.018L76.9867 136L149 64"></path>
                         </svg>
-                        <span class="text-center f18">Soy consciente que debo llegar <strong>30 MINUTOS ANTES</strong> de la cita, de lo contrario no podre tomar el curso.</span>
+                        <span class="text-center f18">Soy consciente que debo llegar <strong>30 MINUTOS ANTES</strong> de la cita, de lo contrario no podré tomar el curso.</span>
                     </label>
                 </div>
+
             </div>
             <input type="hidden" name="utm_source" value="{{ session('utm_source', 'Desconocido') }}">
             <input type="hidden" name="url_variables" value="{{ json_encode(request()->except('utm_source')) }}">
@@ -246,7 +239,6 @@
     <script>
         id_sede = '<?= $id_sede ?>'
         festivos = <?= json_encode($festivos) ?>;
-        const servicios_liquidador = JSON.parse('<?php echo json_encode($servicios_liquidador); ?>');
         const phoneInputField = document.querySelector("#phoneCliente");
         const phoneInput = window.intlTelInput(phoneInputField, {
             initialCountry: "co",
@@ -290,39 +282,25 @@
         .swal2-title {
             margin: auto !important;
         }
+
+        .comparendo-section {
+            transition: opacity 0.3s ease;
+        }
+
+        #comparendos-slider {
+            width: 100%;
+        }
+
+        #add-comparendo {
+            background-color: #e6f7ff;
+            color: #1890ff;
+            border-color: #91d5ff;
+        }
+
+        #add-comparendo:hover {
+            background-color: #bae7ff;
+        }
     </style>
-    <script>
-        const codigo_comparendo = document.querySelector("#codigo_comparendo_tagify");
-
-        const whitelist = [
-            "A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "A11", "A12",
-            "B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B10", "B11", "B12",
-            "B13", "B14", "B15", "B16", "B17", "B18", "B19", "B20", "B21", "B22", "B23",
-            "C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08", "C09", "C10", "C11", "C12",
-            "C13", "C14", "C15", "C16", "C17", "C18", "C19", "C20", "C21", "C22", "C23", "C24",
-            "C25", "C26", "C27", "C28", "C29", "C30", "C31", "C32", "C33", "C34", "C35", "C36",
-            "C37", "C38", "C39", "C40",
-            "D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "D09", "D10", "D11", "D12",
-            "D13", "D14", "D15", "D16", "D17",
-            "E01", "E02", "E04",
-            "F01", "F02", "F03", "F04", "F05", "F06", "F07",
-            "G01", "G02",
-            "H01", "H02", "H03", "H04", "H05", "H06", "H07", "H08", "H09", "H10", "H11", "H12"
-        ];
-
-        // Inline
-        let codigo_comparendo_tagify = new Tagify(codigo_comparendo, {
-            whitelist: whitelist,
-            maxTags: 5, // allows to select max items
-            pattern: /^.{0,3}$/,
-            dropdown: {
-                maxItems: 20, // display max items
-                classname: "tags-inline", // Custom inline class
-                enabled: 0,
-                closeOnSelect: false
-            }
-        });
-    </script>
     <div id="vuexy-loading" class="d-none" style="
         position: fixed;
         top: 0;
@@ -342,37 +320,6 @@
 
     <script>
     const ID_CIUDAD_GLOBAL = {{ (int) $id_ciudad }};
-</script>
-
-<script src="{{ asset('js/createcita.js') }}"></script>
-
-//SCRIPT PARA DINAMIZAR LA REFACTORIZACIÓN EN EL SELECTOR DE CANTIDAD DE COMPARENDOS:
-<script>
-document.getElementById('cantidad_comparendos').addEventListener('change', function () {
-
-    const cantidad = parseInt(this.value);
-    const contenedor = document.getElementById('bloqueComparendos');
-    contenedor.innerHTML = '';
-
-    for (let i = 1; i <= cantidad; i++) {
-
-        contenedor.innerHTML += `
-        <div class="col-12">
-            <h6 class="mt-3">Comparendo ${i}</h6>
-        </div>
-
-        <div class="col-md-6">
-            <label class="form-label">Fecha notificación comparendo ${i} *</label>
-            <input type="date" class="form-control" name="fechas_comparendo[]" required>
-        </div>
-
-        <div class="col-md-6">
-            <label class="form-label">Código de comparendo ${i} (opcional)</label>
-            <input type="text" class="form-control" name="codigos_comparendo[]" placeholder="Ej: C14">
-        </div>
-        `;
-    }
-});
 </script>
 
 </body>
