@@ -94,295 +94,271 @@ class LoadController extends Controller
     }
 
     public function savecita(Request $request)
-    {
-        if ($request->ajax()) {
-            $objLoad = [
-                'validate' => false,
-                'text' => 'Error al agendar la cita',
-            ];
-            try {
-                $id_sede = $request->request->get('id_sede');
-                $nombre_cliente = $request->request->get('nombre_cliente');
-                $apellido_cliente = $request->request->get('apellido_cliente');
-                $email_cliente = $request->request->get('email_cliente');
-                $telefono_cliente = $request->request->get('telefono_cliente');
-                $tipo_doc_cliente = $request->request->get('tipo_doc_cliente');
-                $doc_cliente = $request->request->get('doc_cliente');
-                $id_sede_horario = $request->request->get('id_sede_horario');
-                $tipo_vehiculo = $request->request->get('tipo_vehiculo');
-                $placa_vehiculo = strtoupper($request->request->get('placa_vehiculo'));
-                $modelo_vehiculo = $request->request->get('modelo_vehiculo');
-                $reserva_cita = $request->request->get('reserva_cita');
-                $servicio_liquidador = $request->request->get('servicio_liquidador');
-                $codigo_comparendo = $request->request->get('codigo_comparendo');
-                $empresa_paquete = PaqueteHelper::obtenerPaqueteActivoEmpresa($id_sede);
-                // log::info($codigo_comparendo);
+{
+    if ($request->ajax()) {
+        $objLoad = [
+            'validate' => false,
+            'text' => 'Error al agendar la cita',
+            'ids' => [] // Para retornar IDs de citas creadas
+        ];
 
-                // Obtener nombre de la sede
-                $sede = DB::table('tb_sede')->where('id_sede', $id_sede)->first();
-                $id_ciudad = $sede->id_ciudad ?? null;
+        try {
+            // ────────────────────────────────────────────────────────────────
+            // Datos comunes
+            // ────────────────────────────────────────────────────────────────
+            $id_sede = $request->request->get('id_sede');
+            $nombre_cliente = $request->request->get('nombre_cliente');
+            $apellido_cliente = $request->request->get('apellido_cliente');
+            $email_cliente = $request->request->get('email_cliente');
+            $telefono_cliente = $request->request->get('telefono_cliente');
+            $tipo_doc_cliente = $request->request->get('tipo_doc_cliente');
+            $doc_cliente = $request->request->get('doc_cliente');
+            $origen = $request->input('utm_source', 'Desconocido');
+            $urlVariables = $request->request->get('url_variables');
+            $urlVariablesArray = json_decode($urlVariables, true) ?: [];
+            $tipo_dispositivo = $this->detectDevice($request->header('User-Agent'));
 
-                $nombre_sede = $sede ? $sede->nombre_sede : 'Sede no encontrada';
-                $direccion_sede = $sede ? $sede->direccion_sede : 'Dirección no encontrada';
-                $latitud = $sede ? str_replace(',', '.', $sede->latitud) : '';
-                $longitud = $sede ? str_replace(',', '.', $sede->longitud) : '';
+            if ($origen == 'Desconocido' || $origen == '' || $origen == null) {
+                $responsable_origen = 'Desconocido';
+            } elseif (in_array(strtolower($origen), ['qr', 'qrcode'])) {
+                $responsable_origen = 'Sede';
+            } else {
+                $responsable_origen = 'Curso Comparendo';
+            }
 
-                // Asignar valores adicionales
-                $creado_por = 'Cliente'; // Identifica que la cita fue creada por el cliente
-                // Obtener la variable "utm_source" desde la URL
-                $origen = $request->input('utm_source', 'Desconocido');
-                if ($origen == 'Desconocido' || $origen == '' || $origen == null) {
-                    $responsable_origen = 'Desconocido';
-                } elseif ($origen == 'QR' || $origen == 'qr' || $origen == 'Qr' || $origen == 'QRCode' || $origen == 'qrcode') {
-                    $responsable_origen = 'Sede';
-                } else {
-                    $responsable_origen = 'Curso Comparendo';
+            $creado_por = 'Cliente';
+            $empresa_paquete = PaqueteHelper::obtenerPaqueteActivoEmpresa($id_sede);
+
+            // Sede info
+            $sede = DB::table('tb_sede')->where('id_sede', $id_sede)->first();
+            $id_ciudad = $sede->id_ciudad ?? null;
+            $nombre_sede = $sede ? $sede->nombre_sede : 'Sede no encontrada';
+            $direccion_sede = $sede ? $sede->direccion_sede : 'Dirección no encontrada';
+            $latitud = $sede ? str_replace(',', '.', $sede->latitud) : '';
+            $longitud = $sede ? str_replace(',', '.', $sede->longitud) : '';
+
+            // ────────────────────────────────────────────────────────────────
+            // Array de comparendos
+            // ────────────────────────────────────────────────────────────────
+            $comparendos = $request->input('comparendos', []);
+            $totalComparendos = count($comparendos);
+
+            if ($totalComparendos == 0 || $totalComparendos > 3) {
+                $objLoad['text'] = 'Número inválido de comparendos.';
+                return response()->json($objLoad);
+            }
+
+            // Determinar servicio liquidador según cantidad
+            $servicio_liquidador = $this->getServicioLiquidadorId($totalComparendos);
+
+            // ────────────────────────────────────────────────────────────────
+            // NUEVO: Generar identificador único de grupo (UUID v4)
+            // ────────────────────────────────────────────────────────────────
+            $grupo_uuid = \Illuminate\Support\Str::uuid()->toString(); // Ej: "550e8400-e29b-41d4-a716-446655440000"
+
+            // ────────────────────────────────────────────────────────────────
+            // Cliente
+            // ────────────────────────────────────────────────────────────────
+            $cliente = AdminHelper::get_cliente_by_doc($doc_cliente);
+            if (!$cliente) {
+                DB::insert(
+                    "INSERT INTO tb_cliente (nombre_cliente, apellido_cliente, email_cliente, tipo_doc_cliente, doc_cliente, telefono_cliente, desc_cliente) VALUES (?, ?, ?, ?, ?, ?, 'Creada por el cliente')",
+                    [$nombre_cliente, $apellido_cliente, $email_cliente, $tipo_doc_cliente, $doc_cliente, $telefono_cliente]
+                );
+                $id_cliente = DB::getPdo()->lastInsertId();
+            } else {
+                $id_cliente = $cliente['id_cliente'];
+            }
+
+            // ────────────────────────────────────────────────────────────────
+            // Duplicados y estados
+            // ────────────────────────────────────────────────────────────────
+            $citas_agendadas = $this->getCitasAgendadas(new \Illuminate\Http\Request(['cc' => $doc_cliente]));
+            $estado_duplicado = DB::table('tb_estado')->where('nombre_estado', 'Duplicado')->first();
+            $estado_agendado = DB::table('tb_estado')->where('nombre_estado', 'Agendado')->first();
+            $id_estado_default = $citas_agendadas ? $estado_duplicado->id_estado : $estado_agendado->id_estado;
+            $id_estado_verificado_default = $id_estado_default;
+
+            // Agente callcenter
+            $idAgenteCallcenter = $this->getAgenteCallcenter($doc_cliente, $citas_agendadas);
+
+            // ────────────────────────────────────────────────────────────────
+            // Procesar cada comparendo
+            // ────────────────────────────────────────────────────────────────
+            $citasCreadas = [];
+            DB::beginTransaction();
+
+            foreach ($comparendos as $index => $comp) {
+                $reserva_cita = $comp['reserva_cita'] ?? null;
+                $id_sede_horario = $comp['id_sede_horario'] ?? null;
+                $tipo_vehiculo = $comp['tipo_vehiculo'] ?? null;
+                $placa_vehiculo = strtoupper($comp['placa_vehiculo'] ?? '');
+                $codigo_comparendo = $comp['codigo_comparendo'] ?? '';
+                $fecha_notificacion = $comp['fecha_notificacion'] ?? null;
+
+                // Formatear fechas
+                $date_reserva = \DateTime::createFromFormat('d/m/Y', $reserva_cita);
+                if (!$date_reserva) {
+                    throw new \Exception("Formato de fecha reserva inválido en comparendo #" . ($index + 1));
                 }
-                $tipo_dispositivo = $request->header('User-Agent'); // Detectar el dispositivo desde el User-Agent
+                $reserva_cita = $date_reserva->format('Y-m-d');
 
-                // Procesar el User-Agent para determinar el tipo de dispositivo
-                if (preg_match('/mobile/i', $tipo_dispositivo)) {
-                    $tipo_dispositivo = 'Mobile';
-                } elseif (preg_match('/tablet/i', $tipo_dispositivo)) {
-                    $tipo_dispositivo = 'Tablet';
-                } else {
-                    $tipo_dispositivo = 'Desktop';
+                $date_notif = \DateTime::createFromFormat('d/m/Y', $fecha_notificacion);
+                if (!$date_notif) {
+                    throw new \Exception("Formato de fecha notificación inválido en comparendo #" . ($index + 1));
                 }
+                $fecha_notificacion = $date_notif->format('Y-m-d');
 
-                // Obtener el JSON de variables de URL
-                $urlVariables = $request->request->get('url_variables');
-
-                // Convertir a array y validar
-                $urlVariablesArray = json_decode($urlVariables, true) ?: [];
-
-                //Creamos el formato de la fecha de reserva
-                $date = \DateTime::createFromFormat('d/m/Y', $reserva_cita);
-                if ($date) {
-                    $reserva_cita = $date->format('Y-m-d');
-                } else {
-                    throw new \Exception("El formato de la fecha es incorrecto");
-                }
-                //Verificamos disponibilidad de la cita
+                // Validar horario y cupo
                 $horario_sedes = AdminHelper::get_horario_by_id($id_sede_horario);
-                if (is_array($horario_sedes) && !empty($horario_sedes)) {
-                    $cupo_sede_horario = $horario_sedes['cupo_sede_horario'];
-                    $id_horario = $horario_sedes['id_horario'];
-                    //Obtenemos el rango horario by id
-                    $horario = AdminHelper::get_horarios_by_id($id_horario);
-                    $rango_horario = $horario['rango_horario'];
-                    $sql = "SELECT * FROM tb_cita WHERE id_sede = $id_sede AND reserva_cita = '$reserva_cita' AND rango_horario = '$rango_horario'";
-                    $citas = DB::select($sql);
-                    if (count($citas) >= $cupo_sede_horario) {
-                        $objLoad['text'] = 'No hay cupo disponible para la cita';
-                        return response()->json($objLoad);
-                    }
+                if (empty($horario_sedes)) {
+                    throw new \Exception("Horario inválido en comparendo #" . ($index + 1));
                 }
 
-                //Verificamos si el cliente existe por doc_cliente
-                $cliente = AdminHelper::get_cliente_by_doc($doc_cliente);
-                if (!$cliente) {
-                    //Si no existe el cliente lo creamos
-                    $sql = "INSERT INTO tb_cliente (nombre_cliente, apellido_cliente, email_cliente, tipo_doc_cliente, doc_cliente, telefono_cliente, desc_cliente) VALUES ('$nombre_cliente', '$apellido_cliente', '$email_cliente', '$tipo_doc_cliente', '$doc_cliente', '$telefono_cliente', 'Creado por el cliente')";
-                    DB::insert($sql);
-                    $id_cliente = DB::getPdo()->lastInsertId();
-                } else {
-                    $id_cliente = $cliente['id_cliente'];
+                $cupo_sede_horario = $horario_sedes['cupo_sede_horario'];
+                $id_horario = $horario_sedes['id_horario'];
+                $horario = AdminHelper::get_horarios_by_id($id_horario);
+                $rango_horario = $horario['rango_horario'];
+
+                $sql = "SELECT COUNT(*) as count FROM tb_cita WHERE id_sede = ? AND reserva_cita = ? AND rango_horario = ?";
+                $citas_count = DB::selectOne($sql, [$id_sede, $reserva_cita, $rango_horario])->count;
+
+                if ($citas_count >= $cupo_sede_horario) {
+                    throw new \Exception("No hay cupo disponible para la cita en comparendo #" . ($index + 1));
                 }
 
-                //Verificamos si el vehiculo existe por placa
-                if ($placa_vehiculo == '' || $placa_vehiculo == null) {
-                    $id_vehiculo = "NULL";
-                } else {
+                // Vehículo
+                $id_vehiculo = null;
+                if (!empty($placa_vehiculo)) {
                     $vehiculo = AdminHelper::get_vehiculo_by_placa($placa_vehiculo);
                     if (!$vehiculo) {
-                        //Si no existe el vehiculo lo creamos
-                        $sql = "INSERT INTO tb_vehiculo (id_cliente, placa_vehiculo, tipo_vehiculo, modelo_vehiculo) VALUES ( $id_cliente, '$placa_vehiculo', '$tipo_vehiculo', '$modelo_vehiculo')";
-                        DB::insert($sql);
+                        DB::insert(
+                            "INSERT INTO tb_vehiculo (id_cliente, placa_vehiculo, tipo_vehiculo, modelo_vehiculo) VALUES (?, ?, ?, '0000')",
+                            [$id_cliente, $placa_vehiculo, $tipo_vehiculo]
+                        );
                         $id_vehiculo = DB::getPdo()->lastInsertId();
                     } else {
-                        // log::info($vehiculo[0]['id_vehiculo']);
                         $id_vehiculo = $vehiculo[0]['id_vehiculo'];
                     }
                 }
 
-                // VERIFICA SI TIENE CITAS AGENDADAS
-                $citas_agendadas = $this->getCitasAgendadas(new \Illuminate\Http\Request(['cc' => $doc_cliente]));
-                $save = null;
+                // ────────────────────────────────────────────────────────────────
+                // Datos para insertar (con el nuevo campo grupo_comparendos)
+                // ────────────────────────────────────────────────────────────────
                 $insertData = [
-                    'id_cliente' => $id_cliente,
-                    'id_sede' => $id_sede,
-                    'id_servicio_liquidador' => $servicio_liquidador,
-                    'codigos_comparendo' => $codigo_comparendo, // Este puede ser un string JSON
-                    'id_vehiculo' => $id_vehiculo,
-                    'reserva_cita' => $reserva_cita,
-                    'rango_horario' => $rango_horario,
-                    'desc_cita' => 'Creada por el cliente',
-                    'responsable_origen' => $responsable_origen,
-                    'creado_por' => $creado_por,
-                    'origen' => $origen,
-                    'url_variables' => json_encode($urlVariablesArray),
-                    'tipo_dispositivo' => $tipo_dispositivo,
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                    'id_empresa_paquete' => $empresa_paquete
+                    'id_cliente'              => $id_cliente,
+                    'id_sede'                 => $id_sede,
+                    'id_estado'               => $id_estado_default,
+                    'id_estado_verificado'    => $id_estado_verificado_default,
+                    'id_servicio_liquidador'  => $servicio_liquidador,
+                    'id_agente_callcenter'    => $idAgenteCallcenter,
+                    'codigos_comparendo'      => $codigo_comparendo,
+                    'reserva_cita'            => $reserva_cita,
+                    'rango_horario'           => $rango_horario,
+                    'desc_cita'               => 'Creada por el cliente - Comparendo #' . ($index + 1),
+                    'responsable_origen'      => $responsable_origen,
+                    'creado_por'              => $creado_por,
+                    'origen'                  => $origen,
+                    'url_variables'           => json_encode($urlVariablesArray),
+                    'tipo_dispositivo'        => $tipo_dispositivo,
+                    'created_at'              => Carbon::now(),
+                    'updated_at'              => Carbon::now(),
+                    'id_empresa_paquete'      => $empresa_paquete,
+                    'fecha_notificacion'      => $fecha_notificacion,
+
+                    // ¡NUEVO CAMPO!
+                    'grupo_comparendos'       => $grupo_uuid,
                 ];
 
+                if ($id_vehiculo) {
+                    $insertData['id_vehiculo'] = $id_vehiculo;
+                }
+
+                // Insertar
+                $id_cita = DB::table('tb_cita')->insertGetId($insertData);
+                $citasCreadas[] = $id_cita;
+
+                // Email de confirmación
+                $this->sendConfirmationEmail($id_cliente, $id_sede, $id_cita, $reserva_cita, $rango_horario, $origen, $tipo_dispositivo);
+
+                // Seguimiento duplicados (solo una vez por grupo, pero como está dentro del loop, se ejecuta por cada uno - si quieres solo una vez, muévelo fuera)
                 if ($citas_agendadas) {
-                    $query_estado_duplicado = DB::table('tb_estado')->select(['tb_estado.*'])->where('tb_estado.nombre_estado', 'Duplicado');
-                    $estado_duplicado = $query_estado_duplicado->first();
-                    $response_citas_agendadas_historico = $this->getCitasAgendadasHistorico(new \Illuminate\Http\Request(['cc' => $doc_cliente]));
-                    $data_citas_agendadas_historico = $response_citas_agendadas_historico->getData(true);
-
-                    // SE AGREGAN LOS ESTADOS
-                    $insertData['id_estado'] = $estado_duplicado->id_estado;
-                    $insertData['id_estado_verificado'] = $estado_duplicado->id_estado;
-                    $callcenter_habilitado = false;
-                    $agenteValue = null;
-
-                    // SE VERIFICA SI EL AGENTE CALL-CENTER ESTÁ HABILITADO
-                    try {
-                        $callcenter_habilitado = $this->verificarEstadoCallCenter($data_citas_agendadas_historico['Data'][0]['id_agente_callcenter']);
-                    } catch (\Exception $e) {
-                        $callcenter_habilitado = false;
-                    }
-
-                    if ($callcenter_habilitado) {
-                        $agenteValue = $data_citas_agendadas_historico['Data'][0]['id_agente_callcenter'];
-                        $insertData['id_agente_callcenter'] = $agenteValue;
-                    } else {
-                        $idAgenteCallcenter = $this->RoundRobinCallCenter();
-                        $agenteValue = is_null($idAgenteCallcenter) ? "NULL" : $idAgenteCallcenter;
-                        $insertData['id_agente_callcenter'] = $agenteValue;
-                    }
-
-                    // SE REALIZA LA INSERCIÓN DE LA CITA
-                    $save = DB::table('tb_cita')->insert($insertData);
-
-                    // SE REALIZA LA INSERCIÓN DEL SEGUIMIENTO
-                    if ($save) {
-                        $this->postSeguimientoDuplicados(new \Illuminate\Http\Request(['cc' => $doc_cliente]));
-                    }
-                } else {
-                    $query_estado_agendado = DB::table('tb_estado')->select(['tb_estado.*'])->where('tb_estado.nombre_estado', 'Agendado');
-                    $estado_agendado = $query_estado_agendado->first();
-                    $response_citas_agendadas_historico = $this->getCitasAgendadasHistorico(new \Illuminate\Http\Request(['cc' => $doc_cliente]));
-                    $data_citas_agendadas_historico = $response_citas_agendadas_historico->getData(true);
-                    $callcenter_habilitado = false;
-                    $agenteValue = null;
-
-                    // SE VERIFICA SI EL AGENTE CALL-CENTER ESTÁ HABILITADO
-                    try {
-                        $callcenter_habilitado = $this->verificarEstadoCallCenter($data_citas_agendadas_historico['Data'][0]['id_agente_callcenter']);
-                    } catch (\Exception $e) {
-                        $callcenter_habilitado = false;
-                    }
-
-                    if ($callcenter_habilitado) {
-                        $agenteValue = $data_citas_agendadas_historico['Data'][0]['id_agente_callcenter'];
-                        $insertData['id_agente_callcenter'] = $agenteValue;
-                    } else {
-                        $idAgenteCallcenter = $this->RoundRobinCallCenter();
-                        $agenteValue = is_null($idAgenteCallcenter) ? "NULL" : $idAgenteCallcenter;
-                        $insertData['id_agente_callcenter'] = $agenteValue;
-                    }
-
-                    // SE AGREGAN LOS ESTADOS Y EL CALLCENTER
-                    $insertData['id_estado'] = $estado_agendado->id_estado;
-                    $insertData['id_estado_verificado'] = $estado_agendado->id_estado;
-                    $insertData['id_agente_callcenter'] = $agenteValue;
-
-                    // SE REALIZA LA INSERCIÓN DE LA CITA
-                    $save = DB::table('tb_cita')->insert($insertData);
+                    $this->postSeguimientoDuplicados(new \Illuminate\Http\Request(['cc' => $doc_cliente]));
                 }
-
-                if ($save) {
-
-                    try {
-                        // Consulta la información de la sede
-                        $sede = DB::table('tb_sede')->where('id_sede', $id_sede)->first();
-                        $id_ciudad = $sede->id_ciudad ?? null;
-
-                        // Preparar los datos para la plantilla de SendPulse
-                        $templateVariables = [
-                            'nombre_cliente'   => $nombre_cliente,
-                            'apellido_cliente' => $apellido_cliente,
-                            'nombre_sede'      => $nombre_sede,
-                            'direccion_sede'   => $direccion_sede,
-                            'email_cliente'    => $email_cliente,
-                            'telefono_cliente' => $telefono_cliente,
-                            'reserva_cita'     => $reserva_cita,
-                            'rango_horario'    => $rango_horario,
-                            'origen'           => $origen,
-                            'tipo_dispositivo' => $tipo_dispositivo,
-                            'latitud'          => $latitud,
-                            'longitud'         => $longitud,
-                        ];
-                        // Enviar el correo al cliente
-                        $enviadoCliente = $this->sendPulse->sendEmailConfirmacion(
-                            $email_cliente,
-                            $nombre_cliente,
-                            $nombre_cliente . " Confirmamos tu cita",
-                            $doc_cliente,
-                            $sede,
-
-                            $templateVariables
-                        );
-
-                        if (!$enviadoCliente) {
-                            Log::error("Error al enviar uno o ambos correos con SendPulse.");
-                        }
-                    } catch (\Exception $e) {
-                        Log::error($e->getMessage());
-                    }
-
-                    // Obtener el ID de la cita recién creada
-                    $ultimaCita = DB::table('tb_cita')->orderBy('id_cita', 'desc')->first();
-                    $id_cita = $ultimaCita->id_cita;
-
-                    //Limitar agente si es el caso
-                    $this->limitar_agente($agenteValue, $id_cita, $citas_agendadas);
-
-                    // Se envía la cita para validar en el SIMIT
-                    $metodo_actual = DB::table('tb_config')
-                        ->where('config_key', 'method_scraping')
-                        ->value('config_value');
-
-                    // Se valida si debe realizar el scraping o no
-                    if ($metodo_actual > 0 && !$citas_agendadas) {
-                        ScrapingSimitJob::dispatch($id_cita, $doc_cliente, $metodo_actual)->onQueue('Scraping');
-                    }
-                    
-
-                    try {
-                        $saveliquidador = DB::table('tb_liquidador')->insert([
-                            'id_cita' => $id_cita,
-                            'estado_liquidador' => "Pendiente",
-                            'comentario_liquidador' => "",
-                            'pago_liquidador' => "Pendiente",
-                            'created_at' => DB::raw('DATE_SUB(NOW(), INTERVAL 5 HOUR)'),
-                            'updated_at' => DB::raw('DATE_SUB(NOW(), INTERVAL 5 HOUR)')
-                        ]);
-
-                        //AQUI SE ENVÍA LA INFORMACIÓN DE LOS DETALLES DE LA CITA
-                        //$url_detalles = config('app.url').'/agendas-cursos/public_html/api/detalles-cita/'.Crypt::encryptString($id_cita);
-                        //$detalles = Http::get($url_detalles);
-
-                    } catch (\Throwable $e) {
-                        Log::error($e->getMessage());
-                    }
-
-                    $objLoad = [
-                        'validate' => true,
-                        'text' => 'Cita guardada correctamente',
-                        'id' => Crypt::encryptString($id_cita)
-                    ];
-                }
-            } catch (\Throwable $e) {
-                Log::error($e->getMessage());
             }
+
+            DB::commit();
+
+            $objLoad['validate'] = true;
+            $objLoad['text'] = 'Citas agendadas exitosamente.';
+            $objLoad['ids'] = $citasCreadas;
+            $objLoad['grupo'] = $grupo_uuid; // Opcional: para debug o futuras referencias
+
+            return response()->json($objLoad);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            $objLoad['text'] = $e->getMessage();
+            Log::error("Error al guardar citas múltiples: " . $e->getMessage());
             return response()->json($objLoad);
         }
     }
+}
+
+private function getServicioLiquidadorId($total) {
+    $nombre = match($total) {
+        1 => '1 comparendo',
+        2 => '2 comparendos',
+        3 => '3 comparendos',
+        default => '+3 comparendos'
+    };
+    $servicio = DB::table('tb_servicio_liquidador')->where('nombre_servicio_liquidador', $nombre)->first();
+    return $servicio ? $servicio->id_servicio_liquidador : 5; // Default si no encuentra
+}
+
+private function detectDevice($userAgent) {
+    if (preg_match('/mobile/i', $userAgent)) return 'Mobile';
+    if (preg_match('/tablet/i', $userAgent)) return 'Tablet';
+    return 'Desktop';
+}
+
+private function getAgenteCallcenter($doc_cliente, $citas_agendadas) {
+    if (!$citas_agendadas) return null; // No duplicado, no agente
+    $historico = $this->getCitasAgendadasHistorico(new \Illuminate\Http\Request(['cc' => $doc_cliente]))->getData(true)['Data'][0] ?? null;
+    $callcenter_habilitado = $this->verificarEstadoCallCenter($historico['id_agente_callcenter'] ?? null);
+    if ($callcenter_habilitado) return $historico['id_agente_callcenter'];
+    return $this->RoundRobinCallCenter();
+}
+
+private function sendConfirmationEmail($id_cliente, $id_sede, $id_cita, $reserva_cita, $rango_horario, $origen, $tipo_dispositivo) {
+    // Lógica existente adaptada para una cita
+    $cliente = DB::table('tb_cliente')->where('id_cliente', $id_cliente)->first();
+    $sede = DB::table('tb_sede')->where('id_sede', $id_sede)->first();
+    $servicio = DB::table('tb_servicio')->where('id_servicio', $sede->id_servicio)->first();
+    $templateVariables = [
+        'nombre_cliente' => $cliente->nombre_cliente,
+        'apellido_cliente' => $cliente->apellido_cliente,
+        'nombre_sede' => $sede->nombre_sede,
+        'direccion_sede' => $sede->direccion_sede,
+        'email_cliente' => $cliente->email_cliente,
+        'telefono_cliente' => $cliente->telefono_cliente,
+        'reserva_cita' => $reserva_cita,
+        'rango_horario' => $rango_horario,
+        'origen' => $origen,
+        'tipo_dispositivo' => $tipo_dispositivo,
+        'nombre_servicio' => $servicio->tipo_servicio ?? 'Servicio no encontrado',
+        'latitud' => str_replace(',', '.', $sede->latitud),
+        'longitud' => str_replace(',', '.', $sede->longitud),
+    ];
+    $this->sendPulse->sendEmailConfirmacion(
+        $cliente->email_cliente,
+        $cliente->nombre_cliente,
+        $cliente->nombre_cliente . " Confirmamos tu cita #$id_cita",
+        $cliente->doc_cliente,
+        $sede,
+        $templateVariables
+    );
+}
 
     public function RoundRobinCallCenter()
     {
